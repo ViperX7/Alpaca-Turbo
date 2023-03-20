@@ -13,7 +13,7 @@ context.log_level = "critical"
 # pylint: disable=C0103
 # pylint: disable=C0114
 # pylint: disable=C0116
-format = """
+FORMAT = """
 ###Instruction:
 {instruction}
 
@@ -78,7 +78,7 @@ class Assistant:
         """
         prompt = self.context + "\n" + self.prompt
         for instr, resp in self.chat_history:
-            prompt += format.format(instruction=instr, response=resp)
+            prompt += FORMAT.format(instruction=instr, response=resp)
         prompt = prompt.replace("\n", "\\\n")
         return prompt
 
@@ -89,7 +89,7 @@ class Assistant:
         for _ in track(range(45), "Loading Model"):
             self.program.recvuntil(b".", timeout=10)
         self.program.recvuntil(b"'\\'.\n")
-        print("Model Ready to respond")
+        # print("Model Ready to respond")
         self.is_ready = True
 
     def ask_bot(self, question):
@@ -100,14 +100,30 @@ class Assistant:
         self.chat_history.append((question, ""))
 
         self.program.sendline(self.bot_input.encode())
+        self.end_marker = b"[end of text]"
 
         try:
-            data = self.program.recv(1, timeout=40)
+            marker_detected = b""
+            char = self.program.recv(1, timeout=40)
+            data = char
+            yield char
             while True:
-                data += self.program.recv(1)
-                if b"[end of text]" in data:
+                char = self.program.recv(1)
+                data += char
+
+                if char == b"[" or marker_detected:
+                    marker_detected += char
+                    if marker_detected in assistant.end_marker:
+                        continue
+                    else:
+                        marker_detected = b""
+
+                if self.end_marker in data:
                     data = data.replace(b"[end of text]", b"")
                     break
+
+
+                yield char
         except (KeyboardInterrupt, EOFError):
             print("Stooping")
         finally:
@@ -118,32 +134,10 @@ class Assistant:
         return data
 
 
+assistant = Assistant()
+while True:
+    resp = assistant.ask_bot(input(">>> "))
 
-# while True:
-#     uinp = input("input:  ")
-#     new_prompt = prompt + "\n\n" + format.format(instruction=uinp)
-#
-#     program = magic("./main", "")
-#     program = process(command)
-#     # program.start(custom=command)
-#     # pr, wsnd = program.pr, program.wsnd
-#     program.recvuntil(b".............................................", timeout=10)
-#     program.recvuntil(b"'\\'.\n")
-#     print("Model Loaded")
-#
-#     program.sendline(new_prompt.replace("\n", "\\\n"))
-#     print("Prompt Sent")
-#
-#     try:
-#         data = program.recv(1, timeout=40)
-#         while True:
-#             data += program.recv(1)
-#             if b"[end of text]" in data:
-#                 break
-#             # print(data)
-#     except (KeyboardInterrupt, EOFError):
-#         pass
-#
-#     new_prompt += data.decode("latin")
-#     prompt = new_prompt
-#     print(prompt)
+    for char in resp:
+        print(char.decode("latin"), end="")
+    print()
