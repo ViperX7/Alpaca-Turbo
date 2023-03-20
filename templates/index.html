@@ -1,0 +1,45 @@
+
+
+
+ <!DOCTYPE html>
+<html>
+  <head>
+    <title>Alpaca Turbo</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  </head>
+  <body>
+    <div>
+      <label for="question">Ask the bot:</label>
+      <input type="text" id="question" name="question">
+      <button id="submit">Submit</button>
+    </div>
+    <div>
+      <p>Bot response:</p>
+      <pre id="response"></pre>
+    </div>
+    <div>
+      <p>History:</p>
+      <ul id="history"></ul>
+    </div>
+    <script>
+      $(document).ready(function() {
+        $('#submit').click(function() {
+          var question = $('#question').val();
+          $.ajax({
+            type: 'POST',
+            url: '/ask_bot',
+            data: JSON.stringify({ 'question': question }),
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'text',
+            success: function(data) {
+              $('#response').text(data);
+              $('#history').append('<li>' + question + '</li>');
+              $('#history').append('<li>' + data + '</li>');
+            }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
+
