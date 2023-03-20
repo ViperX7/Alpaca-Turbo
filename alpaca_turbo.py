@@ -117,7 +117,7 @@ class Assistant:
 
                 if char == b"[" or marker_detected:
                     marker_detected += char
-                    if marker_detected in assistant.end_marker:
+                    if marker_detected in self.end_marker:
                         continue
                     else:
                         marker_detected = b""
@@ -136,13 +136,16 @@ class Assistant:
         self.chat_history[-1] = (question, data)
         return data
 
+    @staticmethod
+    def repl():
+        assistant = Assistant()
+        assistant.prep_model()
+        while True:
+            resp = assistant.ask_bot(input(">>> "))
 
-assistant = Assistant()
-assistant.prep_model()
-while True:
-    resp = assistant.ask_bot(input(">>> "))
+            for char in resp:
+                print(char, end="")
+            print()
 
-    for char in resp:
-        print(char, end="")
-    print()
 
+_ = Assistant.repl() if __name__ == "__main__" else None
