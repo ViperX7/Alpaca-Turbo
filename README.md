@@ -25,6 +25,15 @@ Web UI to run alpaca model locally
 
 
 
+### Running
+If you have dalai on your system you should be fine
+```bash
+git clone https://github.com/viperx7/Alpaca-Turbo
+cd Alpaca-Turbo
+python3 webui
+```
+
+
 # CREDITS
 - https//github.com/ggerganov/llama.cpp
 - https://github.com/cocktailpeanut/dalai

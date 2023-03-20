@@ -1,0 +1,4 @@
+pwntools
+flask
+gradio
+rich
