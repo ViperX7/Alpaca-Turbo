@@ -98,6 +98,9 @@ class Assistant:
         """
         _ = self.prep_model() if not self.is_ready else None
         self.chat_history.append((question, ""))
+        # print("------")
+        # print(self.bot_input)
+        # print("------")
 
         self.program.sendline(self.bot_input.encode())
         self.end_marker = b"[end of text]"
@@ -106,7 +109,7 @@ class Assistant:
             marker_detected = b""
             char = self.program.recv(1, timeout=40)
             data = char
-            yield char
+            yield char.decode('latin')
             while True:
                 char = self.program.recv(1)
                 data += char
@@ -123,7 +126,7 @@ class Assistant:
                     break
 
 
-                yield char
+                yield char.decode('latin')
         except (KeyboardInterrupt, EOFError):
             print("Stooping")
         finally:
@@ -134,10 +137,40 @@ class Assistant:
         return data
 
 
-assistant = Assistant()
-while True:
-    resp = assistant.ask_bot(input(">>> "))
+# assistant = Assistant()
+# while True:
+#     resp = assistant.ask_bot(input(">>> "))
+#
+#     for char in resp:
+#         print(char.decode("latin"), end="")
+#     print()
+#
 
-    for char in resp:
-        print(char.decode("latin"), end="")
-    print()
+
+
+from flask import Flask, request, Response
+from flask import Flask, request, render_template
+# from alpaca_turbo import Assistant
+
+app = Flask(__name__)
+assistant = Assistant()
+assistant.prep_model()
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+
+@app.route('/ask_bot', methods=['POST'])
+def ask_bot():
+    question = request.json.get('question')
+
+    return Response(assistant.ask_bot(question), mimetype='text/plain')
+
+
+@app.teardown_request
+def areload(a):
+    _ = None if assistant.is_ready else assistant.prep_model()
+
+if __name__ == '__main__':
+    app.run(debug=True)
