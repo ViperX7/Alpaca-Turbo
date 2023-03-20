@@ -30,7 +30,7 @@ class Assistant:
         self.model = "alpaca.13B"
         self.model_path = "~/dalai/alpaca/models/13B/ggml-model-q4_0.bin"
         self.model_path = "~/dalai/alpaca/models/7B/ggml-model-q4_0.bin"
-        self.executable = "~/dalai/alpaca/main"
+        self.executable = "./bin/main"
         self.model_path = os.path.expanduser(self.model_path)
         self.executable = os.path.expanduser(self.executable)
 
