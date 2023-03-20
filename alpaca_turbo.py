@@ -28,7 +28,7 @@ class Assistant:
         self.seed = 888777
         self.threads = 11
         self.n_predict = 200
-        self.threads = 11
+        self.threads = 16
         self.top_k = 40
         self.top_p = 0.9
         self.temp = 0.5
@@ -83,9 +83,9 @@ class Assistant:
         return prompt
 
     def prep_model(self):
+        if self.is_ready:
+            return None
         self.program = process(self.command)
-        # program.start(custom=command)
-        # pr, wsnd = program.pr, program.wsnd
         for _ in track(range(45), "Loading Model"):
             self.program.recvuntil(b".", timeout=10)
         self.program.recvuntil(b"'\\'.\n")
@@ -97,12 +97,12 @@ class Assistant:
         run
         """
         _ = self.prep_model() if not self.is_ready else None
+        self.program.recvuntil(b"REPLERP\n")
         self.chat_history.append((question, ""))
         # print("------")
         # print(self.bot_input)
         # print("------")
 
-        self.is_ready = False
         self.program.sendline(self.bot_input.encode())
         self.end_marker = b"[end of text]"
 
@@ -110,7 +110,7 @@ class Assistant:
             marker_detected = b""
             char = self.program.recv(1, timeout=40)
             data = char
-            yield char.decode('latin')
+            yield char.decode("latin")
             while True:
                 char = self.program.recv(1)
                 data += char
@@ -126,27 +126,23 @@ class Assistant:
                     data = data.replace(b"[end of text]", b"")
                     break
 
-
-                yield char.decode('latin')
+                yield char.decode("latin")
         except (KeyboardInterrupt, EOFError):
             print("Stooping")
-        finally:
-            self.program.kill()
-            self.is_ready = False
+
+        # self.program.kill()
+        # self.is_ready = False
 
         self.chat_history[-1] = (question, data)
         return data
 
 
-# assistant = Assistant()
-# while True:
-#     resp = assistant.ask_bot(input(">>> "))
-#
-#     for char in resp:
-#         print(char.decode("latin"), end="")
-#     print()
-#
+assistant = Assistant()
+assistant.prep_model()
+while True:
+    resp = assistant.ask_bot(input(">>> "))
 
-
-
+    for char in resp:
+        print(char, end="")
+    print()
 
