@@ -13,13 +13,6 @@ context.log_level = "critical"
 # pylint: disable=C0103
 # pylint: disable=C0114
 # pylint: disable=C0116
-FORMAT = """
-###Instruction:
-{instruction}
-
-###Response:
-{response}"""
-
 
 class Assistant:
     """Alpaca Assistant"""
@@ -36,13 +29,19 @@ class Assistant:
         self.repeat_penalty = 1.3
         self.model = "alpaca.13B"
         self.model_path = "~/dalai/alpaca/models/13B/ggml-model-q4_0.bin"
+        self.model_path = "~/dalai/alpaca/models/7B/ggml-model-q4_0.bin"
         self.executable = "~/dalai/alpaca/main"
         self.model_path = os.path.expanduser(self.model_path)
         self.executable = os.path.expanduser(self.executable)
 
-        self.context = "chat transcript between human and a bot named devil and the bol remembers everything from previous response"
+        self.persona = "chat transcript between human and a bot named devil and the bol remembers everything from previous response"
 
         self.prompt = f"""Below is an instruction that describes a task. Write a response that appropriately completes the request."""
+
+        self.format =  """\n###Instruction:\n{instruction}\n\n###Response:\n{response}"""
+        self.enable_history = True
+
+
 
         self.chat_history = []
         self.is_ready = False
@@ -76,10 +75,14 @@ class Assistant:
         """
         prep_bot_input
         """
-        prompt = self.context + "\n" + self.prompt
-        for instr, resp in self.chat_history:
-            prompt += FORMAT.format(instruction=instr, response=resp)
+        prompt = self.persona + "\n" + self.prompt
+        history = self.chat_history if self.enable_history else [self.chat_history[-1]]
+        for instr, resp in history:
+            prompt += self.format.format(instruction=instr, response=resp)
         prompt = prompt.replace("\n", "\\\n")
+        print("======")
+        print(prompt)
+        print("======")
         return prompt
 
     def prep_model(self):
