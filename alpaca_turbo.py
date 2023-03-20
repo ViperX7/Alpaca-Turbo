@@ -102,6 +102,7 @@ class Assistant:
         # print(self.bot_input)
         # print("------")
 
+        self.is_ready = False
         self.program.sendline(self.bot_input.encode())
         self.end_marker = b"[end of text]"
 
@@ -148,29 +149,4 @@ class Assistant:
 
 
 
-from flask import Flask, request, Response
-from flask import Flask, request, render_template
-# from alpaca_turbo import Assistant
 
-app = Flask(__name__)
-assistant = Assistant()
-assistant.prep_model()
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-
-@app.route('/ask_bot', methods=['POST'])
-def ask_bot():
-    question = request.json.get('question')
-
-    return Response(assistant.ask_bot(question), mimetype='text/plain')
-
-
-@app.teardown_request
-def areload(a):
-    _ = None if assistant.is_ready else assistant.prep_model()
-
-if __name__ == '__main__':
-    app.run(debug=True)
