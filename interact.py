@@ -26,7 +26,7 @@ class Process(PopenSpawn):
 
 
 def main():
-    prog = Process("cat")
+    prog = Process("cmd.exe")
     prog.sendline("hi")
 
     # o = prog.read(1)

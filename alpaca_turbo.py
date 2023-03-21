@@ -1,10 +1,10 @@
 """
 Alpaca Turbo
 """
+import json
 import os
-import subprocess
-import sys
-import time
+import platform
+import signal
 
 from interact import Process as process
 from rich.progress import track
@@ -14,6 +14,82 @@ from rich.progress import track
 # pylint: disable=C0103
 # pylint: disable=C0114
 # pylint: disable=C0116
+
+
+class AssistantSettings:
+    """Settings handler for assistant"""
+
+    def __init__(self, assistant):
+        self.assistant = assistant
+        self.load_settings()
+        self.assistant.prep_model()
+
+    def load_settings(self):
+        if os.path.exists("settings.dat"):
+            with open("settings.dat", "r", encoding="utf-8") as file:
+                settings = json.load(file)
+            self.update(*settings)
+        else:
+            print("can't load the settings file continuing with defaults")
+
+    def update(self, *settings):
+        old_settings = self.get()
+        (
+            self.assistant.enable_history,
+            self.assistant.seed,
+            self.assistant.top_k,
+            self.assistant.top_p,
+            self.assistant.temp,
+            self.assistant.threads,
+            self.assistant.repeat_penalty,
+            self.assistant.repeat_last_n,
+            self.assistant.model_path,
+            self.assistant.persona,
+            self.assistant.prompt,
+            self.assistant.format,
+        ) = settings
+
+        self.assistant.enable_history = int(self.assistant.enable_history)
+        self.assistant.seed = int(self.assistant.seed)
+        self.assistant.top_k = int(self.assistant.top_k)
+        self.assistant.top_p = float(self.assistant.top_p)
+        self.assistant.temp = float(self.assistant.temp)
+        self.assistant.threads = int(self.assistant.threads)
+        self.assistant.repeat_penalty = float(self.assistant.repeat_penalty)
+        self.assistant.repeat_last_n = int(self.assistant.repeat_last_n)
+
+        new_settings = self.get()
+
+        if not os.path.exists(self.assistant.model_path):
+            print("Error Saving Settings")
+            print(f"Can't locate the model @ {self.assistant.model_path}")
+
+        with open("settings.dat", "w") as file:
+            json.dump(settings, file)
+
+        if old_settings[:-3] != new_settings[:-3] and self.assistant.is_ready:
+            self.assistant.program.kill(signal.SIGTERM)
+            self.assistant.is_ready = False
+            self.assistant.prep_model()
+
+    def get(self, n=None):
+        order = [
+            self.assistant.enable_history,
+            self.assistant.seed,
+            self.assistant.top_k,
+            self.assistant.top_p,
+            self.assistant.temp,
+            self.assistant.threads,
+            self.assistant.repeat_penalty,
+            self.assistant.repeat_last_n,
+            self.assistant.model_path,
+            self.assistant.persona,
+            self.assistant.prompt,
+            self.assistant.format,
+        ]
+
+        result = order if n is None else order[n]
+        return result
 
 
 class Assistant:
@@ -28,11 +104,8 @@ class Assistant:
         self.temp = 0.5
         self.repeat_last_n = 64
         self.repeat_penalty = 1.3
-        self.model = "alpaca.13B"
         self.model_path = "~/dalai/alpaca/models/7B/ggml-model-q4_0.bin"
-        self.executable = "./bin/main"
         self.model_path = os.path.expanduser(self.model_path)
-        self.executable = os.path.expanduser(self.executable)
 
         self.persona = "chat transcript between human and a bot named devil and the bot remembers everything from previous response"
 
@@ -40,14 +113,30 @@ class Assistant:
 
         self.format = """\n###Instruction:\n{instruction}\n\n###Response:\n{response}"""
         self.enable_history = True
+        self.is_ready = False
+
+        self.settings = AssistantSettings(self)
 
         self.chat_history = []
-        self.is_ready = False
+
+    def get_os_name(self):
+        system_name = platform.system()
+        if system_name == "Linux":
+            return "linux"
+        elif system_name == "Windows":
+            return "win.exe"
+        elif system_name == "Darwin":
+            return "mac"
+        # elif system_name == "Android":
+        #     return "Android"
+        else:
+            exit()
+            return "Unknown"
 
     @property
     def command(self):
         command = [
-            self.executable,
+            f"./bin/{self.get_os_name()}",
             # "--color",
             # "-i",
             "--seed",
@@ -132,9 +221,6 @@ class Assistant:
                 yield char.decode("latin")
         except (KeyboardInterrupt, EOFError):
             print("Stooping")
-
-        # self.program.kill()
-        # self.is_ready = False
 
         self.chat_history[-1] = (question, data)
         return data
