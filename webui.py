@@ -1,10 +1,11 @@
 import json
+import os
 
 import gradio as gr
 from alpaca_turbo import Assistant
 
 ASSISTANT = Assistant()
-# ASSISTANT.prep_model()
+ASSISTANT.prep_model()
 
 header = """
 Placeholder
@@ -40,13 +41,16 @@ def update_settings(*settings):
 
     new_settings = get_settings()
 
-    if old_settings[:-3] != new_settings[:-3] and ASSISTANT.is_ready:
-        # ASSISTANT.program.kill()
-        ASSISTANT.is_ready = False
-        ASSISTANT.prep_model()
-
     with open("settings.dat", "w") as file:
         json.dump(settings, file)
+
+
+    if old_settings[:-3] != new_settings[:-3] and ASSISTANT.is_ready:
+        # ASSISTANT.program.kill()
+        # ASSISTANT.is_ready = False
+        # ASSISTANT.prep_model()
+        os.system("python3 ./webui.py")
+        exit()
 
 
 def get_settings(n=None):
