@@ -36,6 +36,7 @@ def update_settings(*settings):
         ASSISTANT.threads,
         ASSISTANT.repeat_penalty,
         ASSISTANT.repeat_last_n,
+        ASSISTANT.model_path,
         ASSISTANT.persona,
         ASSISTANT.prompt,
         ASSISTANT.format,
@@ -49,12 +50,12 @@ def update_settings(*settings):
     ASSISTANT.threads = int(ASSISTANT.threads)
     ASSISTANT.repeat_penalty = float(ASSISTANT.repeat_penalty)
     ASSISTANT.repeat_last_n = int(ASSISTANT.repeat_last_n)
-    print(get_settings())
 
     new_settings = get_settings()
 
     if old_settings[:-3] != new_settings[:-3] and ASSISTANT.is_ready:
-        ASSISTANT.program.kill()
+        # ASSISTANT.program.kill()
+        ASSISTANT.is_ready = False
         ASSISTANT.prep_model()
 
     with open("settings.dat", "w") as file:
@@ -71,6 +72,7 @@ def get_settings(n=None):
         ASSISTANT.threads,
         ASSISTANT.repeat_penalty,
         ASSISTANT.repeat_last_n,
+        ASSISTANT.model_path,
         ASSISTANT.persona,
         ASSISTANT.prompt,
         ASSISTANT.format,
@@ -86,7 +88,6 @@ def load_settings():
     update_settings(*settings)
 
 
-load_settings()
 
 
 def add_text(history, text):
@@ -132,13 +133,13 @@ with gr.Blocks() as demo:
                     interactive=True,
                 )
                 bot_persona = gr.TextArea(
-                    label="Persona", value=ASSISTANT.persona, interactive=True
+                    label="Persona", value=lambda:get_settings(8), interactive=True
                 )
                 bot_prompt = gr.TextArea(
-                    label="Init Prompt", value=ASSISTANT.prompt, interactive=True
+                    label="Init Prompt", value=lambda:get_settings(9), interactive=True
                 )
                 bot_format = gr.TextArea(
-                    label="Format", value=ASSISTANT.format, interactive=True
+                    label="Format", value=lambda: get_settings(10), interactive=True
                 )
 
             with gr.Column():
@@ -167,6 +168,12 @@ with gr.Blocks() as demo:
                     value=lambda: get_settings(7),
                     interactive=True,
                 )
+                model_path = gr.Textbox(
+                    label="Path to model",
+                    value=lambda: get_settings(11),
+                    interactive=True,
+                )
+
                 with gr.Row():
                     save_button = gr.Button("Apply")
 
@@ -184,6 +191,7 @@ with gr.Blocks() as demo:
             bot_persona,
             bot_prompt,
             bot_format,
+            model_path,
         ],
     )
 

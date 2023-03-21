@@ -19,7 +19,7 @@ class Assistant:
 
     def __init__(self) -> None:
         self.seed = 888777
-        self.threads = 11
+        self.threads = 4
         self.n_predict = 200
         self.threads = 16
         self.top_k = 40
@@ -28,7 +28,6 @@ class Assistant:
         self.repeat_last_n = 64
         self.repeat_penalty = 1.3
         self.model = "alpaca.13B"
-        self.model_path = "~/dalai/alpaca/models/13B/ggml-model-q4_0.bin"
         self.model_path = "~/dalai/alpaca/models/7B/ggml-model-q4_0.bin"
         self.executable = "./bin/main"
         self.model_path = os.path.expanduser(self.model_path)
