@@ -176,7 +176,7 @@ class Assistant:
     def prep_model(self):
         if self.is_ready:
             return None
-        self.program = process(self.command)
+        self.program = process(self.command, timeout=600)
         for _ in track(range(45), "Loading Model"):
             self.program.recvuntil(b".")
         self.program.recvuntil("remaining tokens")
