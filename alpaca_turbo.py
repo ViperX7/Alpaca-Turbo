@@ -14,6 +14,7 @@ context.log_level = "critical"
 # pylint: disable=C0114
 # pylint: disable=C0116
 
+
 class Assistant:
     """Alpaca Assistant"""
 
@@ -33,14 +34,12 @@ class Assistant:
         self.model_path = os.path.expanduser(self.model_path)
         self.executable = os.path.expanduser(self.executable)
 
-        self.persona = "chat transcript between human and a bot named devil and the bol remembers everything from previous response"
+        self.persona = "chat transcript between human and a bot named devil and the bot remembers everything from previous response"
 
         self.prompt = f"""Below is an instruction that describes a task. Write a response that appropriately completes the request."""
 
-        self.format =  """\n###Instruction:\n{instruction}\n\n###Response:\n{response}"""
+        self.format = """\n###Instruction:\n{instruction}\n\n###Response:\n{response}"""
         self.enable_history = True
-
-
 
         self.chat_history = []
         self.is_ready = False
@@ -79,9 +78,9 @@ class Assistant:
         for instr, resp in history:
             prompt += self.format.format(instruction=instr, response=resp)
         prompt = prompt.replace("\n", "\\\n")
-        print("======")
-        print(prompt)
-        print("======")
+        # print("======")
+        # print(prompt)
+        # print("======")
         return prompt
 
     def prep_model(self):

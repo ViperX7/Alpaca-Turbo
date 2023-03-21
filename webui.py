@@ -133,10 +133,10 @@ with gr.Blocks() as demo:
                     interactive=True,
                 )
                 bot_persona = gr.TextArea(
-                    label="Persona", value=lambda:get_settings(8), interactive=True
+                    label="Persona", value=lambda:get_settings(9), interactive=True
                 )
                 bot_prompt = gr.TextArea(
-                    label="Init Prompt", value=lambda:get_settings(9), interactive=True
+                    label="Init Prompt", value=lambda:get_settings(10), interactive=True
                 )
                 bot_format = gr.TextArea(
                     label="Format", value=lambda: get_settings(10), interactive=True
@@ -170,7 +170,7 @@ with gr.Blocks() as demo:
                 )
                 model_path = gr.Textbox(
                     label="Path to model",
-                    value=lambda: get_settings(11),
+                    value=lambda: get_settings(8),
                     interactive=True,
                 )
 
