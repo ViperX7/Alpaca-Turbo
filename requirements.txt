@@ -1,4 +1,4 @@
-pwntools
+pwntools==4.9.0
 flask
-gradio
+gradio==3.22.1
 rich

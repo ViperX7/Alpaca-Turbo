@@ -2,28 +2,14 @@ import json
 
 import gradio as gr
 from alpaca_turbo import Assistant
-from rich import print as eprint
 
 ASSISTANT = Assistant()
 # ASSISTANT.prep_model()
 
 header = """
-## Note
-- Any change on settings page on the right side will reload the model will take 5-10 seconds
-- Settings on the left side can be modified any time 
-- Remembering history is expensive for some reason
+Placeholder
 """
 
-header1 = """
-## Features
-- No blabbering
-- No reloading model again and again
-- Load once run multiple times
-- Bot won't repeating what you said
-- can remember history
-- Settings are saved across restarts
-- Easy to configure and Even easier to use
-"""
 
 
 def update_settings(*settings):
@@ -55,7 +41,7 @@ def update_settings(*settings):
     new_settings = get_settings()
 
     if old_settings[:-3] != new_settings[:-3] and ASSISTANT.is_ready:
-        ASSISTANT.program.kill()
+        # ASSISTANT.program.kill()
         ASSISTANT.is_ready = False
         ASSISTANT.prep_model()
 
@@ -97,7 +83,7 @@ def add_text(history, text):
 
 
 def bot(history):
-    """Run the bot with entire history"""
+    """ Run the bot with entire history"""
     # print(ASSISTANT.enable_history)
     # print(history)
     ASSISTANT.chat_history = history[:-1] if len(history) >=1 else []
@@ -123,10 +109,8 @@ with gr.Blocks() as demo:
         txt.submit(add_text, [chatbot, txt], [chatbot, txt]).then(bot, chatbot, chatbot)
 
     with gr.Tab("README"):
-        gr.Markdown("# Instructions to use")
-        with gr.Row():
-            gr.Markdown(header1)
-            gr.Markdown(header)
+            # gr.Markdown(header1)
+        gr.Markdown(header)
 
     with gr.Tab("settings"):
         with gr.Row():
