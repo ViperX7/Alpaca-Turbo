@@ -4,11 +4,12 @@ Alpaca Turbo
 import os
 import subprocess
 import sys
+import time
 
-from pwn import context, process
+from interact import Process as process
 from rich.progress import track
 
-context.log_level = "critical"
+# from pwn import  process
 
 # pylint: disable=C0103
 # pylint: disable=C0114
@@ -22,7 +23,6 @@ class Assistant:
         self.seed = 888777
         self.threads = 4
         self.n_predict = 200
-        self.threads = 16
         self.top_k = 40
         self.top_p = 0.9
         self.temp = 0.5
@@ -49,7 +49,7 @@ class Assistant:
         command = [
             self.executable,
             # "--color",
-            "-i",
+            # "-i",
             "--seed",
             f"{self.seed}",
             "-t",
@@ -77,6 +77,7 @@ class Assistant:
         history = self.chat_history if self.enable_history else [self.chat_history[-1]]
         for instr, resp in history:
             prompt += self.format.format(instruction=instr, response=resp)
+        prompt = prompt.strip("\n")
         prompt = prompt.replace("\n", "\\\n")
         # print("======")
         # print(prompt)
@@ -88,8 +89,8 @@ class Assistant:
             return None
         self.program = process(self.command)
         for _ in track(range(45), "Loading Model"):
-            self.program.recvuntil(b".", timeout=10)
-        self.program.recvuntil(b"'\\'.\n")
+            self.program.recvuntil(b".")
+        self.program.recvuntil("remaining tokens")
         # print("Model Ready to respond")
         self.is_ready = True
 
@@ -98,18 +99,19 @@ class Assistant:
         run
         """
         _ = self.prep_model() if not self.is_ready else None
-        self.program.recvuntil(b"REPLERP\n")
+        self.program.recvuntil(b"REPLERP")
+        self.program.recv(1)
         self.chat_history.append((question, ""))
         # print("------")
         # print(self.bot_input)
         # print("------")
 
-        self.program.sendline(self.bot_input.encode())
+        self.program.sendline(self.bot_input)
         self.end_marker = b"[end of text]"
 
         try:
             marker_detected = b""
-            char = self.program.recv(1, timeout=40)
+            char = self.program.recv(1)
             data = char
             yield char.decode("latin")
             while True:
