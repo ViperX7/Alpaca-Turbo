@@ -9,8 +9,10 @@ The goal is to provide a seamless chat experience that is easy to configure and 
 
 We invite you to try Alpaca-Turbo today and experience the difference for yourself.
 
-Screenshot showing ability to remember previous part of conversation
-![webui](https://user-images.githubusercontent.com/38191717/226487153-53086d64-f260-4d6e-8460-2456e72158f0.png)
+Screencast showing ability to remember previous part of conversation  
+
+
+https://user-images.githubusercontent.com/38191717/226516128-8feb7bdd-c7e0-46b3-b3e2-c14109045405.mp4
 
 Web UI to run alpaca model locally
 ![image](https://user-images.githubusercontent.com/38191717/226486832-9c774493-948a-4f90-96c9-695cee44b4c3.png)
@@ -45,5 +47,9 @@ python webui.py
 - [cocktailpeanut/dalai](https://github.com/cocktailpeanut/dalai) For the Inspiration
 - MetaAI for the Llama models
 - Stanford for the alpaca [models](https://github.com/tatsu-lab/stanford_alpaca) 
+
+
+
+
 
 
