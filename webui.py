@@ -1,16 +1,15 @@
 import json
 import os
+import signal
 
 import gradio as gr
 from alpaca_turbo import Assistant
 
 ASSISTANT = Assistant()
-ASSISTANT.prep_model()
 
 header = """
 Placeholder
 """
-
 
 
 def update_settings(*settings):
@@ -44,13 +43,10 @@ def update_settings(*settings):
     with open("settings.dat", "w") as file:
         json.dump(settings, file)
 
-
     if old_settings[:-3] != new_settings[:-3] and ASSISTANT.is_ready:
-        # ASSISTANT.program.kill()
-        # ASSISTANT.is_ready = False
-        # ASSISTANT.prep_model()
-        os.system("python3 ./webui.py")
-        exit()
+        ASSISTANT.program.kill(signal.SIGTERM)
+        ASSISTANT.is_ready = False
+        ASSISTANT.prep_model()
 
 
 def get_settings(n=None):
@@ -79,6 +75,8 @@ def load_settings():
     update_settings(*settings)
 
 
+load_settings()
+ASSISTANT.prep_model()
 
 
 def add_text(history, text):
@@ -87,10 +85,10 @@ def add_text(history, text):
 
 
 def bot(history):
-    """ Run the bot with entire history"""
+    """Run the bot with entire history"""
     # print(ASSISTANT.enable_history)
     # print(history)
-    ASSISTANT.chat_history = history[:-1] if len(history) >=1 else []
+    ASSISTANT.chat_history = history[:-1] if len(history) >= 1 else []
     user_input = history[-1][0]
     response = ""
     response = "".join(list(ASSISTANT.ask_bot(user_input)))
@@ -113,7 +111,7 @@ with gr.Blocks() as demo:
         txt.submit(add_text, [chatbot, txt], [chatbot, txt]).then(bot, chatbot, chatbot)
 
     with gr.Tab("README"):
-            # gr.Markdown(header1)
+        # gr.Markdown(header1)
         gr.Markdown(header)
 
     with gr.Tab("settings"):
@@ -125,13 +123,15 @@ with gr.Blocks() as demo:
                     interactive=True,
                 )
                 bot_persona = gr.TextArea(
-                    label="Persona", value=lambda:get_settings(9), interactive=True
+                    label="Persona", value=lambda: get_settings(9), interactive=True
                 )
                 bot_prompt = gr.TextArea(
-                    label="Init Prompt", value=lambda:get_settings(10), interactive=True
+                    label="Init Prompt",
+                    value=lambda: get_settings(10),
+                    interactive=True,
                 )
                 bot_format = gr.TextArea(
-                    label="Format", value=lambda: get_settings(10), interactive=True
+                    label="Format", value=lambda: get_settings(11), interactive=True
                 )
 
             with gr.Column():
@@ -180,10 +180,10 @@ with gr.Blocks() as demo:
             threads,
             repeate_pen,
             repeate_lastn,
+            model_path,
             bot_persona,
             bot_prompt,
             bot_format,
-            model_path,
         ],
     )
 
