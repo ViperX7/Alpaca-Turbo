@@ -111,11 +111,13 @@ class Assistant:
 
         self.prompt = f"""Below is an instruction that describes a task. Write a response that appropriately completes the request."""
 
-        self.format = """\n###Instruction:\n{instruction}\n\n###Response:\n{response}"""
+        self.format = """\n### Instruction:\n{instruction}\n\n### Response:\n{response}"""
         self.enable_history = True
         self.is_ready = False
 
         self.settings = AssistantSettings(self)
+
+        self.end_marker = b"[end of text]"
 
         self.chat_history = []
 
@@ -176,7 +178,7 @@ class Assistant:
     def prep_model(self):
         if self.is_ready:
             return None
-        self.program = process(self.command, timeout=600)
+        self.program = process(self.command,timeout=600)
         for _ in track(range(45), "Loading Model"):
             self.program.recvuntil(b".")
         self.program.recvuntil("remaining tokens")
@@ -195,8 +197,10 @@ class Assistant:
         # print(self.bot_input)
         # print("------")
 
-        self.program.sendline(self.bot_input)
-        self.end_marker = b"[end of text]"
+        opts = self.bot_input.split("\n")
+        for opt in opts: 
+            self.program.sendline(opt)
+
 
         try:
             marker_detected = b""

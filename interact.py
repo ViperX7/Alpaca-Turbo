@@ -16,13 +16,15 @@ class Process(PopenSpawn):
         return info
 
     def recv(self, *cfg):
-        return self.read(*cfg)
+        data = self.read(*cfg)
+        return data
 
     def interactive(self, *cfg):
         return self.interact(*cfg)
 
     def sendline(self, line):
-        self.send(line + "\n")
+        msg = line + "\n"
+        self.send(msg)
 
 
 def main():
