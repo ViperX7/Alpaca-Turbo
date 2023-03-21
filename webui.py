@@ -2,6 +2,7 @@ import json
 
 import gradio as gr
 from alpaca_turbo import Assistant
+from rich import print as eprint
 
 ASSISTANT = Assistant()
 # ASSISTANT.prep_model()
@@ -54,7 +55,7 @@ def update_settings(*settings):
     new_settings = get_settings()
 
     if old_settings[:-3] != new_settings[:-3] and ASSISTANT.is_ready:
-        # ASSISTANT.program.kill()
+        ASSISTANT.program.kill()
         ASSISTANT.is_ready = False
         ASSISTANT.prep_model()
 
@@ -96,12 +97,15 @@ def add_text(history, text):
 
 
 def bot(history):
-    print(ASSISTANT.enable_history)
-    print(history)
+    """Run the bot with entire history"""
+    # print(ASSISTANT.enable_history)
+    # print(history)
+    ASSISTANT.chat_history = history[:-1] if len(history) >=1 else []
     user_input = history[-1][0]
     response = ""
     response = "".join(list(ASSISTANT.ask_bot(user_input)))
     history[-1] = (user_input, response)
+    print(history)
     return history
 
 
