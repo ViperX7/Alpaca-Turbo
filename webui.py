@@ -76,6 +76,7 @@ with gr.Blocks() as demo:
 
                     persona = gr.Dropdown(
                         PERSONAS.get_all(),
+                        label="Personalities",
                         value=lambda: PERSONAS.get_all()[0],
                         interactive=True,
                     )
