@@ -40,11 +40,14 @@ with gr.Blocks() as demo:
     with gr.Tab("Chat"):
         with gr.Row():
             with gr.Column():
-                remember_history = gr.Checkbox(
-                    label="Remember history",
-                    value=lambda: settings.get(0),
-                    interactive=True,
-                )
+                with gr.Row():
+                    remember_history = gr.Checkbox(
+                        label="Remember history",
+                        value=lambda: settings.get(0),
+                        interactive=True,
+                    )
+                    apply_button = gr.Button("Apply")
+
                 bot_persona = gr.TextArea(
                     label="Persona", value=lambda: settings.get(9), interactive=True
                 )
@@ -117,6 +120,26 @@ with gr.Blocks() as demo:
             with gr.Row():
                 save_button = gr.Button("Apply")
 
+    apply_button.click(
+        settings.update,
+        [
+            remember_history,
+            seed,
+            topk,
+            topp,
+            temperature,
+            threads,
+            repeate_pen,
+            repeate_lastn,
+            model_path,
+            bot_persona,
+            bot_prompt,
+            bot_format,
+        ],
+    )
+
+
+    
     save_button.click(
         settings.update,
         [
