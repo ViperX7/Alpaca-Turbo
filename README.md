@@ -24,7 +24,7 @@ Web UI to run alpaca model locally
 To get started with Alpaca-Turbo, simply clone our repository and run the following commands:
 
 ```bash
-git clone https://github.com/your-username/Alpaca-Turbo.git
+git clone https://github.com/ViperX7/Alpaca-Turbo.git
 cd Alpaca-Turbo
 pip install -r requirements.txt
 python webui.py
