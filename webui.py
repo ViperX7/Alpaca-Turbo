@@ -29,6 +29,7 @@ def bot(history):
         response+=out
         history[-1] = (user_input, response)
         yield history
+    # settings.reload()
 
 with gr.Blocks() as demo:
     with gr.Tab("Chat"):
@@ -121,6 +122,9 @@ with gr.Blocks() as demo:
             bot_format,
         ],
     )
+
+#############################################5
+
 
 demo.queue(concurrency_count=1, max_size=20).launch()
 demo.launch()

@@ -192,7 +192,6 @@ class Assistant:
         self.program = process(self.command,timeout=600)
         for _ in track(range(45), "Loading Model"):
             self.program.recvuntil(b".")
-        self.program.recvuntil("remaining tokens")
         # print("Model Ready to respond")
         self.is_ready = True
 
@@ -201,8 +200,11 @@ class Assistant:
         run
         """
         _ = self.prep_model() if not self.is_ready else None
-        self.program.recvuntil(b"REPLERP")
-        self.program.recv(1)
+        self.program.recvuntil("\'\\\'.")
+        self.program.recvuntil("\n")
+
+        # self.program.recvuntil(b"REPLERP")
+        # self.program.recv(1)
         self.chat_history.append((question, ""))
         # print("------")
         # print(self.bot_input)
@@ -237,7 +239,8 @@ class Assistant:
         except (KeyboardInterrupt, EOFError):
             print("Stooping")
 
-        self.chat_history[-1] = (question, data)
+        self.chat_history[-1] = (question, data.decode("utf-8").strip("\n"))
+        # self.is_ready = False
         return data
 
     @staticmethod
@@ -245,6 +248,7 @@ class Assistant:
         assistant = Assistant()
         assistant.prep_model()
         while True:
+            print(assistant.chat_history)
             resp = assistant.ask_bot(input(">>> "))
 
             for char in resp:
