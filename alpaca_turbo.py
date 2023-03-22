@@ -311,7 +311,10 @@ def health_checks():
         log.fatal("Already running another instance or dirty exit last time")
         with open("./pid") as file:
             pid = int(file.readline())
+        log.info("Attempting to kill the process")
         os.kill(pid, signal.SIGTERM)
+        os.remove("./pid")
+        log.info("Fixed the Issue Now Retry running")
 
     memstat = psutil.virtual_memory()
     log.info("checking memory")
