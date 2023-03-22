@@ -15,7 +15,6 @@ from prompts import Personas
 
 PERSONAS = Personas("./prompts.json")
 
-
 def add_text(history, text):
     history = history + [(text, None)]
     return history, ""
@@ -57,7 +56,7 @@ def bot(history):
     # settings.reload()
 
 
-with gr.Blocks() as demo:
+with gr.Blocks(analytics_enabled=False) as demo:
     with gr.Tab("Chat"):
         with gr.Row():
             with gr.Column():
@@ -96,7 +95,9 @@ with gr.Blocks() as demo:
                 bot_format = gr.TextArea(
                     label="Format", value=lambda: settings.get(11), interactive=True
                 )
-                reload = gr.Button(value="reload model")
+                reload = gr.Button(
+                    value="reload model",
+                )
                 with gr.Row():
                     clear_history = gr.Button(value="Clear history")
                     edit_last = gr.Button(value="Edit last request")
@@ -158,7 +159,6 @@ with gr.Blocks() as demo:
             with gr.Row():
                 save_button = gr.Button("Apply")
 
-
     save_button.click(settings.update, get_state())
     remember_history.change(settings.update, get_state())
     bot_persona.change(settings.update, get_state())
@@ -173,6 +173,10 @@ with gr.Blocks() as demo:
     )
 
 #############################################5
-
-demo.queue(concurrency_count=1, max_size=20)
-demo.launch()
+try:
+    demo.queue(concurrency_count=1, max_size=20)
+    demo.launch()
+    ASSISTANT.program.killx()
+except Exception as error:
+    ASSISTANT.program.killx()
+    raise error
