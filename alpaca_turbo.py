@@ -106,6 +106,7 @@ class Assistant:
         self.repeat_penalty = 1.3
         self.model_path = "~/dalai/alpaca/models/7B/ggml-model-q4_0.bin"
         self.model_path = os.path.expanduser(self.model_path)
+        self.model_path = "a/v/"
 
         self.persona = "chat transcript between human and a bot named devil and the bot remembers everything from previous response"
 
@@ -178,6 +179,10 @@ class Assistant:
     def prep_model(self):
         if self.is_ready:
             return None
+        if not os.path.exists(self.model_path):
+            print("Please Set model path in the settings")
+            return 
+
         self.program = process(self.command,timeout=600)
         for _ in track(range(45), "Loading Model"):
             self.program.recvuntil(b".")
