@@ -21,6 +21,23 @@ def yeet_text(history):
     return []
 
 
+def get_state():
+    return [
+        remember_history,
+        seed,
+        topk,
+        topp,
+        temperature,
+        threads,
+        repeate_pen,
+        repeate_lastn,
+        model_path,
+        bot_persona,
+        bot_prompt,
+        bot_format,
+    ]
+
+
 def bot(history):
     """Run the bot with entire history"""
     # print(ASSISTANT.enable_history)
@@ -41,26 +58,34 @@ with gr.Blocks() as demo:
         with gr.Row():
             with gr.Column():
                 with gr.Row():
+
                     remember_history = gr.Checkbox(
                         label="Remember history",
                         value=lambda: settings.get(0),
                         interactive=True,
                     )
-                    apply_button = gr.Button("Apply")
 
-                bot_persona = gr.TextArea(
-                    label="Persona", value=lambda: settings.get(9), interactive=True
+                    gr.Dropdown()
+
+                bot_persona = gr.Textbox(
+                    label="Persona",
+                    value=lambda: settings.get(9),
+                    interactive=True,
+                    lines=4,
                 )
-                bot_prompt = gr.TextArea(
+                bot_prompt = gr.Textbox(
                     label="Init Prompt",
                     value=lambda: settings.get(10),
                     interactive=True,
+                    lines=4,
                 )
                 bot_format = gr.TextArea(
                     label="Format", value=lambda: settings.get(11), interactive=True
                 )
                 reload = gr.Button(value="reload model")
-                clear_history = gr.Button(value="Clear history")
+                with gr.Row():
+                    clear_history = gr.Button(value="Clear history")
+                    edit_last = gr.Button(value="Edit last request")
 
             reload.click(settings.reload)
 
@@ -78,7 +103,10 @@ with gr.Blocks() as demo:
                 bot, chatbot, chatbot
             )
 
-            clear_history.click(lambda:"", outputs= [chatbot])
+            clear_history.click(lambda: [], outputs=[chatbot])
+            edit_last.click(
+                lambda x: (x[:-1], x[-1][0]), inputs=[chatbot], outputs=[chatbot, txt]
+            )
 
     with gr.Tab("README"):
         # gr.Markdown(header1)
@@ -120,43 +148,11 @@ with gr.Blocks() as demo:
             with gr.Row():
                 save_button = gr.Button("Apply")
 
-    apply_button.click(
-        settings.update,
-        [
-            remember_history,
-            seed,
-            topk,
-            topp,
-            temperature,
-            threads,
-            repeate_pen,
-            repeate_lastn,
-            model_path,
-            bot_persona,
-            bot_prompt,
-            bot_format,
-        ],
-    )
-
-
-    
-    save_button.click(
-        settings.update,
-        [
-            remember_history,
-            seed,
-            topk,
-            topp,
-            temperature,
-            threads,
-            repeate_pen,
-            repeate_lastn,
-            model_path,
-            bot_persona,
-            bot_prompt,
-            bot_format,
-        ],
-    )
+    save_button.click(settings.update, get_state())
+    remember_history.change(settings.update, get_state())
+    bot_persona.change(settings.update, get_state())
+    bot_prompt.change(settings.update, get_state())
+    bot_format.change(settings.update, get_state())
 
 #############################################5
 
