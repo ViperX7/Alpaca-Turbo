@@ -24,11 +24,11 @@ def bot(history):
     ASSISTANT.chat_history = history[:-1] if len(history) >= 1 else []
     user_input = history[-1][0]
     response = ""
-    response = "".join(list(ASSISTANT.ask_bot(user_input)))
-    history[-1] = (user_input, response)
-    print(history)
-    return history
-
+    resp = ASSISTANT.ask_bot(user_input)
+    for out in resp:
+        response+=out
+        history[-1] = (user_input, response)
+        yield history
 
 with gr.Blocks() as demo:
     with gr.Tab("Chat"):
@@ -122,4 +122,6 @@ with gr.Blocks() as demo:
         ],
     )
 
+demo.queue(concurrency_count=1, max_size=20).launch()
 demo.launch()
+
