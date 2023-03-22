@@ -32,6 +32,13 @@ class AssistantSettings:
         else:
             print("can't load the settings file continuing with defaults")
 
+    def reload(self):
+        self.assistant.program.kill(signal.SIGTERM)
+        self.assistant.is_ready = False
+        self.assistant.prep_model()
+
+
+
     def update(self, *settings):
         old_settings = self.get()
         (
@@ -68,9 +75,7 @@ class AssistantSettings:
             json.dump(settings, file)
 
         if old_settings[:-3] != new_settings[:-3] and self.assistant.is_ready:
-            self.assistant.program.kill(signal.SIGTERM)
-            self.assistant.is_ready = False
-            self.assistant.prep_model()
+            self.reload()
 
     def get(self, n=None):
         order = [
@@ -106,7 +111,6 @@ class Assistant:
         self.repeat_penalty = 1.3
         self.model_path = "~/dalai/alpaca/models/7B/ggml-model-q4_0.bin"
         self.model_path = os.path.expanduser(self.model_path)
-        self.model_path = "a/v/"
 
         self.persona = "chat transcript between human and a bot named devil and the bot remembers everything from previous response"
 
@@ -180,7 +184,9 @@ class Assistant:
         if self.is_ready:
             return None
         if not os.path.exists(self.model_path):
+            print("="*20)
             print("Please Set model path in the settings")
+            print("="*20)
             return 
 
         self.program = process(self.command,timeout=600)

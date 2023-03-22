@@ -40,8 +40,10 @@ with gr.Blocks() as demo:
                     show_label=False,
                     placeholder="Enter text and press enter shift+enter for new line",
                 ).style(container=False)
+                reload = gr.Button(value="reload model")
 
         txt.submit(add_text, [chatbot, txt], [chatbot, txt]).then(bot, chatbot, chatbot)
+        reload.click(settings.reload)
 
     with gr.Tab("README"):
         # gr.Markdown(header1)
