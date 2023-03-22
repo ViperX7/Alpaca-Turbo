@@ -132,6 +132,8 @@ class Assistant:
 
     @staticmethod
     def get_bin_path():
+        if os.path.exists("bin/local"):
+            return "bin/local"
         system_name = platform.system()
         if system_name == "Linux":
             name = "linux"
@@ -190,8 +192,12 @@ class Assistant:
     def prep_model(self):
         if self.is_ready:
             return None
-        _ = "" if os.path.exists(self.model_path) else health_checks()
-        _ = health_checks() if os.path.exists("./pid") else ""
+        _ = "" if os.path.exists(self.model_path) else print("Set the model path in settings")
+        if not os.path.exists(self.model_path):
+            return
+        _ = [health_checks(),exit()] if os.path.exists("./pid") else ""
+
+        
 
         self.program = process(self.command, timeout=600)
         self.program.readline()
@@ -276,6 +282,9 @@ def health_checks():
         log.info("Found binary")
     else:
         log.fatal("Binary Not Found")
+        log.info("Check https://github.com/ViperX7/alpaca.cpp")
+        log.info("put the compiled file in (./bin/main or ./bin/main.exe )")
+        exit()
 
     log.info("checking if system is supported")
     try:
@@ -283,6 +292,9 @@ def health_checks():
         log.info("Supported system")
     except OSError:
         log.fatal("Binary Not supported on this system")
+        log.info("Check https://github.com/ViperX7/alpaca.cpp")
+        log.info("put the compiled file in (./bin/main or ./bin/main.exe )")
+        exit()
 
     log.info("Looking for the models to load")
     if os.path.exists(os.path.expanduser(Assistant.model_path)):
@@ -306,8 +318,9 @@ def health_checks():
     log.info(f"Total memory {memstat.total//(1024*1024)} MB")
     log.info(f"Used memory {memstat.used//(1024*1024)} MB")
     log.info(f"Free memory {memstat.free//(1024*1024)} MB")
+    exit()
+    log.level = 5
 
-    memstat = psutil.virtual_memory()
 
 
 # health_checks()
