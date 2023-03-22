@@ -117,15 +117,6 @@ with gr.Blocks() as demo:
                             placeholder="Enter text and press enter shift+enter for new line",
                         ).style(container=False)
 
-            txt.submit(add_text, [chatbot, txt], [chatbot, txt]).then(
-                bot, chatbot, chatbot
-            )
-
-            clear_history.click(lambda: [], outputs=[chatbot])
-            edit_last.click(
-                lambda x: (x[:-1], x[-1][0]), inputs=[chatbot], outputs=[chatbot, txt]
-            )
-
     with gr.Tab("README"):
         # gr.Markdown(header1)
         gr.Markdown(header)
@@ -166,13 +157,21 @@ with gr.Blocks() as demo:
             with gr.Row():
                 save_button = gr.Button("Apply")
 
+
     save_button.click(settings.update, get_state())
     remember_history.change(settings.update, get_state())
     bot_persona.change(settings.update, get_state())
     bot_prompt.change(settings.update, get_state())
     bot_format.change(settings.update, get_state())
 
+    txt.submit(add_text, [chatbot, txt], [chatbot, txt]).then(bot, chatbot, chatbot)
+
+    clear_history.click(lambda: [], outputs=[chatbot])
+    edit_last.click(
+        lambda x: (x[:-1], x[-1][0]), inputs=[chatbot], outputs=[chatbot, txt]
+    )
+
 #############################################5
 
-demo.queue(concurrency_count=1, max_size=20).launch()
+demo.queue(concurrency_count=1, max_size=20)
 demo.launch()
