@@ -72,7 +72,7 @@ class AssistantSettings:
         with open("settings.dat", "w") as file:
             json.dump(settings, file)
 
-        if old_settings[:-3] != new_settings[:-3] and self.assistant.is_ready:
+        if old_settings[1:-3] != new_settings[1:-3] and self.assistant.is_ready:
             self.reload()
 
     def get(self, n=None):
@@ -256,7 +256,7 @@ class Assistant:
         assistant = Assistant()
         assistant.prep_model()
         while True:
-            # print(assistant.chat_history)
+            print(assistant.chat_history)
             resp = assistant.ask_bot(input(">>> "))
 
             for char in resp:

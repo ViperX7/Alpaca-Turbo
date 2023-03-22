@@ -11,6 +11,10 @@ header = """
 Placeholder
 """
 
+from prompts import Personas
+
+PERSONAS = Personas("./prompts.json")
+
 
 def add_text(history, text):
     history = history + [(text, None)]
@@ -58,14 +62,23 @@ with gr.Blocks() as demo:
         with gr.Row():
             with gr.Column():
                 with gr.Row():
+                    with gr.Column():
+                        remember_history = gr.Checkbox(
+                            label="Remember history",
+                            value=lambda: settings.get(0),
+                            interactive=True,
+                        )
+                        # history_length = gr.Textbox(
+                        #     label="Max chat history to remember",
+                        #     interactive=True,
+                        #     value=lambda: settings.get(1),
+                        # )
 
-                    remember_history = gr.Checkbox(
-                        label="Remember history",
-                        value=lambda: settings.get(0),
+                    persona = gr.Dropdown(
+                        PERSONAS.get_all(),
+                        value=lambda: PERSONAS.get_all()[0],
                         interactive=True,
                     )
-
-                    gr.Dropdown()
 
                 bot_persona = gr.Textbox(
                     label="Persona",
@@ -88,6 +101,11 @@ with gr.Blocks() as demo:
                     edit_last = gr.Button(value="Edit last request")
 
             reload.click(settings.reload)
+            persona.change(
+                PERSONAS.get,
+                [persona],
+                [bot_persona, bot_prompt, bot_format],
+            )
 
             with gr.Column():
                 chatbot = gr.Chatbot([], elem_id="chatbot").style(height=740)
