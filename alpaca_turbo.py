@@ -37,8 +37,6 @@ class AssistantSettings:
         self.assistant.is_ready = False
         self.assistant.prep_model()
 
-
-
     def update(self, *settings):
         old_settings = self.get()
         (
@@ -116,7 +114,9 @@ class Assistant:
 
         self.prompt = f"""Below is an instruction that describes a task. Write a response that appropriately completes the request."""
 
-        self.format = """\n### Instruction:\n{instruction}\n\n### Response:\n{response}"""
+        self.format = (
+            """\n### Instruction:\n{instruction}\n\n### Response:\n{response}"""
+        )
         self.enable_history = True
         self.is_ready = False
 
@@ -184,12 +184,12 @@ class Assistant:
         if self.is_ready:
             return None
         if not os.path.exists(self.model_path):
-            print("="*20)
+            print("=" * 20)
             print("Please Set model path in the settings")
-            print("="*20)
-            return 
+            print("=" * 20)
+            return
 
-        self.program = process(self.command,timeout=600)
+        self.program = process(self.command, timeout=600)
         for _ in track(range(45), "Loading Model"):
             self.program.recvuntil(b".")
         # print("Model Ready to respond")
@@ -200,8 +200,9 @@ class Assistant:
         run
         """
         _ = self.prep_model() if not self.is_ready else None
-        self.program.recvuntil("\'\\\'.")
+        self.program.recvuntil("'\\'.")
         self.program.recvuntil("\n")
+        cnt = 3
 
         # self.program.recvuntil(b"REPLERP")
         # self.program.recv(1)
@@ -211,17 +212,24 @@ class Assistant:
         # print("------")
 
         opts = self.bot_input.split("\n")
-        for opt in opts: 
+        for opt in opts:
             self.program.sendline(opt)
-
 
         try:
             marker_detected = b""
-            char = self.program.recv(1)
+            char = self.program.recv(3)
+            if char.decode("utf-8") == "REP":
+                dat = self.program.recvuntil("\n")
+                if "ELERP" in dat.decode("utf-8"):
+                    char = self.program.recv(1)
+                else:
+                    char = dat
+
             data = char
             yield char.decode("latin")
             while True:
                 char = self.program.recv(1)
+
                 data += char
 
                 if char == b"[" or marker_detected:
@@ -248,7 +256,7 @@ class Assistant:
         assistant = Assistant()
         assistant.prep_model()
         while True:
-            print(assistant.chat_history)
+            # print(assistant.chat_history)
             resp = assistant.ask_bot(input(">>> "))
 
             for char in resp:
