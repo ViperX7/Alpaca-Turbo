@@ -191,6 +191,59 @@ class Assistant:
         tend = time()
         eprint(f"Model Loaded in {(tend-tstart)} s")
 
+    def ask_bot_pack(self, question):
+        """
+        run
+        """
+        tend = 0
+        _ = self.prep_model() if not self.is_ready else None
+        tstart = time()
+
+        program = self.program
+        program.recvuntil(">")
+
+        self.chat_history.append((question, ""))
+
+        opts = self.bot_input.split("\n")
+        for opt in opts:
+            program.sendline(opt)
+
+        data=None
+        try:
+            marker_detected = b""
+            char = program.recv(1)
+            tfirstchar = time()
+            wcount = len(question.replace("\n", " ").split(" "))
+            eprint(f"Size of Input: {len(question)} chars || {wcount} words")
+            eprint(f"Time taken to analyze the user input {(tfirstchar-tstart)} s")
+            data = char
+            while True:
+                char = program.recv(1)
+
+                data += char
+
+                if char == b"[" or marker_detected:
+                    marker_detected += char
+                    if marker_detected in self.end_marker:
+                        continue
+                    marker_detected = b""
+
+                if self.end_marker in data:
+                    data = data.replace(b"[end of text]", b"")
+                    tend = time()
+                    wcount = len(data.replace(b"\n", b" ").split(b" "))
+                    eprint(f"Size of output: {len(data)} chars || {wcount} words")
+                    eprint(f"Time taken to for generation {(tend-tstart)} s")
+                    break
+
+        except (KeyboardInterrupt, EOFError):
+            print("Stooping")
+
+        self.chat_history[-1] = (question, data.decode("utf-8").strip("\n"))
+
+        self.is_ready = False
+        return data
+
     def ask_bot(self, question):
         """
         run
@@ -212,7 +265,7 @@ class Assistant:
             marker_detected = b""
             char = program.recv(1)
             tfirstchar = time()
-            wcount = len(question.replace('\n',' ').split(' '))
+            wcount = len(question.replace("\n", " ").split(" "))
             eprint(f"Size of Input: {len(question)} chars || {wcount} words")
             eprint(f"Time taken to analyze the user input {(tfirstchar-tstart)} s")
             data = char
@@ -231,7 +284,7 @@ class Assistant:
                 if self.end_marker in data:
                     data = data.replace(b"[end of text]", b"")
                     tend = time()
-                    wcount = len(data.replace(b'\n',b' ').split(b' '))
+                    wcount = len(data.replace(b"\n", b" ").split(b" "))
                     eprint(f"Size of output: {len(data)} chars || {wcount} words")
                     eprint(f"Time taken to for generation {(tend-tstart)} s")
                     break
