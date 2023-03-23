@@ -172,7 +172,7 @@ class Assistant:
                     pid = int(file.readline())
                     if psutil.pid_exists(pid):
                         os.kill(pid, signal.SIGTERM)
-                    os.remove("./pid")
+                    # os.remove("./pid")
             except (ProcessLookupError, FileNotFoundError):
                 pass
         tstart = time()
