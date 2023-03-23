@@ -1,10 +1,15 @@
 import json
+import os
 
 from rich import print as eprint
 
 
 class Personas:
     def __init__(self, filename):
+        if not os.path.exists(filename):
+            self.data = []
+            self.save()
+
         self.filename = filename
         self.load()
 
@@ -37,6 +42,7 @@ class Personas:
 
 class History:
     """History"""
+
     def clean(self):
         self.load()
         while [] in self.data:
@@ -45,6 +51,10 @@ class History:
         self.load()
 
     def __init__(self, filename):
+        if not os.path.exists(filename):
+            self.data = []
+            self.save()
+
         self.filename = filename
         self.data = []
 
