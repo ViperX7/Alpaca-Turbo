@@ -261,6 +261,8 @@ class Assistant:
         for opt in opts:
             program.sendline(opt)
 
+        data=None
+
         try:
             marker_detected = b""
             char = program.recv(1)
@@ -295,7 +297,7 @@ class Assistant:
 
         self.chat_history[-1] = (question, data.decode("utf-8").strip("\n"))
 
-        # self.is_ready = False
+        self.is_ready = False
         return data
 
     @staticmethod
