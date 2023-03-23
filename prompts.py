@@ -43,20 +43,20 @@ class Personas:
 class History:
     """History"""
 
+    def __init__(self, filename):
+        self.filename = filename
+        if not os.path.exists(filename):
+            self.data = []
+            self.save()
+
+        self.data = []
+
     def clean(self):
         self.load()
         while [] in self.data:
             self.data.remove([])
         self.save()
         self.load()
-
-    def __init__(self, filename):
-        self.filename = filename
-        if not os.path.exists(filename):
-            self.data = [["",""]]
-            self.save()
-
-        self.data = []
 
     def load(self):
         """load"""

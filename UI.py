@@ -23,6 +23,7 @@ class ChatBotUI:
         self._conv = History("./chat_hist.json")
         self._conv.clean()
         self._conv.append([])
+        print(self._conv)
         self.assistant: Assistant = assistant
         self.settings = {
             "bot_persona": self.assistant.persona,
@@ -75,8 +76,10 @@ class ChatBotUI:
     def load_history(self):
         """load"""
         entries = []
+        self._conv.load()
+        eprint(self._conv.data)
+        
         if self._conv.data:
-            self._conv.clean()
             for chats in self._conv[:-1]:
                 # print(chats)
                 first_interaction = chats[0]
@@ -88,8 +91,11 @@ class ChatBotUI:
         return entries
 
     def add_text(self, history, text):
-        self._conv[-1] = history + [(text, None)] if len(self._conv) > 0 else []
-        return self._conv[-1], ""
+        # add conversation to chat
+        curr_conversation = history + [(text, None)]
+        self._conv[-1] = curr_conversation
+        # if len(self._conv) > 0 else []
+        return self._conv[-1], ""  # return latest conversation
 
     def bot(
         self,
@@ -102,31 +108,55 @@ class ChatBotUI:
         """Run the bot with entire history"""
         # print(ASSISTANT.enable_history)
         # print(history)
-        self.assistant.chat_history = history[:-1] if len(history) >= 1 else []
-        user_input = history[-1][0]
-        response = ""
 
+        true_history, current_prompt = history[:-1], history[-1]
+
+        # set the history for the assistant
+        self.assistant.chat_history = true_history if len(true_history) > 0 else []
+        user_input = current_prompt[0]  # Get the user input
+
+        # Settings
         self.assistant.persona = persona
         self.assistant.prompt = prompt
         self.assistant.format = format
         self.assistant.enable_history = remember
 
+        # Querry the bot for response
         resp = self.assistant.ask_bot(user_input)
 
+        response = ""
         for out in resp:
             response += out
+
+            # Update the chatbox with live input
             history[-1] = (user_input, response)
             yield history
+
+        # update the conversation
         self._conv[-1] = history
 
     def on_select(self, evt: gr.SelectData):  # SelectData is a subclass of EventData
-        if self._conv.data:
-            self._conv.append(self._conv[evt.index[0]])
-        else:
-            self._conv[-1] = self._conv[evt.index[0]]
+        requested_chat = self._conv[evt.index[0]]
 
-        len_c = len(self._conv.data) -1
-        return self._conv[len_c - evt.index[0]], self.load_history()
+        # check if the chatbot window is occupied
+        if self._conv[-1] != []:  # If ocupied
+            self._conv.data.append([])
+            self._conv.save()
+
+        self._conv.load()
+
+        # cleanup
+        cleaned_list = []
+        for converse in self._conv.data:
+            if converse not in cleaned_list:
+                cleaned_list.append(converse)
+        self._conv.data = cleaned_list
+        self._conv.save()
+
+        self._conv[-1] = requested_chat
+        self._conv.save() # Saved the changes
+
+        return requested_chat, self.load_history()
 
     def link_units(self):
         self.chat_submition = self.input.submit(
