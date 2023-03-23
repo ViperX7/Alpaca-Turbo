@@ -248,7 +248,7 @@ class Assistant:
         # print("------")
 
         opts = self.bot_input.split("\n")
-        eprint(opts)
+        # eprint(opts)
         for opt in opts:
             self.program.sendline(opt)
 
