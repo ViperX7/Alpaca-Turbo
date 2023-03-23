@@ -9,9 +9,9 @@ import signal
 
 import psutil
 from interact import Process as process
+from rich import print as eprint
 from rich.logging import RichHandler
 from rich.progress import track
-from rich import print as eprint
 
 # from pwn import  process
 
@@ -23,80 +23,36 @@ from rich import print as eprint
 class AssistantSettings:
     """Settings handler for assistant"""
 
-    def __init__(self, assistant, auto_load=True):
+    def __init__(self, assistant) -> None:
         self.assistant = assistant
-        self.load_settings()
-        _ = self.assistant.prep_model() if auto_load else None
 
     def load_settings(self):
         if os.path.exists("settings.dat"):
-            with open("settings.dat", "r", encoding="utf-8") as file:
+            with open("settings.dat", "r") as file:
                 settings = json.load(file)
-            self.update(*settings)
-        else:
-            print("can't load the settings file continuing with defaults")
+                eprint(settings)
+                self.assistant.seed = settings["seed"]
+                self.assistant.top_k = settings["top_k"]
+                self.assistant.top_p = settings["top_p"]
+                self.assistant.temp = settings["temp"]
+                self.assistant.threads = settings["threads"]
+                self.assistant.repeat_penalty = settings["repeat_penalty"]
+                self.assistant.repeat_last_n = settings["repeat_last_n"]
+                self.assistant.model_path = settings["model_path"]
 
-    def reload(self):
-        self.assistant.is_ready = False
-        self.assistant.program.kill(signal.SIGTERM)
-        self.assistant.prep_model()
-
-    def update(self, *settings):
-        old_settings = self.get()
-        (
-            self.assistant.enable_history,
-            self.assistant.seed,
-            self.assistant.top_k,
-            self.assistant.top_p,
-            self.assistant.temp,
-            self.assistant.threads,
-            self.assistant.repeat_penalty,
-            self.assistant.repeat_last_n,
-            self.assistant.model_path,
-            self.assistant.persona,
-            self.assistant.prompt,
-            self.assistant.format,
-        ) = settings
-
-        self.assistant.enable_history = int(self.assistant.enable_history)
-        self.assistant.seed = int(self.assistant.seed)
-        self.assistant.top_k = int(self.assistant.top_k)
-        self.assistant.top_p = float(self.assistant.top_p)
-        self.assistant.temp = float(self.assistant.temp)
-        self.assistant.threads = int(self.assistant.threads)
-        self.assistant.repeat_penalty = float(self.assistant.repeat_penalty)
-        self.assistant.repeat_last_n = int(self.assistant.repeat_last_n)
-
-        new_settings = self.get()
-
-        if not os.path.exists(self.assistant.model_path):
-            print("Error Saving Settings")
-            print(f"Can't locate the model @ {self.assistant.model_path}")
-
+    def save_settings(self):
+        settings = {
+            "seed": self.assistant.seed,
+            "top_k": self.assistant.top_k,
+            "top_p": self.assistant.top_p,
+            "temp": self.assistant.temp,
+            "threads": self.assistant.threads,
+            "repeat_penalty": self.assistant.repeat_penalty,
+            "repeat_last_n": self.assistant.repeat_last_n,
+            "model_path": self.assistant.model_path,
+        }
         with open("settings.dat", "w") as file:
             json.dump(settings, file)
-
-        if old_settings[1:-3] != new_settings[1:-3] and self.assistant.is_ready:
-            self.reload()
-
-    def get(self, n=None):
-        order = [
-            self.assistant.enable_history,
-            self.assistant.seed,
-            self.assistant.top_k,
-            self.assistant.top_p,
-            self.assistant.temp,
-            self.assistant.threads,
-            self.assistant.repeat_penalty,
-            self.assistant.repeat_last_n,
-            self.assistant.model_path,
-            self.assistant.persona,
-            self.assistant.prompt,
-            self.assistant.format,
-        ]
-
-        result = order if n is None else order[n]
-        return result
 
 
 class Assistant:
@@ -126,18 +82,19 @@ class Assistant:
         self.enable_history = True
         self.is_ready = False
 
-        self.settings = AssistantSettings(self, auto_load)
+        self.settings = AssistantSettings(self)
 
         self.end_marker = b"[end of text]"
 
         self.chat_history = []
 
     def reload(self):
-        self.program.kill(signal.SIGTERM)
+        try:
+            self.program.kill(signal.SIGTERM)
+        except:
+            pass
         self.is_ready = False
         self.prep_model()
-
-
 
     @staticmethod
     def get_bin_path():
@@ -179,7 +136,7 @@ class Assistant:
             f"{self.model_path}",
             "--interactive-start",
         ]
-        # print(f"starting with {command}")
+        eprint(f"starting with {command}")
         return command
 
     @property

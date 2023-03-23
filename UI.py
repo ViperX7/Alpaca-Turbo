@@ -1,6 +1,10 @@
+import json
+import os
+
 import gradio as gr
 from alpaca_turbo import Assistant
 from prompts import History, Personas
+from rich import print as eprint
 
 
 def trunc(data):
@@ -163,13 +167,121 @@ class ChatBotUI:
             self.on_select, None, outputs=[self.chatbot_window, self.history_sidebar]
         )
 
-        self.bot_persona.change(self.settings_update)
-        self.bot_prompt.change(self.settings_update)
-        self.bot_format.change(self.settings_update)
+        self.bot_persona.change(
+            self.settings_update,
+            inputs=[self.bot_persona, self.bot_prompt, self.bot_format],
+        )
+        self.bot_prompt.change(
+            self.settings_update,
+            inputs=[self.bot_persona, self.bot_prompt, self.bot_format],
+        )
+        self.bot_format.change(
+            self.settings_update,
+            inputs=[self.bot_persona, self.bot_prompt, self.bot_format],
+        )
 
-    def settings_update(self):
+    def settings_update(self, *params):
         self.settings = {
             "bot_persona": self.bot_persona,
             "bot_prompt": self.bot_prompt,
             "bot_format": self.bot_format,
         }
+
+    def render(self):
+        with gr.Row():
+            with gr.Column():
+                self.remember_history.render()
+                self.persona.render()
+                self.history_sidebar.render()
+            with gr.Column(scale=4):
+                with gr.Column():
+                    self.chatbot_window.render()
+                    self.stop_generation.render()
+                    self.input.render()
+                    self.bot_format.render()
+                    self.bot_prompt.render()
+                    self.bot_persona.render()
+        self.link_units()
+
+
+class SettingsUI:
+    def __init__(self, asistant: Assistant):
+        self.assistant = asistant
+        self.assistant.settings.load_settings()
+
+        self.seed = gr.Textbox(
+            label="seed", interactive=True, value=lambda: self.assistant.seed
+        )
+        self.topk = gr.Textbox(
+            label="top_k", value=lambda: self.assistant.top_k, interactive=True
+        )
+        self.topp = gr.Textbox(
+            label="top_p", value=lambda: self.assistant.top_p, interactive=True
+        )
+        self.temperature = gr.Textbox(
+            label="temperature", value=lambda: self.assistant.temp, interactive=True
+        )
+        self.threads = gr.Textbox(
+            label="threads", value=lambda: self.assistant.threads, interactive=True
+        )
+        self.repeate_pen = gr.Textbox(
+            label="repeat_penalty",
+            value=lambda: self.assistant.repeat_penalty,
+            interactive=True,
+        )
+        self.repeate_lastn = gr.Textbox(
+            label="repeat_last_n",
+            value=lambda: self.assistant.repeat_last_n,
+            interactive=True,
+        )
+        self.model_path = gr.Textbox(
+            label="Path to model",
+            value=lambda: self.assistant.model_path,
+            interactive=True,
+        )
+
+        self.save_button = gr.Button("Apply")
+
+    def apply_settings(self, *params):
+        (
+            self.assistant.seed,
+            self.assistant.top_k,
+            self.assistant.top_p,
+            self.assistant.temp,
+            self.assistant.threads,
+            self.assistant.repeat_penalty,
+            self.assistant.repeat_last_n,
+            self.assistant.model_path,
+        ) = params
+        self.assistant.settings.save_settings()
+        self.assistant.reload()
+
+    def link_units(self):
+        self.save_button.click(
+            self.apply_settings,
+            [
+                self.seed,
+                self.topk,
+                self.topp,
+                self.temperature,
+                self.threads,
+                self.repeate_pen,
+                self.repeate_lastn,
+                self.model_path,
+            ],
+        )
+
+    def render(self):
+        with gr.Column():
+            self.seed.render()
+            self.topk.render()
+            self.topp.render()
+            self.temperature.render()
+            self.threads.render()
+            self.repeate_pen.render()
+            self.repeate_lastn.render()
+            self.model_path.render()
+            with gr.Row():
+                self.save_button.render()
+
+        self.link_units()
