@@ -2,8 +2,4 @@ flask
 gradio==3.22.1
 rich
 pexpect
-transformers
-torch
-sentencepiece
-sacremoses
 psutil
