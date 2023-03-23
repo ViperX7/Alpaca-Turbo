@@ -1,5 +1,7 @@
 import json
 
+from rich import print as eprint
+
 
 class Personas:
     def __init__(self, filename):
@@ -30,3 +32,55 @@ class Personas:
         if name in self.bots:
             return list(self.bots[name].values())
         return None
+
+
+class History:
+    """History"""
+    def clean(self):
+        self.load()
+        while [] in self.data:
+            self.data.remove([])
+        self.save()
+        self.load()
+
+    def __init__(self, filename):
+        self.filename = filename
+        self.data = []
+
+    def load(self):
+        """load"""
+        with open(self.filename, "r", encoding="utf-8") as file:
+            self.data = json.load(file)
+
+    def save(self):
+        """save"""
+        with open(self.filename, "w", encoding="utf-8") as file:
+            json.dump(self.data, file)
+
+    def __getitem__(self, index):
+        self.load()
+        return self.data[index]
+
+    def __setitem__(self, index, value):
+        self.load()
+        self.data[index] = value
+        self.save()
+
+    def __delitem__(self, index):
+        del self.data[index]
+
+    def __len__(self):
+        return len(self.data)
+
+    def __str__(self):
+        self.load()
+        return str(self.data)
+
+    def __repr__(self):
+        self.__str__()
+
+    def append(self, new_item):
+        """append"""
+        self.load()
+        self.data.append(new_item)
+        self.save()

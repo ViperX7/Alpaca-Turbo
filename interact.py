@@ -51,10 +51,12 @@ class Process(PopenSpawn):
         info = b""
         while data not in info:
             info += self.read(1)
+            # print(info)
         return info
 
     def recv(self, *cfg):
         data = self.read(*cfg)
+        # print(data)
         return data
 
     def interactive(self, *cfg):
