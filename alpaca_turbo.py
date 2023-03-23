@@ -188,7 +188,7 @@ class Assistant:
         self.program.recvuntil("\n")
         self.is_ready = True
         tend = time()
-        eprint(f"Model Loaded in {(tend-tstart)/1000} s")
+        eprint(f"Model Loaded in {(tend-tstart)} s")
 
     def ask_bot(self, question):
         """
@@ -213,7 +213,7 @@ class Assistant:
             tfirstchar = time()
             wcount = len(question.replace('\n',' ').split(' '))
             eprint(f"Size of Input: {len(question)} chars || {wcount} words")
-            eprint(f"Time taken to analyze the user input {(tfirstchar-tstart)/1000} s")
+            eprint(f"Time taken to analyze the user input {(tfirstchar-tstart)} s")
             data = char
             yield char.decode("latin")
             while True:
@@ -232,7 +232,7 @@ class Assistant:
                     tend = time()
                     wcount = len(data.replace(b'\n',b' ').split(b' '))
                     eprint(f"Size of output: {len(data)} chars || {wcount} words")
-                    eprint(f"Time taken to for generation {(tend-tstart)/1000} s")
+                    eprint(f"Time taken to for generation {(tend-tstart)} s")
                     break
 
                 yield char.decode("latin")
