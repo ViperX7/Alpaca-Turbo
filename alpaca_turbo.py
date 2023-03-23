@@ -104,6 +104,7 @@ class Assistant:
     model_path = "~/dalai/alpaca/models/7B/ggml-model-q4_0.bin"
 
     def __init__(self, auto_load=True) -> None:
+        self.prompt_hit = False
         self.seed = 888777
         self.threads = 4
         self.n_predict = 200
@@ -192,17 +193,23 @@ class Assistant:
     def prep_model(self):
         if self.is_ready:
             return None
-        _ = "" if os.path.exists(self.model_path) else print("Set the model path in settings")
+        _ = (
+            ""
+            if os.path.exists(self.model_path)
+            else print("Set the model path in settings")
+        )
         if not os.path.exists(self.model_path):
             return
-        _ = [health_checks(),exit()] if os.path.exists("./pid") else ""
-
-        
+        _ = [health_checks(), exit()] if os.path.exists("./pid") else ""
 
         self.program = process(self.command, timeout=600)
         self.program.readline()
-        for _ in track(range(36), "Loading Model"):
-            self.program.recvuntil(b".")
+        self.program.recvuntil(b".")
+        for _ in track(range(35), "Loading Model"):
+            data = self.program.recv(1).decode("utf-8")
+            if data == ">":
+                self.prompt_hit = True
+                break
         print("Model Loaded")
         self.is_ready = True
 
@@ -211,7 +218,8 @@ class Assistant:
         run
         """
         _ = self.prep_model() if not self.is_ready else None
-        self.program.recvuntil(">")
+        _ = self.program.recvuntil(">") if not self.prompt_hit else None
+
         # print("Model Ready to Respond")
 
         # self.program.recv(1)
@@ -232,6 +240,8 @@ class Assistant:
             while True:
                 char = self.program.recv(1)
 
+                # print(f"app{char}")
+
                 data += char
 
                 if char == b"[" or marker_detected:
@@ -243,6 +253,7 @@ class Assistant:
 
                 if self.end_marker in data:
                     data = data.replace(b"[end of text]", b"")
+                    self.prompt_hit=False
                     break
 
                 yield char.decode("latin")
@@ -250,6 +261,7 @@ class Assistant:
             print("Stooping")
 
         self.chat_history[-1] = (question, data.decode("utf-8").strip("\n"))
+        
         # self.is_ready = False
         return data
 
@@ -323,7 +335,6 @@ def health_checks():
     log.info(f"Free memory {memstat.free//(1024*1024)} MB")
     exit()
     log.level = 5
-
 
 
 # health_checks()
