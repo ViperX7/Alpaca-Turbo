@@ -51,11 +51,11 @@ class History:
         self.load()
 
     def __init__(self, filename):
+        self.filename = filename
         if not os.path.exists(filename):
             self.data = []
             self.save()
 
-        self.filename = filename
         self.data = []
 
     def load(self):
