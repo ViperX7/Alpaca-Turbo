@@ -76,7 +76,7 @@ class ChatBotUI:
         """load"""
         entries = []
         if self._conv.data:
-            self._conv.clean()
+            # self._conv.clean()
             for chats in self._conv[:-1]:
                 # print(chats)
                 first_interaction = chats[0]
@@ -84,6 +84,7 @@ class ChatBotUI:
                 if len(bots_resp.split(" ")) > 6:
                     bots_resp = " ".join(bots_resp.split(" ")[:6])
                 entries.append((bots_resp, None))
+        eprint(entries)
         return entries[::-1]
 
     def add_text(self, history, text):

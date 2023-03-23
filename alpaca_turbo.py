@@ -241,7 +241,6 @@ class Assistant:
 
         self.chat_history[-1] = (question, data.decode("utf-8").strip("\n"))
 
-        self.is_ready = False
         return data
 
     def ask_bot(self, question):
@@ -297,7 +296,6 @@ class Assistant:
 
         self.chat_history[-1] = (question, data.decode("utf-8").strip("\n"))
 
-        self.is_ready = False
         return data
 
     @staticmethod
