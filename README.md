@@ -11,12 +11,13 @@ We invite you to try Alpaca-Turbo today and experience the difference for yourse
 
 Screencast showing ability to remember previous part of conversation  
 
-
-https://user-images.githubusercontent.com/38191717/226516128-8feb7bdd-c7e0-46b3-b3e2-c14109045405.mp4
+https://user-images.githubusercontent.com/38191717/227249838-76ab17ce-2439-4b9d-aebb-db95d13fa457.mp4
 
 Web UI to run alpaca model locally
-![image](https://user-images.githubusercontent.com/38191717/226486832-9c774493-948a-4f90-96c9-695cee44b4c3.png)
-![image](https://user-images.githubusercontent.com/38191717/226486862-2d59c18f-7b7a-4a9a-a54e-a3b3a0fd29ba.png)
+
+![image](https://user-images.githubusercontent.com/38191717/227250115-165240e7-1e71-4f7b-afe4-ec0691a68466.png)
+![image](https://user-images.githubusercontent.com/38191717/227250289-6f4c0697-4367-4bce-a9a1-94e47433717a.png)
+
 
 
 ## Try It Out!
@@ -29,10 +30,20 @@ cd Alpaca-Turbo
 pip install -r requirements.txt
 python webui.py
 ```
+## Troubleshooting 
+- OS error
+  you need to compile https://github.com/viperx7/alpaca.cpp
+  manually and place alpaca.cpp/main => Alpaca-Turbo/bin/main
+
+
 
 ## Features
 
 - **Easy Configuration:** Our UI provides a simple way to configure the bot persona and prompt style, allowing you to personalize your chatbot to your liking.
+
+
+
+
 - **Lightning Fast Generation:** Alpaca-Turbo keeps the model in memory, which makes subsequent generations lightning fast, without the need to reload the model for every generation.
 - **Persistent Configuration:** We understand the importance of saving your preferences, which is why our UI remembers changes between restarts, ensuring you don't have to go through the setup process every time you want to use it.
 - **Seamless Chat Experience:** Our web UI ensures that the chat continues even if you restart the script that is running in the background, providing you with a seamless chat experience.
