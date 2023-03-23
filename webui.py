@@ -152,12 +152,6 @@ with gr.Blocks(analytics_enabled=False) as demo:
                     clear_history = gr.Button(value="Clear history")
                     edit_last = gr.Button(value="Edit last request")
 
-            persona.change(
-                PERSONAS.get,
-                [persona],
-                [bot_persona, bot_prompt, bot_format],
-            )
-
             with gr.Column(scale=4):
                 chatbot = gr.Chatbot([], elem_id="chatbot").style(height=690)
 
@@ -209,7 +203,6 @@ with gr.Blocks(analytics_enabled=False) as demo:
             with gr.Row():
                 save_button = gr.Button("Apply")
 
-    state = gr.State([])
     history_sidebar.select(on_select, None, outputs=[chatbot_chat])
 
     save_button.click(settings.update, get_state())
@@ -220,6 +213,11 @@ with gr.Blocks(analytics_enabled=False) as demo:
 
     clear_history.click(lambda: (["hi"]), outputs=[chatbot])
     remember_history.change(settings.update, get_state())
+    remember_history_chat.change(
+        lambda x: x,
+        remember_history_chat,
+        remember_history,
+    )
     bot_persona.change(settings.update, get_state())
     bot_prompt.change(settings.update, get_state())
     bot_format.change(settings.update, get_state())
@@ -228,16 +226,22 @@ with gr.Blocks(analytics_enabled=False) as demo:
         lambda x: (x[:-1], x[-1][0]), inputs=[chatbot], outputs=[chatbot, txt]
     )
 
+    persona.change(
+        lambda x: PERSONAS.get(x) + [x],
+        [persona],
+        [bot_persona, bot_prompt, bot_format, persona_chat],
+    )
+
     ############ CHAT ############
     gen_chat = txt_chat.submit(
         add_text, [chatbot_chat, txt_chat], [chatbot_chat, txt_chat]
-    ).then(bot, chatbot_chat, [chatbot_chat, history_sidebar])
-    stop_generation_chat.click(settings.reload, cancels=gen_chat)
-    remember_history_chat.change(settings.update, get_state())
+    )
+    res = gen_chat.then(bot, chatbot_chat, [chatbot_chat, history_sidebar])
+    stop_generation_chat.click(settings.reload, cancels=[gen_chat, res])
     persona_chat.change(
-        PERSONAS.get,
-        [persona],
-        [bot_persona, bot_prompt, bot_format],
+        lambda x: PERSONAS.get(x) + [x],
+        [persona_chat],
+        [bot_persona, bot_prompt, bot_format, persona],
     )
 
 #############################################5
