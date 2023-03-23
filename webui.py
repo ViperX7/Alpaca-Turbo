@@ -65,13 +65,21 @@ def bot(history):
         print("====")
         print(conv_history)
         print("====")
-        yield history, [(hist[0][1], None) for hist in conv_history if hist]
+        yield history, [(trunc(hist[0][1]), None) for hist in conv_history if hist]
     conv_history[-1] = history
     # settings.reload()
 
 
 def on_select(evt: gr.SelectData):  # SelectData is a subclass of EventData
     return conv_history[evt.index[0]]
+
+
+def trunc(data):
+    return data[: min(10, len(data))]
+
+
+def get_history():
+    return [(trunc(hist[0][1]), None) for hist in conv_history]
 
 
 with gr.Blocks(analytics_enabled=False) as demo:
@@ -89,9 +97,7 @@ with gr.Blocks(analytics_enabled=False) as demo:
                     value=lambda: PERSONAS.get_all()[0],
                     interactive=True,
                 )
-                history_sidebar = gr.Chatbot(
-                    [(hist[0][1], None) for hist in conv_history], label="History"
-                )
+                history_sidebar = gr.Chatbot(get_history(), label="History")
 
             with gr.Column(scale=4):
                 chatbot_chat = gr.Chatbot([], elem_id="chatbot").style(height=690)
@@ -103,7 +109,6 @@ with gr.Blocks(analytics_enabled=False) as demo:
                         show_label=False,
                         placeholder="Enter text and press enter shift+enter for new line",
                     ).style(container=False)
-
 
     with gr.Tab("Tinker Prompt"):
         with gr.Row():
@@ -205,7 +210,7 @@ with gr.Blocks(analytics_enabled=False) as demo:
                 save_button = gr.Button("Apply")
 
     state = gr.State([])
-    history_sidebar.select(on_select, None, outputs=[chatbot])
+    history_sidebar.select(on_select, None, outputs=[chatbot_chat])
 
     save_button.click(settings.update, get_state())
     gen = txt.submit(add_text, [chatbot, txt], [chatbot, txt]).then(
@@ -223,7 +228,7 @@ with gr.Blocks(analytics_enabled=False) as demo:
         lambda x: (x[:-1], x[-1][0]), inputs=[chatbot], outputs=[chatbot, txt]
     )
 
-############ CHAT ############
+    ############ CHAT ############
     gen_chat = txt_chat.submit(
         add_text, [chatbot_chat, txt_chat], [chatbot_chat, txt_chat]
     ).then(bot, chatbot_chat, [chatbot_chat, history_sidebar])
