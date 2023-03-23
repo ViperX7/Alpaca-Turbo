@@ -1,1 +1,8 @@
 ./settings.dat
+chat_hist.json
+
+venv
+
+.vscode
+.idea
+.fleet
