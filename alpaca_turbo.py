@@ -11,6 +11,7 @@ import psutil
 from interact import Process as process
 from rich.logging import RichHandler
 from rich.progress import track
+from rich import print as eprint
 
 # from pwn import  process
 
@@ -36,8 +37,8 @@ class AssistantSettings:
             print("can't load the settings file continuing with defaults")
 
     def reload(self):
-        self.assistant.program.kill(signal.SIGTERM)
         self.assistant.is_ready = False
+        self.assistant.program.kill(signal.SIGTERM)
         self.assistant.prep_model()
 
     def update(self, *settings):
@@ -131,6 +132,13 @@ class Assistant:
 
         self.chat_history = []
 
+    def reload(self):
+        self.program.kill(signal.SIGTERM)
+        self.is_ready = False
+        self.prep_model()
+
+
+
     @staticmethod
     def get_bin_path():
         if os.path.exists("bin/local"):
@@ -171,7 +179,7 @@ class Assistant:
             f"{self.model_path}",
             "--interactive-start",
         ]
-        print(f"starting with {command}")
+        # print(f"starting with {command}")
         return command
 
     @property
@@ -200,17 +208,27 @@ class Assistant:
         )
         if not os.path.exists(self.model_path):
             return
-        _ = [health_checks(), exit()] if os.path.exists("./pid") else ""
+
+        if os.path.exists("./pid"):
+            try:
+                with open("./pid") as file:
+                    pid = int(file.readline())
+                    os.kill(pid, signal.SIGTERM)
+                    os.remove("./pid")
+            except (ProcessLookupError, FileNotFoundError):
+                pass
 
         self.program = process(self.command, timeout=600)
         self.program.readline()
         self.program.recvuntil(b".")
-        for _ in track(range(35), "Loading Model"):
-            data = self.program.recv(1).decode("utf-8")
-            if data == ">":
-                self.prompt_hit = True
-                break
-        print("Model Loaded")
+
+        model_done = False
+        for _ in track(range(40), "Loading Model"):
+            data = self.program.recv(1).decode("utf-8") if not model_done else None
+            model_done = True if data == "d" else model_done
+            if model_done:
+                continue
+        self.program.recvuntil("\n")
         self.is_ready = True
 
     def ask_bot(self, question):
@@ -218,7 +236,8 @@ class Assistant:
         run
         """
         _ = self.prep_model() if not self.is_ready else None
-        _ = self.program.recvuntil(">") if not self.prompt_hit else None
+
+        self.program.recvuntil(">")
 
         # print("Model Ready to Respond")
 
@@ -229,6 +248,7 @@ class Assistant:
         # print("------")
 
         opts = self.bot_input.split("\n")
+        eprint(opts)
         for opt in opts:
             self.program.sendline(opt)
 
@@ -253,7 +273,7 @@ class Assistant:
 
                 if self.end_marker in data:
                     data = data.replace(b"[end of text]", b"")
-                    self.prompt_hit=False
+                    self.prompt_hit = False
                     break
 
                 yield char.decode("latin")
@@ -261,7 +281,7 @@ class Assistant:
             print("Stooping")
 
         self.chat_history[-1] = (question, data.decode("utf-8").strip("\n"))
-        
+
         # self.is_ready = False
         return data
 
@@ -318,8 +338,8 @@ def health_checks():
             "model not found you need to download the models and set the model path in settings"
         )
 
-    log.info("Other checks")
     if os.path.exists("./pid"):
+        log.info("Other checks")
         log.fatal("Already running another instance or dirty exit last time")
         with open("./pid") as file:
             pid = int(file.readline())
@@ -327,6 +347,7 @@ def health_checks():
         os.kill(pid, signal.SIGTERM)
         os.remove("./pid")
         log.info("Fixed the Issue Now Retry running")
+        exit()
 
     memstat = psutil.virtual_memory()
     log.info("checking memory")
