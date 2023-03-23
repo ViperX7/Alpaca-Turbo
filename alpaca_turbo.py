@@ -6,9 +6,11 @@ import logging
 import os
 import platform
 import signal
+from time import time
 
 import psutil
 from interact import Process as process
+from rich import print as eprint
 from rich.logging import RichHandler
 from rich.progress import track
 
@@ -22,80 +24,36 @@ from rich.progress import track
 class AssistantSettings:
     """Settings handler for assistant"""
 
-    def __init__(self, assistant, auto_load=True):
+    def __init__(self, assistant) -> None:
         self.assistant = assistant
-        self.load_settings()
-        _ = self.assistant.prep_model() if auto_load else None
 
     def load_settings(self):
         if os.path.exists("settings.dat"):
-            with open("settings.dat", "r", encoding="utf-8") as file:
+            with open("settings.dat", "r") as file:
                 settings = json.load(file)
-            self.update(*settings)
-        else:
-            print("can't load the settings file continuing with defaults")
+                eprint(settings)
+                self.assistant.seed = settings["seed"]
+                self.assistant.top_k = settings["top_k"]
+                self.assistant.top_p = settings["top_p"]
+                self.assistant.temp = settings["temp"]
+                self.assistant.threads = settings["threads"]
+                self.assistant.repeat_penalty = settings["repeat_penalty"]
+                self.assistant.repeat_last_n = settings["repeat_last_n"]
+                self.assistant.model_path = settings["model_path"]
 
-    def reload(self):
-        self.assistant.program.kill(signal.SIGTERM)
-        self.assistant.is_ready = False
-        self.assistant.prep_model()
-
-    def update(self, *settings):
-        old_settings = self.get()
-        (
-            self.assistant.enable_history,
-            self.assistant.seed,
-            self.assistant.top_k,
-            self.assistant.top_p,
-            self.assistant.temp,
-            self.assistant.threads,
-            self.assistant.repeat_penalty,
-            self.assistant.repeat_last_n,
-            self.assistant.model_path,
-            self.assistant.persona,
-            self.assistant.prompt,
-            self.assistant.format,
-        ) = settings
-
-        self.assistant.enable_history = int(self.assistant.enable_history)
-        self.assistant.seed = int(self.assistant.seed)
-        self.assistant.top_k = int(self.assistant.top_k)
-        self.assistant.top_p = float(self.assistant.top_p)
-        self.assistant.temp = float(self.assistant.temp)
-        self.assistant.threads = int(self.assistant.threads)
-        self.assistant.repeat_penalty = float(self.assistant.repeat_penalty)
-        self.assistant.repeat_last_n = int(self.assistant.repeat_last_n)
-
-        new_settings = self.get()
-
-        if not os.path.exists(self.assistant.model_path):
-            print("Error Saving Settings")
-            print(f"Can't locate the model @ {self.assistant.model_path}")
-
+    def save_settings(self):
+        settings = {
+            "seed": self.assistant.seed,
+            "top_k": self.assistant.top_k,
+            "top_p": self.assistant.top_p,
+            "temp": self.assistant.temp,
+            "threads": self.assistant.threads,
+            "repeat_penalty": self.assistant.repeat_penalty,
+            "repeat_last_n": self.assistant.repeat_last_n,
+            "model_path": self.assistant.model_path,
+        }
         with open("settings.dat", "w") as file:
             json.dump(settings, file)
-
-        if old_settings[1:-3] != new_settings[1:-3] and self.assistant.is_ready:
-            self.reload()
-
-    def get(self, n=None):
-        order = [
-            self.assistant.enable_history,
-            self.assistant.seed,
-            self.assistant.top_k,
-            self.assistant.top_p,
-            self.assistant.temp,
-            self.assistant.threads,
-            self.assistant.repeat_penalty,
-            self.assistant.repeat_last_n,
-            self.assistant.model_path,
-            self.assistant.persona,
-            self.assistant.prompt,
-            self.assistant.format,
-        ]
-
-        result = order if n is None else order[n]
-        return result
 
 
 class Assistant:
@@ -104,7 +62,6 @@ class Assistant:
     model_path = "~/dalai/alpaca/models/7B/ggml-model-q4_0.bin"
 
     def __init__(self, auto_load=True) -> None:
-        self.prompt_hit = False
         self.seed = 888777
         self.threads = 4
         self.n_predict = 200
@@ -125,11 +82,19 @@ class Assistant:
         self.enable_history = True
         self.is_ready = False
 
-        self.settings = AssistantSettings(self, auto_load)
+        self.settings = AssistantSettings(self)
 
         self.end_marker = b"[end of text]"
 
         self.chat_history = []
+
+    def reload(self):
+        try:
+            self.program.kill(signal.SIGTERM)
+        except:
+            pass
+        self.is_ready = False
+        self.prep_model()
 
     @staticmethod
     def get_bin_path():
@@ -171,7 +136,7 @@ class Assistant:
             f"{self.model_path}",
             "--interactive-start",
         ]
-        print(f"starting with {command}")
+        eprint(f"starting with {command}")
         return command
 
     @property
@@ -200,47 +165,59 @@ class Assistant:
         )
         if not os.path.exists(self.model_path):
             return
-        _ = [health_checks(), exit()] if os.path.exists("./pid") else ""
 
+        if os.path.exists("./pid"):
+            try:
+                with open("./pid") as file:
+                    pid = int(file.readline())
+                    os.kill(pid, signal.SIGTERM)
+                    os.remove("./pid")
+            except (ProcessLookupError, FileNotFoundError):
+                pass
+        tstart = time()
         self.program = process(self.command, timeout=600)
         self.program.readline()
         self.program.recvuntil(b".")
-        for _ in track(range(35), "Loading Model"):
-            data = self.program.recv(1).decode("utf-8")
-            if data == ">":
-                self.prompt_hit = True
-                break
-        print("Model Loaded")
+
+        model_done = False
+        for _ in track(range(40), "Loading Model"):
+            data = self.program.recv(1).decode("utf-8") if not model_done else None
+            model_done = True if data == "d" else model_done
+            if model_done:
+                continue
+        self.program.recvuntil("\n")
         self.is_ready = True
+        tend = time()
+        eprint(f"Model Loaded in {(tend-tstart)/1000} s")
 
     def ask_bot(self, question):
         """
         run
         """
+        tend = 0
         _ = self.prep_model() if not self.is_ready else None
-        _ = self.program.recvuntil(">") if not self.prompt_hit else None
+        tstart = time()
 
-        # print("Model Ready to Respond")
+        program = self.program
+        program.recvuntil(">")
 
-        # self.program.recv(1)
         self.chat_history.append((question, ""))
-        # print("------")
-        # print(self.bot_input)
-        # print("------")
 
         opts = self.bot_input.split("\n")
         for opt in opts:
-            self.program.sendline(opt)
+            program.sendline(opt)
 
         try:
             marker_detected = b""
-            char = self.program.recv(1)
+            char = program.recv(1)
+            tfirstchar = time()
+            wcount = len(question.replace('\n',' ').split(' '))
+            eprint(f"Size of Input: {len(question)} chars || {wcount} words")
+            eprint(f"Time taken to analyze the user input {(tfirstchar-tstart)/1000} s")
             data = char
             yield char.decode("latin")
             while True:
-                char = self.program.recv(1)
-
-                # print(f"app{char}")
+                char = program.recv(1)
 
                 data += char
 
@@ -248,12 +225,14 @@ class Assistant:
                     marker_detected += char
                     if marker_detected in self.end_marker:
                         continue
-                    else:
-                        marker_detected = b""
+                    marker_detected = b""
 
                 if self.end_marker in data:
                     data = data.replace(b"[end of text]", b"")
-                    self.prompt_hit=False
+                    tend = time()
+                    wcount = len(data.replace(b'\n',b' ').split(b' '))
+                    eprint(f"Size of output: {len(data)} chars || {wcount} words")
+                    eprint(f"Time taken to for generation {(tend-tstart)/1000} s")
                     break
 
                 yield char.decode("latin")
@@ -261,7 +240,7 @@ class Assistant:
             print("Stooping")
 
         self.chat_history[-1] = (question, data.decode("utf-8").strip("\n"))
-        
+
         # self.is_ready = False
         return data
 
@@ -318,8 +297,8 @@ def health_checks():
             "model not found you need to download the models and set the model path in settings"
         )
 
-    log.info("Other checks")
     if os.path.exists("./pid"):
+        log.info("Other checks")
         log.fatal("Already running another instance or dirty exit last time")
         with open("./pid") as file:
             pid = int(file.readline())
@@ -327,6 +306,7 @@ def health_checks():
         os.kill(pid, signal.SIGTERM)
         os.remove("./pid")
         log.info("Fixed the Issue Now Retry running")
+        exit()
 
     memstat = psutil.virtual_memory()
     log.info("checking memory")

@@ -1,10 +1,15 @@
 import json
+import os
 
 from rich import print as eprint
 
 
 class Personas:
     def __init__(self, filename):
+        if not os.path.exists(filename):
+            self.data = []
+            self.save()
+
         self.filename = filename
         self.load()
 
@@ -30,12 +35,14 @@ class Personas:
 
     def get(self, name):
         if name in self.bots:
+            # eprint(self.bots[name])
             return list(self.bots[name].values())
         return None
 
 
 class History:
     """History"""
+
     def clean(self):
         self.load()
         while [] in self.data:
@@ -45,6 +52,10 @@ class History:
 
     def __init__(self, filename):
         self.filename = filename
+        if not os.path.exists(filename):
+            self.data = []
+            self.save()
+
         self.data = []
 
     def load(self):
@@ -82,5 +93,6 @@ class History:
     def append(self, new_item):
         """append"""
         self.load()
-        self.data.append(new_item)
+        if new_item not in self.data:
+            self.data.append(new_item)
         self.save()
