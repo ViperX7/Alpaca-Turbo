@@ -53,7 +53,7 @@ class History:
     def __init__(self, filename):
         self.filename = filename
         if not os.path.exists(filename):
-            self.data = []
+            self.data = [["",""]]
             self.save()
 
         self.data = []
@@ -74,7 +74,10 @@ class History:
 
     def __setitem__(self, index, value):
         self.load()
-        self.data[index] = value
+        if self.data:
+            self.data[index] = value
+        else:
+            self.data.append(value)
         self.save()
 
     def __delitem__(self, index):
