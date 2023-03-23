@@ -76,7 +76,7 @@ class ChatBotUI:
         """load"""
         entries = []
         if self._conv.data:
-            # self._conv.clean()
+            self._conv.clean()
             for chats in self._conv[:-1]:
                 # print(chats)
                 first_interaction = chats[0]
@@ -84,8 +84,8 @@ class ChatBotUI:
                 if len(bots_resp.split(" ")) > 6:
                     bots_resp = " ".join(bots_resp.split(" ")[:6])
                 entries.append((bots_resp, None))
-        eprint(entries)
-        return entries[::-1]
+        # eprint(entries)
+        return entries
 
     def add_text(self, history, text):
         self._conv[-1] = history + [(text, None)] if len(self._conv) > 0 else []
@@ -120,12 +120,13 @@ class ChatBotUI:
         self._conv[-1] = history
 
     def on_select(self, evt: gr.SelectData):  # SelectData is a subclass of EventData
-        if self._conv:
+        if self._conv.data:
             self._conv.append(self._conv[evt.index[0]])
         else:
             self._conv[-1] = self._conv[evt.index[0]]
 
-        return self._conv[evt.index[0]], self.load_history()
+        len_c = len(self._conv.data) -1
+        return self._conv[len_c - evt.index[0]], self.load_history()
 
     def link_units(self):
         self.chat_submition = self.input.submit(
