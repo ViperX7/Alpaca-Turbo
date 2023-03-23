@@ -23,7 +23,7 @@ with gr.Blocks(analytics_enabled=False) as demo:
 
 try:
     demo.queue(concurrency_count=2, max_size=20)
-    demo.launch()
+    demo.launch(server_port=3000)
     ASSISTANT.program.killx()
 except Exception as error:
     ASSISTANT.program.killx()
