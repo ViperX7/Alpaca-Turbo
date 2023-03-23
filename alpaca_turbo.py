@@ -170,7 +170,8 @@ class Assistant:
             try:
                 with open("./pid") as file:
                     pid = int(file.readline())
-                    os.kill(pid, signal.SIGTERM)
+                    if psutil.pid_exists(pid):
+                        os.kill(pid, signal.SIGTERM)
                     os.remove("./pid")
             except (ProcessLookupError, FileNotFoundError):
                 pass
