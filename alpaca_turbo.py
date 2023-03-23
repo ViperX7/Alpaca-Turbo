@@ -208,7 +208,7 @@ class Assistant:
         for opt in opts:
             program.sendline(opt)
 
-        data=None
+        data = None
         try:
             marker_detected = b""
             char = program.recv(1)
@@ -243,7 +243,7 @@ class Assistant:
 
         return data
 
-    def ask_bot(self, question):
+    def ask_bot(self, question, answer=""):
         """
         run
         """
@@ -254,13 +254,13 @@ class Assistant:
         program = self.program
         program.recvuntil(">")
 
-        self.chat_history.append((question, ""))
+        self.chat_history.append((question, answer))
 
         opts = self.bot_input.split("\n")
         for opt in opts:
             program.sendline(opt)
 
-        data=None
+        data = None
 
         try:
             marker_detected = b""

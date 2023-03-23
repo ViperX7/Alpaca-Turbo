@@ -1,6 +1,8 @@
-import json
-import os
+"""
 
+Simple UI abstraction
+
+"""
 import gradio as gr
 from alpaca_turbo import Assistant
 from prompts import History, Personas
@@ -23,7 +25,7 @@ class ChatBotUI:
         self._conv = History("./chat_hist.json")
         self._conv.clean()
         self._conv.append([])
-        print(self._conv)
+        # print(self._conv)
         self.assistant: Assistant = assistant
         self.settings = {
             "bot_persona": self.assistant.persona,
@@ -37,15 +39,30 @@ class ChatBotUI:
             value=True,
             interactive=True,
         ).style(container=False)
+
+        self.llml_path = gr.Dropdown(
+            self._personas.get_all(),
+            label="Personalities",
+            value=self._personas.get_all()[0],
+            interactive=True,
+        )
         self.persona = gr.Dropdown(
             self._personas.get_all(),
             label="Personalities",
             value=self._personas.get_all()[0],
             interactive=True,
         )
-        self.history_sidebar = gr.Chatbot(self.load_history(), label="History")
+        self.history_sidebar = gr.Chatbot(self.load_history(), label="History").style(
+            height=660
+        )
         self.chatbot_window = gr.Chatbot([], elem_id="chatbot").style(height=690)
+
+        ## BUTTONS
         self.stop_generation = gr.Button("Stop Generating")
+        self.edit_last = gr.Button("Edit last")
+        self.new_chat = gr.Button("New chat")
+        self.cont_chat = gr.Button("Continue")
+
         self.input = gr.Textbox(
             show_label=False,
             placeholder="Enter text and press enter shift+enter for new line",
@@ -77,8 +94,8 @@ class ChatBotUI:
         """load"""
         entries = []
         self._conv.load()
-        eprint(self._conv.data)
-        
+        # eprint(self._conv.data)
+
         if self._conv.data:
             for chats in self._conv[:-1]:
                 # print(chats)
@@ -114,6 +131,9 @@ class ChatBotUI:
         # set the history for the assistant
         self.assistant.chat_history = true_history if len(true_history) > 0 else []
         user_input = current_prompt[0]  # Get the user input
+        bot_resp = current_prompt[1] if current_prompt[1] else ""# Get the user input
+
+        user_input += f"\n{bot_resp}"
 
         # Settings
         self.assistant.persona = persona
@@ -121,7 +141,7 @@ class ChatBotUI:
         self.assistant.format = format
         self.assistant.enable_history = remember
 
-        # Querry the bot for response
+        # Query the bot for response
         resp = self.assistant.ask_bot(user_input)
 
         response = ""
@@ -135,11 +155,13 @@ class ChatBotUI:
         # update the conversation
         self._conv[-1] = history
 
-    def on_select(self, evt: gr.SelectData):  # SelectData is a subclass of EventData
+    def opast_chat_select(
+        self, evt: gr.SelectData
+    ):  # SelectData is a subclass of EventData
         requested_chat = self._conv[evt.index[0]]
 
         # check if the chatbot window is occupied
-        if self._conv[-1] != []:  # If ocupied
+        if self._conv[-1] != []:  # If occupied
             self._conv.data.append([])
             self._conv.save()
 
@@ -154,9 +176,24 @@ class ChatBotUI:
         self._conv.save()
 
         self._conv[-1] = requested_chat
-        self._conv.save() # Saved the changes
+        self._conv.save()  # Saved the changes
 
         return requested_chat, self.load_history()
+
+    def get_new_chat(self):
+        self._conv.data.append([])
+        self._conv.save()
+        return self._conv[-1]
+
+    def modify_last(self):
+        conv = self._conv[-1]
+        history = []
+        last_conv = []
+        if len(conv) > 0:  # check if there are any chats in last conv
+            history, last_conv = conv[:-1], conv[-1]
+
+        human_input = last_conv[0] if last_conv else ""
+        return history, human_input
 
     def link_units(self):
         self.chat_submition = self.input.submit(
@@ -176,6 +213,23 @@ class ChatBotUI:
         )
         self.stop_generation.click(self.assistant.reload, cancels=self.chat_submition)
 
+        self.edit_last.click(
+            self.modify_last, outputs=[self.chatbot_window, self.input]
+        )
+        self.new_chat.click(self.get_new_chat, outputs=[self.chatbot_window])
+
+        self.cont_chat.click(
+            self.bot,
+            [
+                self.chatbot_window,
+                self.remember_history,
+                self.bot_persona,
+                self.bot_prompt,
+                self.bot_format,
+            ],
+            self.chatbot_window,
+        )
+
         self.persona.change(
             lambda x: self._personas.get(x),
             [self.persona],
@@ -183,7 +237,9 @@ class ChatBotUI:
         )
 
         self.history_sidebar.select(
-            self.on_select, None, outputs=[self.chatbot_window, self.history_sidebar]
+            self.opast_chat_select,
+            None,
+            outputs=[self.chatbot_window, self.history_sidebar],
         )
 
         self.bot_persona.change(
@@ -219,7 +275,11 @@ class ChatBotUI:
             with gr.Column(scale=4):
                 with gr.Column():
                     self.chatbot_window.render()
-                    self.stop_generation.render()
+                    with gr.Row():
+                        self.stop_generation.render()
+                        self.new_chat.render()
+                        self.edit_last.render()
+                        self.cont_chat.render()
                     self.input.render()
         self.link_units()
 
