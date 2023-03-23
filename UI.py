@@ -115,15 +115,8 @@ class ChatBotUI:
         for out in resp:
             response += out
             history[-1] = (user_input, response)
-            # print("====")
-            # print(history)
-            # print("====")
-            # print(conv_history)
-            # print("====")
-            # hist = self.load_history()
             yield history
         self._conv[-1] = history
-        # settings.reload()
 
     def on_select(self, evt: gr.SelectData):  # SelectData is a subclass of EventData
         if self._conv:
@@ -157,12 +150,6 @@ class ChatBotUI:
             [self.bot_persona, self.bot_prompt, self.bot_format],
         )
 
-        # persona.change(
-        #     lambda x: PERSONAS.get(x) + [x],
-        #     [persona],
-        #     [bot_persona, bot_prompt, bot_format, persona_chat],
-        # )
-
         self.history_sidebar.select(
             self.on_select, None, outputs=[self.chatbot_window, self.history_sidebar]
         )
@@ -193,15 +180,43 @@ class ChatBotUI:
                 self.remember_history.render()
                 self.persona.render()
                 self.history_sidebar.render()
+                self.bot_persona.render()
+                self.bot_prompt.render()
+                self.bot_format.render()
+
             with gr.Column(scale=4):
                 with gr.Column():
                     self.chatbot_window.render()
                     self.stop_generation.render()
                     self.input.render()
-                    self.bot_format.render()
-                    self.bot_prompt.render()
-                    self.bot_persona.render()
         self.link_units()
+
+
+class PromptPlayUI(ChatBotUI):
+    def __init__(self, assistant) -> None:
+        super().__init__(assistant)
+
+        self.bot_persona = gr.Textbox(
+            label="Persona",
+            value=lambda: self.settings["bot_persona"],
+            interactive=True,
+            lines=4,
+        )
+        self.bot_prompt = gr.Textbox(
+            label="Init Prompt",
+            value=lambda: self.settings["bot_prompt"],
+            interactive=True,
+            lines=4,
+        )
+        self.bot_format = gr.TextArea(
+            label="Format",
+            value=lambda: self.settings["bot_format"],
+            interactive=True,
+        )
+
+        self.history_sidebar = gr.Chatbot(
+            self.load_history(), label="History", visible=False
+        )
 
 
 class SettingsUI:

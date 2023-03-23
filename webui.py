@@ -3,7 +3,7 @@ import os
 
 import gradio as gr
 from alpaca_turbo import Assistant
-from UI import ChatBotUI
+from UI import ChatBotUI, PromptPlayUI, SettingsUI
 
 ASSISTANT = Assistant(auto_load=False)
 settings = ASSISTANT.settings
@@ -30,23 +30,6 @@ def add_text(history, text):
 
 def yeet_text(history):
     return []
-
-
-def get_state():
-    return [
-        remember_history,
-        seed,
-        topk,
-        topp,
-        temperature,
-        threads,
-        repeate_pen,
-        repeate_lastn,
-        model_path,
-        bot_persona,
-        bot_prompt,
-        bot_format,
-    ]
 
 
 def bot(history):
@@ -83,26 +66,17 @@ def get_history():
     return [(trunc(hist[0][1]), None) for hist in conv_history]
 
 
-
-
 gptui = ChatBotUI(ASSISTANT)
+settingsui = SettingsUI(ASSISTANT)
+promptui = PromptPlayUI(ASSISTANT)
 
 with gr.Blocks(analytics_enabled=False) as demo:
     with gr.Tab("Chat"):
-        with gr.Row():
-            with gr.Column():
-                gptui.remember_history.render()
-                gptui.persona.render()
-                gptui.history_sidebar.render()
-            with gr.Column(scale=4):
-                with gr.Column():
-                    gptui.chatbot_window.render()
-                    gptui.stop_generation.render()
-                    gptui.input.render()
-                    gptui.bot_format.render()
-                    gptui.bot_prompt.render()
-                    gptui.bot_persona.render()
-    gptui.link_units()
+        gptui.render()
+    with gr.Tab("Prompt Play ground"):
+        promptui.render()
+    with gr.Tab("Settings"):
+        settingsui.render()
 
 #     with gr.Tab("Tinker Prompt"):
 #         with gr.Row():

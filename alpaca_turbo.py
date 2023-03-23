@@ -6,6 +6,7 @@ import logging
 import os
 import platform
 import signal
+from time import time
 
 import psutil
 from interact import Process as process
@@ -61,7 +62,6 @@ class Assistant:
     model_path = "~/dalai/alpaca/models/7B/ggml-model-q4_0.bin"
 
     def __init__(self, auto_load=True) -> None:
-        self.prompt_hit = False
         self.seed = 888777
         self.threads = 4
         self.n_predict = 200
@@ -174,7 +174,7 @@ class Assistant:
                     os.remove("./pid")
             except (ProcessLookupError, FileNotFoundError):
                 pass
-
+        tstart = time()
         self.program = process(self.command, timeout=600)
         self.program.readline()
         self.program.recvuntil(b".")
@@ -187,37 +187,37 @@ class Assistant:
                 continue
         self.program.recvuntil("\n")
         self.is_ready = True
+        tend = time()
+        eprint(f"Model Loaded in {(tend-tstart)/1000} s")
 
     def ask_bot(self, question):
         """
         run
         """
+        tend = 0
         _ = self.prep_model() if not self.is_ready else None
+        tstart = time()
 
-        self.program.recvuntil(">")
+        program = self.program
+        program.recvuntil(">")
 
-        # print("Model Ready to Respond")
-
-        # self.program.recv(1)
         self.chat_history.append((question, ""))
-        # print("------")
-        # print(self.bot_input)
-        # print("------")
 
         opts = self.bot_input.split("\n")
-        # eprint(opts)
         for opt in opts:
-            self.program.sendline(opt)
+            program.sendline(opt)
 
         try:
             marker_detected = b""
-            char = self.program.recv(1)
+            char = program.recv(1)
+            tfirstchar = time()
+            wcount = len(question.replace('\n',' ').split(' '))
+            eprint(f"Size of Input: {len(question)} chars || {wcount} words")
+            eprint(f"Time taken to analyze the user input {(tfirstchar-tstart)/1000} s")
             data = char
             yield char.decode("latin")
             while True:
-                char = self.program.recv(1)
-
-                # print(f"app{char}")
+                char = program.recv(1)
 
                 data += char
 
@@ -225,12 +225,14 @@ class Assistant:
                     marker_detected += char
                     if marker_detected in self.end_marker:
                         continue
-                    else:
-                        marker_detected = b""
+                    marker_detected = b""
 
                 if self.end_marker in data:
                     data = data.replace(b"[end of text]", b"")
-                    self.prompt_hit = False
+                    tend = time()
+                    wcount = len(data.replace(b'\n',b' ').split(b' '))
+                    eprint(f"Size of output: {len(data)} chars || {wcount} words")
+                    eprint(f"Time taken to for generation {(tend-tstart)/1000} s")
                     break
 
                 yield char.decode("latin")
