@@ -24,14 +24,15 @@ from rich.progress import track
 class AssistantSettings:
     """Settings handler for assistant"""
 
-    def __init__(self, assistant) -> None:
+    def __init__(self, assistant, DEBUG=False) -> None:
         self.assistant = assistant
+        self.DEBUG = DEBUG
 
     def load_settings(self):
         if os.path.exists("settings.dat"):
             with open("settings.dat", "r") as file:
                 settings = json.load(file)
-                eprint(settings)
+                _  =eprint(settings) if self.DEBUG else None
                 self.assistant.seed = settings["seed"]
                 self.assistant.top_k = settings["top_k"]
                 self.assistant.top_p = settings["top_p"]
@@ -139,8 +140,7 @@ class Assistant:
         eprint(f"starting with {command}")
         return command
 
-    @property
-    def bot_input(self):
+    def prep_bot_input(self):
         """
         prep_bot_input
         """
@@ -191,59 +191,93 @@ class Assistant:
         tend = time()
         eprint(f"Model Loaded in {(tend-tstart)} s")
 
-    def ask_bot_pack(self, question):
-        """
-        run
-        """
-        tend = 0
+    def streamer(
+        self,
+        stuff_to_type,
+        pre_recv_hook=None,
+        post_recv_hook=None,
+    ):
         _ = self.prep_model() if not self.is_ready else None
+
+        self.program.recvuntil(">")
+
+        opts = stuff_to_type.split("\n")
+        for opt in opts:
+            self.program.sendline(opt)
+
+        while True:
+            # _ = pre_recv_hook(self.program) if pre_recv_hook is not None else None
+            yield self.program.recv(1)
+            # _ = post_recv_hook(self.program) if pre_recv_hook is not None else None
+
+    def ask_bot(self, question, answer=""):
+        self.chat_history.append((question, answer))
+        inp_to_send = self.prep_bot_input()
+
+        opt_stream = self.streamer(inp_to_send)
         tstart = time()
 
-        program = self.program
-        program.recvuntil(">")
+        buffer = b""
 
-        self.chat_history.append((question, ""))
-
-        opts = self.bot_input.split("\n")
-        for opt in opts:
-            program.sendline(opt)
-
-        data = None
         try:
+            isfirst = True
             marker_detected = b""
-            char = program.recv(1)
-            tfirstchar = time()
-            wcount = len(question.replace("\n", " ").split(" "))
-            eprint(f"Size of Input: {len(question)} chars || {wcount} words")
-            eprint(f"Time taken to analyze the user input {(tfirstchar-tstart)} s")
-            data = char
-            while True:
-                char = program.recv(1)
+            char_old = b""
+            for char in opt_stream:
+                buffer += char  # update the buffer
 
-                data += char
+                if isfirst:
+                    t_firstchar = time()
+                    wcount = len(question.replace("\n", " ").split(" "))
+                    if self.DEBUG:
+                        eprint(f"Size of Input: {len(question)} chars || {wcount} words")
+                        eprint(
+                            f"Time taken to analyze the user input {t_firstchar-tstart} s"
+                        )
+                    isfirst = False
+                else:
+                    # Detect end of text if detected try to confirm else reset
+                    if char == b"[" or marker_detected:
+                        marker_detected += char
+                        if marker_detected in self.end_marker[: len(marker_detected)]:
+                            continue
+                        marker_detected = b""
 
-                if char == b"[" or marker_detected:
-                    marker_detected += char
-                    if marker_detected in self.end_marker:
+                    if self.end_marker in buffer:
+                        buffer = buffer.replace(b"[end of text]", b"")
+                        tend = time()
+                        wcount = len(buffer.replace(b"\n", b" ").split(b" "))
+                        if self.DEBUG = True:
+                            eprint(f"Size of output: {len(buffer)} chars || {wcount} words") 
+                            eprint(f"Time taken to for generation {(tend-tstart)} s")
+                        break
+                try:
+                    # Load the full buffer
+                    char = char_old + char
+
+                    # print single printable chars
+                    if len(char) == 1 and char[0] <= 0x7E and char[0] >= 0x21:
+                        char = char.decode("utf-8")
+                        char_old = b""
+                    elif len(char) in [4, 6]:  # If 4 byte code or 6 byte code
+                        char = char.decode("utf-8")
+                        char_old = b""
+                    else:
+                        char_old = char
                         continue
-                    marker_detected = b""
-
-                if self.end_marker in data:
-                    data = data.replace(b"[end of text]", b"")
-                    tend = time()
-                    wcount = len(data.replace(b"\n", b" ").split(b" "))
-                    eprint(f"Size of output: {len(data)} chars || {wcount} words")
-                    eprint(f"Time taken to for generation {(tend-tstart)} s")
-                    break
+                except UnicodeDecodeError:
+                    char_old = char
+                    continue
+                print(char, end="")
+                yield char
 
         except (KeyboardInterrupt, EOFError):
             print("Stooping")
 
-        self.chat_history[-1] = (question, data.decode("utf-8").strip("\n"))
+        self.chat_history[-1] = (question, buffer.decode("utf-8").strip("\n"))
+        return buffer
 
-        return data
-
-    def ask_bot(self, question, answer=""):
+    def ask_bot_old(self, question, answer=""):
         """
         run
         """
@@ -251,28 +285,28 @@ class Assistant:
         _ = self.prep_model() if not self.is_ready else None
         tstart = time()
 
-        program = self.program
-        program.recvuntil(">")
+        self.program.recvuntil(">")
 
         self.chat_history.append((question, answer))
 
-        opts = self.bot_input.split("\n")
+        opts = self.prep_bot_input.split("\n")
         for opt in opts:
-            program.sendline(opt)
+            self.program.sendline(opt)
 
         data = None
 
         try:
             marker_detected = b""
-            char = program.recv(1)
+            char = self.program.recv(1)
             tfirstchar = time()
             wcount = len(question.replace("\n", " ").split(" "))
-            eprint(f"Size of Input: {len(question)} chars || {wcount} words")
-            eprint(f"Time taken to analyze the user input {(tfirstchar-tstart)} s")
+            if self.DEBUG:
+                eprint(f"Size of Input: {len(question)} chars || {wcount} words")
+                eprint(f"Time taken to analyze the user input {(tfirstchar-tstart)} s")
             data = char
-            yield char.decode("latin")
+            yield char.decode("utf-8")
             while True:
-                char = program.recv(1)
+                char = self.program.recv(1)
 
                 data += char
 
@@ -286,11 +320,12 @@ class Assistant:
                     data = data.replace(b"[end of text]", b"")
                     tend = time()
                     wcount = len(data.replace(b"\n", b" ").split(b" "))
-                    eprint(f"Size of output: {len(data)} chars || {wcount} words")
-                    eprint(f"Time taken to for generation {(tend-tstart)} s")
+                    if self.DEBUG:
+                        eprint(f"Size of output: {len(data)} chars || {wcount} words")
+                        eprint(f"Time taken to for generation {(tend-tstart)} s")
                     break
 
-                yield char.decode("latin")
+                yield char.decode("utf-8")
         except (KeyboardInterrupt, EOFError):
             print("Stooping")
 
@@ -304,7 +339,7 @@ class Assistant:
         assistant.prep_model()
         while True:
             print(assistant.chat_history)
-            resp = assistant.ask_bot(input(">>> "))
+            resp = assistant.ask_bot(input(">>> "), "")
 
             for char in resp:
                 print(char, end="")
