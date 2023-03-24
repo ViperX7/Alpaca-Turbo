@@ -42,6 +42,8 @@ class AssistantSettings:
                 self.assistant.repeat_penalty = settings["repeat_penalty"]
                 self.assistant.repeat_last_n = settings["repeat_last_n"]
                 self.assistant.model_path = settings["model_path"]
+                self.assistant.n_predict = settings["n_predict"]
+
 
     def save_settings(self):
         settings = {
@@ -53,7 +55,9 @@ class AssistantSettings:
             "repeat_penalty": self.assistant.repeat_penalty,
             "repeat_last_n": self.assistant.repeat_last_n,
             "model_path": self.assistant.model_path,
+            "n_predict":self.assistant.n_predict 
         }
+        print(settings)
         with open("settings.dat", "w") as file:
             json.dump(settings, file)
 
@@ -64,7 +68,7 @@ class Assistant:
     model_path = "~/dalai/alpaca/models/7B/ggml-model-q4_0.bin"
 
     def __init__(self, auto_load=True, DEBUG=False) -> None:
-        self.DEBUG = DEBUG
+        self.DEBUG = "-d" in sys.argv
         self.seed = 888777
         self.threads = 4
         self.n_predict = 200
@@ -96,6 +100,11 @@ class Assistant:
         self.end_marker = b"[end of text]"
 
         self.chat_history = []
+        try:
+            self.settings.load()
+        except:
+            pass
+        
 
     def reload(self):
         try:
@@ -141,6 +150,8 @@ class Assistant:
             f"{self.repeat_last_n}",
             "--repeat_penalty",
             f"{self.repeat_penalty}",
+            "--n_predict",
+            f"{self.n_predict}",
             "-m",
             f"{self.model_path}",
             "--interactive-start",
@@ -157,9 +168,9 @@ class Assistant:
             prompt += self.format.format(instruction=instr, response=resp)
         prompt = prompt.strip("\n")
         prompt = prompt.replace("\n", "\\\n")
-        # print("======")
-        # print(prompt)
-        # print("======")
+        print("======")
+        print(prompt)
+        print("======")
         return prompt
 
     def prep_model(self):
@@ -209,7 +220,7 @@ class Assistant:
         _ = self.prep_model() if not self.is_ready else None
         if not self.is_ready:
             raise FileNotFoundError(
-                f"Cannot locate the specified model : {Assistant.model_path}\n Did you put the correct path in settings=>model_path?"
+                f"Cannot locate the specified model : {Assistant.model_path}\n Did you put the correct path in settings=>model_path?\n"
            )
 
         self.program.recvuntil(">")

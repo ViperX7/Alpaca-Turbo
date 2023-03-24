@@ -314,6 +314,34 @@ class PromptPlayUI(ChatBotUI):
         )
 
 
+class PromptPlayUI(ChatBotUI):
+    def __init__(self, assistant) -> None:
+        super().__init__(assistant)
+
+        self.bot_persona = gr.Textbox(
+            label="Persona",
+            value=lambda: self.settings["bot_persona"],
+            interactive=True,
+            lines=4,
+        )
+        self.bot_prompt = gr.Textbox(
+            label="Init Prompt",
+            value=lambda: self.settings["bot_prompt"],
+            interactive=True,
+            lines=4,
+        )
+        self.bot_format = gr.TextArea(
+            label="Format",
+            value=lambda: self.settings["bot_format"],
+            interactive=True,
+        )
+        self.history_sidebar = gr.Chatbot(
+            self.load_history(), label="History", visible=False
+        )
+
+
+
+
 class SettingsUI:
     def __init__(self, asistant: Assistant):
         self.assistant = asistant
@@ -328,6 +356,9 @@ class SettingsUI:
         self.topp = gr.Textbox(
             label="top_p", value=lambda: self.assistant.top_p, interactive=True
         )
+        self.n_predict = gr.Textbox(
+            label="n_predict", value=lambda: self.assistant.n_predict, interactive=True)
+
         self.temperature = gr.Textbox(
             label="temperature", value=lambda: self.assistant.temp, interactive=True
         )
@@ -362,6 +393,7 @@ class SettingsUI:
             self.assistant.repeat_penalty,
             self.assistant.repeat_last_n,
             self.assistant.model_path,
+            self.assistant.n_predict,
         ) = params
         self.assistant.settings.save_settings()
         self.assistant.reload()
@@ -378,6 +410,7 @@ class SettingsUI:
                 self.repeate_pen,
                 self.repeate_lastn,
                 self.model_path,
+                self.n_predict,
             ],
         )
 
@@ -391,6 +424,7 @@ class SettingsUI:
             self.repeate_pen.render()
             self.repeate_lastn.render()
             self.model_path.render()
+            self.n_predict.render()
             with gr.Row():
                 self.save_button.render()
 
