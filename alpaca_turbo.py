@@ -71,6 +71,10 @@ class Assistant:
         self.temp = 0.5
         self.repeat_last_n = 64
         self.repeat_penalty = 1.3
+
+        if platform.system() == "Windows":
+            Assistant.model_path = os.path.expanduser(Assistant.model_path).replace("/", "\\")
+
         self.model_path = os.path.expanduser(Assistant.model_path)
 
         self.persona = "chat transcript between human and a bot named devil and the bot remembers everything from previous response"
