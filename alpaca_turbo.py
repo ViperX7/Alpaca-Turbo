@@ -1,3 +1,4 @@
+#!/bin/python3
 """
 Alpaca Turbo
 """
@@ -6,6 +7,7 @@ import logging
 import os
 import platform
 import signal
+import sys
 from time import time
 
 import psutil
@@ -403,7 +405,10 @@ def health_checks():
         with open("./pid") as file:
             pid = int(file.readline())
         log.info("Attempting to kill the process")
-        os.kill(pid, signal.SIGTERM)
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except OSError:
+            pass
         os.remove("./pid")
         log.info("Fixed the Issue Now Retry running")
         exit()
@@ -421,10 +426,10 @@ def health_checks():
 
 
 def main():
-    import sys
-
+    # Too lazy to add arg parse
     debug = "-d" in sys.argv
-    Assistant.repl(debug)
+    Assistant.repl(debug) if "-i" in sys.argv else None
+    health_checks()
 
 
 assistant = main() if __name__ == "__main__" else None
