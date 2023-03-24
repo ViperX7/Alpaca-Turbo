@@ -1,5 +1,7 @@
-flask
 gradio==3.22.1
 rich
 pexpect
 psutil
+fastapi
+uvicorn
+jinja2
