@@ -23,8 +23,8 @@ class ChatBotUI:
         #################
         self._personas = Personas("./prompts.json")
         self._conv = History("./chat_hist.json")
+        self.chatwindowstate = []
         self._conv.clean()
-        self._conv.append([])
         # print(self._conv)
         self.assistant: Assistant = assistant
         self.settings = {
@@ -52,8 +52,8 @@ class ChatBotUI:
             value=self._personas.get_all()[0],
             interactive=True,
         )
-        self.history_sidebar = gr.Chatbot(self.load_history(), label="History").style(
-            height=660
+        self.history_sidebar = gr.Chatbot(self.load_history, label="History").style(
+            height=660,
         )
         self.chatbot_window = gr.Chatbot([], elem_id="chatbot").style(height=690)
 
@@ -97,22 +97,24 @@ class ChatBotUI:
         # eprint(self._conv.data)
 
         if self._conv.data:
-            for chats in self._conv[:-1]:
-                # print(chats)
-                first_interaction = chats[0]
-                bots_resp = str(first_interaction[1])
-                if len(bots_resp.split(" ")) > 6:
-                    bots_resp = " ".join(bots_resp.split(" ")[:6])
-                entries.append((bots_resp, None))
+            for chats in self._conv:
+                if chats:
+                    first_interaction = chats[0] 
+                    bots_resp = str(first_interaction[1])
+                    if len(bots_resp.split(" ")) > 6:
+                        bots_resp = " ".join(bots_resp.split(" ")[:6])
+                    entries.append((bots_resp, None))
         # eprint(entries)
+        print(entries)
+
         return entries
 
     def add_text(self, history, text):
         # add conversation to chat
         curr_conversation = history + [(text, None)]
-        self._conv[-1] = curr_conversation
+        self.chatwindowstate = curr_conversation
         # if len(self._conv) > 0 else []
-        return self._conv[-1], ""  # return latest conversation
+        return self.chatwindowstate, ""  # return latest conversation
 
     def bot(
         self,
@@ -131,7 +133,7 @@ class ChatBotUI:
         # set the history for the assistant
         self.assistant.chat_history = true_history if len(true_history) > 0 else []
         user_input = current_prompt[0]  # Get the user input
-        bot_resp = current_prompt[1] if current_prompt[1] else ""# Get the user input
+        bot_resp = current_prompt[1] if current_prompt[1] else ""  # Get the user input
 
         user_input += f"\n{bot_resp}"
 
@@ -149,11 +151,12 @@ class ChatBotUI:
             response += out
 
             # Update the chatbox with live input
-            history[-1] = (user_input, response)
+            history[-1][1] = response
+            self.chatwindowstate = history
             yield history
 
         # update the conversation
-        self._conv[-1] = history
+        self.chatwindowstate = history
 
     def opast_chat_select(
         self, evt: gr.SelectData
@@ -161,32 +164,30 @@ class ChatBotUI:
         requested_chat = self._conv[evt.index[0]]
 
         # check if the chatbot window is occupied
-        if self._conv[-1] != []:  # If occupied
-            self._conv.data.append([])
-            self._conv.save()
-
-        self._conv.load()
+        # if self._conv[-1] != []:  # If occupied
+        #     self._conv.data.append([])
+        #     self._conv.save()
+        #
+        # self._conv.load()
 
         # cleanup
-        cleaned_list = []
-        for converse in self._conv.data:
-            if converse not in cleaned_list:
-                cleaned_list.append(converse)
-        self._conv.data = cleaned_list
-        self._conv.save()
+        # cleaned_list = []
+        # for converse in self._conv.data:
+        #     if converse not in cleaned_list:
+        #         cleaned_list.append(converse)
+        self._conv.append(self.chatwindowstate)
 
-        self._conv[-1] = requested_chat
-        self._conv.save()  # Saved the changes
+        self.chatwindowstate = requested_chat
 
         return requested_chat, self.load_history()
 
     def get_new_chat(self):
-        self._conv.data.append([])
-        self._conv.save()
-        return self._conv[-1]
+        _ = self._conv.append(self.chatwindowstate) if self.chatwindowstate else None
+        self.chatwindowstate = []
+        return self.chatwindowstate, self.load_history()
 
     def modify_last(self):
-        conv = self._conv[-1]
+        conv = self.chatwindowstate
         history = []
         last_conv = []
         if len(conv) > 0:  # check if there are any chats in last conv
@@ -216,7 +217,9 @@ class ChatBotUI:
         self.edit_last.click(
             self.modify_last, outputs=[self.chatbot_window, self.input]
         )
-        self.new_chat.click(self.get_new_chat, outputs=[self.chatbot_window])
+        self.new_chat.click(
+            self.get_new_chat, outputs=[self.chatbot_window, self.history_sidebar]
+        )
 
         self.cont_chat.click(
             self.bot,

@@ -58,13 +58,31 @@ class History:
         self.save()
         self.load()
 
+    def strip_n(self):
+        new_data = []
+        for chat_log in self.data:
+            mod_chat_log = []
+            for pair in chat_log:
+                new_pair = []
+                for item in pair:
+                    if item:
+                        new_pair.append(item.strip(" ").strip("\n"))
+                    else:
+                        new_pair.append(item)
+                mod_chat_log.append(new_pair)
+            new_data.append(mod_chat_log)
+        self.data = new_data
+
+
     def load(self):
         """load"""
         with open(self.filename, "r", encoding="utf-8") as file:
             self.data = json.load(file)
+        self.strip_n()
 
     def save(self):
         """save"""
+        self.strip_n()
         with open(self.filename, "w", encoding="utf-8") as file:
             json.dump(self.data, file)
 
@@ -97,5 +115,6 @@ class History:
         """append"""
         self.load()
         if new_item not in self.data:
-            self.data.append(new_item)
+            if new_item not in [[],[None,None],[None,None]]:
+                self.data.append(new_item)
         self.save()
