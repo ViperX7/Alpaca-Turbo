@@ -24,15 +24,14 @@ from rich.progress import track
 class AssistantSettings:
     """Settings handler for assistant"""
 
-    def __init__(self, assistant, DEBUG=False) -> None:
+    def __init__(self, assistant) -> None:
         self.assistant = assistant
-        self.DEBUG = DEBUG
 
     def load_settings(self):
         if os.path.exists("settings.dat"):
             with open("settings.dat", "r") as file:
                 settings = json.load(file)
-                _  =eprint(settings) if self.DEBUG else None
+                _  =eprint(settings) if self.assistant.DEBUG else None
                 self.assistant.seed = settings["seed"]
                 self.assistant.top_k = settings["top_k"]
                 self.assistant.top_p = settings["top_p"]
@@ -62,7 +61,8 @@ class Assistant:
 
     model_path = "~/dalai/alpaca/models/7B/ggml-model-q4_0.bin"
 
-    def __init__(self, auto_load=True) -> None:
+    def __init__(self, auto_load=True, DEBUG=False) -> None:
+        self.DEBUG = DEBUG
         self.seed = 888777
         self.threads = 4
         self.n_predict = 200
@@ -137,7 +137,6 @@ class Assistant:
             f"{self.model_path}",
             "--interactive-start",
         ]
-        eprint(f"starting with {command}")
         return command
 
     def prep_bot_input(self):
@@ -176,7 +175,9 @@ class Assistant:
             except (ProcessLookupError, FileNotFoundError):
                 pass
         tstart = time()
-        self.program = process(self.command, timeout=600)
+        cmd = self.command
+        _ = eprint(cmd) if self.DEBUG else None
+        self.program = process(cmd, timeout=600)
         self.program.readline()
         self.program.recvuntil(b".")
 
@@ -247,7 +248,7 @@ class Assistant:
                         buffer = buffer.replace(b"[end of text]", b"")
                         tend = time()
                         wcount = len(buffer.replace(b"\n", b" ").split(b" "))
-                        if self.DEBUG = True:
+                        if self.DEBUG == True:
                             eprint(f"Size of output: {len(buffer)} chars || {wcount} words") 
                             eprint(f"Time taken to for generation {(tend-tstart)} s")
                         break
@@ -268,7 +269,7 @@ class Assistant:
                 except UnicodeDecodeError:
                     char_old = char
                     continue
-                print(char, end="")
+                # print(char, end="")
                 yield char
 
         except (KeyboardInterrupt, EOFError):
@@ -334,11 +335,11 @@ class Assistant:
         return data
 
     @staticmethod
-    def repl():
-        assistant = Assistant()
+    def repl(debug=False):
+        assistant = Assistant(DEBUG=debug)
         assistant.prep_model()
         while True:
-            print(assistant.chat_history)
+            _  = eprint(assistant.chat_history) if debug else None
             resp = assistant.ask_bot(input(">>> "), "")
 
             for char in resp:
@@ -408,4 +409,12 @@ def health_checks():
 
 # health_checks()
 
-assistant = Assistant.repl() if __name__ == "__main__" else None
+def main():
+    import sys
+    debug = "-d" in sys.argv
+    Assistant.repl(debug)
+
+
+
+
+assistant =  main() if __name__ == "__main__" else None
