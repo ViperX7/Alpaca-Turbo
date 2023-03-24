@@ -31,7 +31,7 @@ class AssistantSettings:
         if os.path.exists("settings.dat"):
             with open("settings.dat", "r") as file:
                 settings = json.load(file)
-                _  =eprint(settings) if self.assistant.DEBUG else None
+                _ = eprint(settings) if self.assistant.DEBUG else None
                 self.assistant.seed = settings["seed"]
                 self.assistant.top_k = settings["top_k"]
                 self.assistant.top_p = settings["top_p"]
@@ -73,9 +73,11 @@ class Assistant:
         self.repeat_penalty = 1.3
 
         if platform.system() == "Windows":
-            Assistant.model_path = os.path.expanduser(Assistant.model_path).replace("/", "\\")
-
-        self.model_path = os.path.expanduser(Assistant.model_path)
+            Assistant.model_path = os.path.expanduser(Assistant.model_path).replace(
+                "/", "\\"
+            )
+        else:
+            Assistant.model_path = os.path.expanduser(Assistant.model_path)
 
         self.persona = "chat transcript between human and a bot named devil and the bot remembers everything from previous response"
 
@@ -235,7 +237,9 @@ class Assistant:
                     t_firstchar = time()
                     wcount = len(question.replace("\n", " ").split(" "))
                     if self.DEBUG:
-                        eprint(f"Size of Input: {len(question)} chars || {wcount} words")
+                        eprint(
+                            f"Size of Input: {len(question)} chars || {wcount} words"
+                        )
                         eprint(
                             f"Time taken to analyze the user input {t_firstchar-tstart} s"
                         )
@@ -253,7 +257,9 @@ class Assistant:
                         tend = time()
                         wcount = len(buffer.replace(b"\n", b" ").split(b" "))
                         if self.DEBUG == True:
-                            eprint(f"Size of output: {len(buffer)} chars || {wcount} words") 
+                            eprint(
+                                f"Size of output: {len(buffer)} chars || {wcount} words"
+                            )
                             eprint(f"Time taken to for generation {(tend-tstart)} s")
                         break
                 try:
@@ -343,7 +349,7 @@ class Assistant:
         assistant = Assistant(DEBUG=debug)
         assistant.prep_model()
         while True:
-            _  = eprint(assistant.chat_history) if debug else None
+            _ = eprint(assistant.chat_history) if debug else None
             resp = assistant.ask_bot(input(">>> "), "")
 
             for char in resp:
@@ -413,12 +419,12 @@ def health_checks():
 
 # health_checks()
 
+
 def main():
     import sys
+
     debug = "-d" in sys.argv
     Assistant.repl(debug)
 
 
-
-
-assistant =  main() if __name__ == "__main__" else None
+assistant = main() if __name__ == "__main__" else None
