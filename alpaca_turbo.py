@@ -433,7 +433,7 @@ def main():
     # Too lazy to add arg parse
     debug = "-d" in sys.argv
     Assistant.repl(debug) if "-i" in sys.argv else None
-    health_checks()
+    health_checks() if "--check" in sys.argv else None
 
 
 assistant = main() if __name__ == "__main__" else None
