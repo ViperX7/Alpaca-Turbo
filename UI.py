@@ -135,7 +135,7 @@ class ChatBotUI:
         user_input = current_prompt[0]  # Get the user input
         bot_resp = current_prompt[1] if current_prompt[1] else ""  # Get the user input
 
-        user_input += f"\n{bot_resp}"
+        user_input += f"\n{bot_resp}" if bot_resp else ""
 
         # Settings
         self.assistant.persona = persona
@@ -146,7 +146,7 @@ class ChatBotUI:
         # Query the bot for response
         resp = self.assistant.ask_bot(user_input)
 
-        response = ""
+        response = bot_resp
         for out in resp:
             response += out
 

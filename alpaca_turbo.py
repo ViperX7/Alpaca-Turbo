@@ -207,6 +207,10 @@ class Assistant:
         post_recv_hook=None,
     ):
         _ = self.prep_model() if not self.is_ready else None
+        if not self.is_ready:
+            raise FileNotFoundError(
+                f"Cannot locate the specified model : {Assistant.model_path}\n Did you put the correct path in settings=>model_path?"
+           )
 
         self.program.recvuntil(">")
 
