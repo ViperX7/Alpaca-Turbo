@@ -1,6 +1,6 @@
 # Alpaca-Turbo: A Fast and Configurable Language Model-Based Chat UI and API
 
-[Discord](https://discord.gg/FEc4sn7U)
+### [Discord](https://discord.gg/FJYphgbkt2)
 
 Alpaca-Turbo is a user-friendly web UI for the alpaca.cpp language model based on LLaMA,  
 with unique features that make it stand out from other implementations.
