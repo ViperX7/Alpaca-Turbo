@@ -1,9 +1,9 @@
-import asyncio
+# import asyncio
 # from async_generator import async_generator, yield_
 from typing import List, Optional, Union
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse, HTMLResponse
-from fastapi import FastAPI, Body, Request
+from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
 from alpaca_turbo import Assistant
 
@@ -36,6 +36,7 @@ class CompletionRequest(BaseModel):
     max_tokens: Optional[int]
     temperature: Optional[float]
     stop: Optional[Union[str, List[str]]]
+    stream: Optional[bool]
 
 
 class CompletionResponseChoice(BaseModel):
@@ -69,20 +70,19 @@ async def read_item(request: Request):
 
 @app.post("/completions", response_model=CompletionResponse)
 async def completions(request: CompletionRequest):
+    if request.stream:
+        return StreamingResponse(completion_token_generator(request), media_type="text/event-stream")
     text = model.get_completion(
         request.model, request.prompt, request.max_tokens, request.temperature, request.stop)
     return CompletionResponse(choices=[CompletionResponseChoice(text=text)])
 
 
-@app.post("/streams")
-async def streams(request: CompletionRequest):
-    def completion_token_generator():
-        for token in model.get_completion_tokens(request.model, request.prompt, request.max_tokens, request.temperature, request.stop):
-            completion_response = CompletionResponse(
-                choices=[CompletionResponseChoice(text=token)])
-            yield f"data: {completion_response.json()}\n\n"
+def completion_token_generator(request: CompletionRequest):
+    for token in model.get_completion_tokens(request.model, request.prompt, request.max_tokens, request.temperature, request.stop):
+        completion_response = CompletionResponse(
+            choices=[CompletionResponseChoice(text=token)])
+        yield f"data: {completion_response.json()}\n\n"
 
-    return StreamingResponse(completion_token_generator())
 
 # Run using uvicorn api:app --reload
 # This will start a local development server at http://127.0.0.1:8000. You can access the auto-generated documentation for your API at http://127.0.0.1:8000/docs.
