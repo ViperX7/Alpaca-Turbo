@@ -6,3 +6,9 @@ venv
 .vscode
 .idea
 .fleet
+
+.DS_Store
+__pycache__
+
+pid
+Pipfile.lock

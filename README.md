@@ -1,4 +1,4 @@
-# Alpaca-Turbo: A Fast and Configurable Language Model-Based Chat UI
+# Alpaca-Turbo: A Fast and Configurable Language Model-Based Chat UI and API
 
 [Discord](https://discord.gg/FEc4sn7U)
 
@@ -31,6 +31,16 @@ cd Alpaca-Turbo
 pip install -r requirements.txt
 python webui.py
 ```
+
+## Using the API
+
+Run using `uvicorn api:app --reload`
+
+This will start a local development server at http://127.0.0.1:8000.
+
+You can access the auto-generated documentation for your API at http://127.0.0.1:8000/docs.
+
+Discussion around standardizing the API can be found [here](https://alexatallah.notion.site/RFC-LLM-API-Standard-c8f15d24bd2f4ab98b656f08cdc1c4fb).
 
 ## Troubleshooting
 

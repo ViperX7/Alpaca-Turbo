@@ -27,8 +27,8 @@
           var question = $('#question').val();
           $.ajax({
             type: 'POST',
-            url: '/ask_bot',
-            data: JSON.stringify({ 'question': question }),
+            url: '/completions',
+            data: JSON.stringify({ 'prompt': question }),
             contentType: 'application/json; charset=utf-8',
             dataType: 'text',
             success: function(data) {
