@@ -65,7 +65,7 @@ class AssistantSettings:
 class Assistant:
     """Alpaca Assistant"""
 
-    model_path = "~/dalai/alpaca/models/7B/ggml-model-q4_0.bin"
+    model_path = "~/dalai/alpaca/models/7B/ggml-model-q4_0.bin" if "-m" not in sys.argv else sys.argv[-1]
 
     models = []
     files = os.listdir()
@@ -76,10 +76,6 @@ class Assistant:
 
 
 
-
-
-
-    model_path = model_path if "--load-default" not in sys.argv else [x for x in os.listdir("./") if ".bin" in x][0]
 
     def __init__(self, auto_load=True, DEBUG=False) -> None:
         self.DEBUG = "-d" in sys.argv
