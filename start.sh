@@ -1,4 +1,16 @@
-#!/bin/bash
+#!/bin/bash    _    _                         _____           _           
+
+clear
+echo ""
+echo "   / \  | |_ __   __ _  ___ __ _  |_   _|   _ _ __| |__   ___  "
+echo "  / _ \ | | '_ \ / _` |/ __/ _` |   | || | | | '__| '_ \ / _ \ "
+echo " / ___ \| | |_) | (_| | (_| (_| |   | || |_| | |  | |_) | (_) |"
+echo "/_/   \_\_| .__/ \__,_|\___\__,_|   |_| \__,_|_|  |_.__/ \___/ "
+echo "          |_|                                                  "
+echo ""
+echo "https://github.com/ViperX7/Alpaca-Turbo/"
+
+
 
 if [ ! -f "ggml-alpaca-7b-q4.bin" ]; then
     read -p "The model has not been downloaded. Would you like to download it now? (y/n)" choice
