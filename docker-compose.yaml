@@ -1,0 +1,8 @@
+version: "3"
+services:
+  alpaca:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/data
