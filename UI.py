@@ -531,7 +531,7 @@ class ArenaUI:
         self.history_sidebar = gr.Chatbot(self.load_history, label="History").style(
             height=660,visible=False
         )
-        self.chatbot_window = gr.Chatbot([], elem_id="chatbot").style(height=600)
+        self.chatbot_window = gr.Chatbot([], elem_id="chatbot").style(height=660)
 
         ## BUTTONS
         self.stop_generation = gr.Button("Stop Generating")
