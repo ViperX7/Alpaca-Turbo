@@ -66,6 +66,19 @@ class Assistant:
     """Alpaca Assistant"""
 
     model_path = "~/dalai/alpaca/models/7B/ggml-model-q4_0.bin" if "-m" not in sys.argv else sys.argv[-1]
+
+    models = []
+    files = os.listdir()
+    for file in files:
+        if ".bin" in file:
+            models.append(file)
+    model_path  = model_path if not models else models[0]
+
+
+
+
+
+
     model_path = model_path if "--load-default" not in sys.argv else [x for x in os.listdir("./") if ".bin" in x][0]
 
     def __init__(self, auto_load=True, DEBUG=False) -> None:

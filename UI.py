@@ -3,6 +3,7 @@
 Simple UI abstraction
 
 """
+import os
 import gradio as gr
 from alpaca_turbo import Assistant
 from prompts import History, Personas
@@ -16,6 +17,34 @@ def trunc(data):
 def quick_summary(data):
     for resp in data:
         return (trunc(resp[1]), None)
+
+
+import urllib.request
+import os
+
+
+def download_file(url, file_path):
+    with urllib.request.urlopen(url) as response:
+        file_size = int(response.getheader('Content-Length'))
+        with open(file_path, 'wb') as file:
+            downloaded_size = 0
+            block_size = 8192
+            while True:
+                buffer = response.read(block_size)
+                if not buffer:
+                    break
+                downloaded_size += len(buffer)
+                file.write(buffer)
+                status = f'{downloaded_size}/{file_size} bytes downloaded'
+                print(status, end='\r')
+    print()
+
+
+
+
+
+
+
 
 
 class ChatBotUI:
@@ -354,6 +383,7 @@ class SettingsUI:
             interactive=True,
         )
 
+        self.download_model = gr.Markdown("Download the 7B recommended model [here](https://huggingface.co/Sosaka/Alpaca-native-4bit-ggml/resolve/main/ggml-alpaca-7b-q4.bin)")
         self.save_button = gr.Button("Apply")
 
     def apply_settings(self, *params):
@@ -372,6 +402,8 @@ class SettingsUI:
         self.assistant.reload()
 
     def link_units(self):
+
+
         self.save_button.click(
             self.apply_settings,
             [
@@ -398,6 +430,7 @@ class SettingsUI:
             self.repeate_lastn.render()
             self.model_path.render()
             self.n_predict.render()
+            self.download_model.render()
             with gr.Row():
                 self.save_button.render()
 
