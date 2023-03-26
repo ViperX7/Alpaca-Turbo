@@ -10,6 +10,7 @@ from prompts import History, Personas
 from rich import print as eprint
 
 
+
 def trunc(data):
     return data[: min(10, len(data))] if data else "<>"
 
