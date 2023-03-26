@@ -1,5 +1,9 @@
 # Alpaca-Turbo: A Fast and Configurable Language Model-Based Chat UI and API
 
+
+![Apaca1](https://user-images.githubusercontent.com/38191717/227757954-2ffe5740-55da-4c01-9954-1accdb5e37bd.png)
+
+
 ### [Discord](https://discord.gg/FJYphgbkt2)
 
 Alpaca-Turbo is a user-friendly web UI for the alpaca.cpp language model based on LLaMA,  
@@ -17,6 +21,10 @@ Screencast showing ability to remember previous part of conversation
 https://user-images.githubusercontent.com/38191717/227249838-76ab17ce-2439-4b9d-aebb-db95d13fa457.mp4
 
 Web UI to run alpaca model locally
+
+* AI vs AI chat
+![image](https://user-images.githubusercontent.com/38191717/227757975-b75e8260-1310-4528-8f95-f61d516f9306.png)
+
 
 | ![image](https://user-images.githubusercontent.com/38191717/227250115-165240e7-1e71-4f7b-afe4-ec0691a68466.png) | ![image](https://user-images.githubusercontent.com/38191717/227250289-6f4c0697-4367-4bce-a9a1-94e47433717a.png) |
 |-----------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
