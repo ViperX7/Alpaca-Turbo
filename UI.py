@@ -838,7 +838,7 @@ class ArenaUI:
             self.modify_last, outputs=[self.chatbot_window, self.input]
         )
         self.new_chat.click(
-            self.get_new_chat, outputs=[self.chatbot_window, self.history_sidebar]
+            lambda:[], outputs=[self.chatbot_window]
         )
 
         self.cont_chat.click(
@@ -913,7 +913,7 @@ class ArenaUI:
                         self.stop_generation.render()
                         self.new_chat.render()
                         self.edit_last.render()
-                        self.cont_chat.render()
+                        # self.cont_chat.render()
                     self.input.render()
             with gr.Column():
                 self.remember_history1.render()
