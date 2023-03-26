@@ -8,7 +8,7 @@ import os
 import platform
 import signal
 import sys
-from time import time
+from time import sleep, time
 
 import psutil
 from interact import Process as process
@@ -77,6 +77,7 @@ class Assistant:
         self.temp = 0.5
         self.repeat_last_n = 64
         self.repeat_penalty = 1.3
+        self.history_size = 1500
 
         if platform.system() == "Windows":
             Assistant.model_path = os.path.expanduser(Assistant.model_path).replace(
@@ -92,7 +93,7 @@ class Assistant:
         self.format = (
             """\n### Instruction:\n{instruction}\n\n### Response:\n{response}"""
         )
-        self.enable_history = True
+        self.enable_history = False
         self.is_ready = False
 
         self.settings = AssistantSettings(self)
@@ -100,15 +101,18 @@ class Assistant:
         self.end_marker = b"[end of text]"
 
         self.chat_history = []
+        self._killed=False
         try:
             self.settings.load()
         except:
             pass
-        
+
 
     def reload(self):
         try:
+            self._killed = True
             self.program.kill(signal.SIGTERM)
+            sleep(2)
         except:
             pass
         self.is_ready = False
@@ -162,10 +166,17 @@ class Assistant:
         """
         prep_bot_input
         """
-        prompt = self.persona + "\n" + self.prompt
+        character = self.persona + "\n" + self.prompt
+
         history = self.chat_history if self.enable_history else [self.chat_history[-1]]
+
+        prompt = "" 
         for instr, resp in history:
             prompt += self.format.format(instruction=instr, response=resp)
+
+        prompt = prompt[-1*self.history_size:] if len(prompt) > self.history_size else prompt
+        prompt = character + prompt
+
         prompt = prompt.strip("\n")
         prompt = prompt.replace("\n", "\\\n")
         print("======")
@@ -197,6 +208,7 @@ class Assistant:
         cmd = self.command
         _ = eprint(cmd) if self.DEBUG else None
         self.program = process(cmd, timeout=600)
+        self._killed = False
         self.program.readline()
         self.program.recvuntil(b".")
 
@@ -231,6 +243,8 @@ class Assistant:
 
         while True:
             # _ = pre_recv_hook(self.program) if pre_recv_hook is not None else None
+            if self._killed:
+                return b""
             yield self.program.recv(1)
             # _ = post_recv_hook(self.program) if pre_recv_hook is not None else None
 

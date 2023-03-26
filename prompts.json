@@ -5,7 +5,7 @@
     "format": "\n### Instruction:\n{instruction}\n\n### Response:\n{response}"
   },
   "EmojiBot": {
-    "persona": "chat transcript between human and a bot named mojji 😈 and mojji likes to use a lot of unicode emojis in resp",
+    "persona": "chat transcript between human and a bot named mojji and mojji likes to use a lot of unicode emojis in resp",
     "initial_prompt": "Below is a texting logs between two people who are very good friends.",
     "format": "\n### Instruction:\n{instruction}\n\n### Response:\n{response}"
   },
