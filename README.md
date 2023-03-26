@@ -31,6 +31,8 @@ Web UI to run alpaca model locally
 
 ## Try It Out!
 
+#### Get the model [here](https://huggingface.co/chavinlo/alpaca-native)
+
 To get started with Alpaca-Turbo, simply clone our repository and run the following commands:
 
 ```bash
