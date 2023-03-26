@@ -2,6 +2,7 @@
 """
 Main launcher
 """
+import sys
 
 import gradio as gr
 from alpaca_turbo import Assistant
@@ -26,8 +27,9 @@ with gr.Blocks(analytics_enabled=False) as demo:
         settingsui.render()
 
 try:
-    demo.queue(concurrency_count=2, max_size=20)
-    demo.launch()
+    demo.queue(concurrency_count=5, max_size=20)
+    demo.launch(
+        server_port=8000, server_name="0.0.0.0")
     ASSISTANT.program.killx()
 except Exception as error:
     pass

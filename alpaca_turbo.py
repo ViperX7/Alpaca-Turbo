@@ -65,7 +65,7 @@ class AssistantSettings:
 class Assistant:
     """Alpaca Assistant"""
 
-    model_path = "~/dalai/alpaca/models/7B/ggml-model-q4_0.bin"
+    model_path = "~/dalai/alpaca/models/7B/ggml-model-q4_0.bin" if "-m" not in sys.argv else sys.argv[-1]
 
     def __init__(self, auto_load=True, DEBUG=False) -> None:
         self.DEBUG = "-d" in sys.argv
@@ -157,7 +157,7 @@ class Assistant:
             "--n_predict",
             f"{self.n_predict}",
             "-m",
-            f"{self.model_path}",
+            f"{self.model_path}" ,
             "--interactive-start",
         ]
         return command
