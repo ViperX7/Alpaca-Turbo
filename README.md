@@ -1,4 +1,4 @@
-# Alpaca-Turbo: A Fast and Configurable Language Model-Based Chat UI and API
+# Alpaca-Turbo: A Fast and Configurable way to run alpaca -Based Chat UI and API
 
 
 ![Apaca1](https://user-images.githubusercontent.com/38191717/227757954-2ffe5740-55da-4c01-9954-1accdb5e37bd.png)
