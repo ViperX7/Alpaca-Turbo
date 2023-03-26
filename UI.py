@@ -111,7 +111,7 @@ class ChatBotUI:
 
     def add_text(self, history, text):
         # add conversation to chat
-        curr_conversation = history + [(text, None)]
+        curr_conversation = history + [(text, None)] if history else [(text, None)]
         self.chatwindowstate = curr_conversation
         # if len(self._conv) > 0 else []
         return self.chatwindowstate, ""  # return latest conversation
@@ -590,7 +590,7 @@ class ArenaUI:
 
     def add_text(self, history, text):
         # add conversation to chat
-        curr_conversation = history + [(text, None)]
+        curr_conversation = history + [(text, None)] if history else [(text, None)]
         self.chatwindowstate = curr_conversation
         # if len(self._conv) > 0 else []
         return self.chatwindowstate, ""  # return latest conversation

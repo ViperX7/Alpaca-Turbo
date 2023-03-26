@@ -16,10 +16,10 @@ promptui = PromptPlayUI(ASSISTANT)
 areena = ArenaUI(ASSISTANT)
 
 with gr.Blocks(analytics_enabled=False) as demo:
-    with gr.Tab("Areena"):
-        areena.render()
     with gr.Tab("Chat"):
         gptui.render()
+    with gr.Tab("Areena"):
+        areena.render()
     with gr.Tab("Prompt Play ground"):
         promptui.render()
     with gr.Tab("Settings"):
