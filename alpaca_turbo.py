@@ -65,7 +65,7 @@ class AssistantSettings:
 class Assistant:
     """Alpaca Assistant"""
 
-    model_path = "~/dalai/alpaca/models/7B/ggml-model-q4_0.bin" if "-m" not in sys.argv else sys.argv[-1]
+    model_path = "~/dalai/alpaca/models/7B/ggml-model-q4_0.bin"
 
     models = []
     files = os.listdir()
