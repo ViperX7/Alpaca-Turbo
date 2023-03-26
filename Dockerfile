@@ -28,10 +28,10 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 WORKDIR /app
 
 
-RUN mv /alpaca.cpp/main /app/bin/linux
+RUN cp /alpaca.cpp/main /app/bin/linux
 
 # Install the Python packages specified in requirements.txt
 
 
 # Start the webui.py file when the container is started
-CMD ["python", "webui.py", "-d","-m", "/app/*.bin"]
+CMD ["/bin/sh","runindocker.sh"]
