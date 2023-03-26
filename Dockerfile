@@ -20,7 +20,7 @@ RUN cd alpaca.cpp/ && make
 RUN git clone https://github.com/ViperX7/Alpaca-Turbo /app
 
 RUN pip install --no-cache-dir -r /app/requirements.txt
-
+#
 # Copy everything in the app directory to the Docker image
 # COPY ./app /app
 
@@ -34,4 +34,4 @@ RUN mv /alpaca.cpp/main /app/bin/linux
 
 
 # Start the webui.py file when the container is started
-CMD ["python", "webui.py", "-d","-m", "/data/ggml-model-q4_0.bin"]
+CMD ["python", "webui.py", "-d","-m", "/app/*.bin"]
