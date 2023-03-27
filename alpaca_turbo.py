@@ -184,7 +184,7 @@ class Assistant:
         for instr, resp in history:
             prompt += self.format.format(instruction=instr, response=resp)
 
-        prompt = prompt[-1*self.history_size:] if len(prompt) > self.history_size else prompt
+        # prompt = prompt[-1*self.history_size:] if len(prompt) > self.history_size else prompt
         prompt = character + prompt
 
         prompt = prompt.strip("\n")
