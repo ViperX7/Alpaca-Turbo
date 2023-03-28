@@ -44,47 +44,47 @@ python webui.py
 ## How to use Alpaca-Turbo on Windows
 
 1. Open the CMD in Windows 
-![CMD](https://drive.google.com/file/d/1h3RGaMDR-chuacRxTe9o5867PY1mT-VH/view?usp=share_link)
+![CMD](https://dl.dropbox.com/s/rc6p3xl8sb46dgn/1.png?dl=0)
 2. Clone the github repository where the CMD is opened that means in that particular directory
-![Clone Repository](https://drive.google.com/file/d/1y4nWjb6X7N-QAPqqHTelxdtLqFxs0-Aw/view?usp=share_link)
+![Clone Repository](https://dl.dropbox.com/s/qmd7ie96y8o80k3/2.png?dl=0)
 ```
 git clone https://github.com/ViperX7/Alpaca-Turbo.git
 ```
 3. Go into the Alpaca-Turbo Directory
-![Alpaca-Turbo Directory](https://drive.google.com/file/d/1yEUU9roB5eI1Gakzwjm4NpQFcMG-IZpo/view?usp=share_link)
+![Alpaca-Turbo Directory](https://dl.dropbox.com/s/64pum8vkv4gvbna/3.png?dl=0)
 ```
 cd Alpaca-Turbo
 ```
 4. Now installing all the dependencies which are in the requirements.txt file
-![Example Image](https://drive.google.com/file/d/1_WfyktBJvhBaxQPrRo22ieNYPEvZKIXU/view?usp=share_link)
+![Dependencies install](https://dl.dropbox.com/s/r8tih2g3qnj54y8/4.png?dl=0)
 ```
 pip install -r requirements.txt
 ```
 5. If you encounter any error regarding `gradio.exe.deleteme` for this just install gradio separately
-![Gradio error](https://drive.google.com/file/d/1IuOjGWg-oR1sHxBEu86vUpqtPoNe1gA-/view?usp=share_link)
+![Gradio error](https://dl.dropbox.com/s/igzsaksd81no81e/4%202nd.png?dl=0)
 ```
 pip install gradio
 ```
-![Gradio Install](https://drive.google.com/file/d/19uN_ZdWHrZuQpahgXzj52lbBYPwODqtE/view?usp=share_link)
-![Error Resolved](https://drive.google.com/file/d/1H49WcRFo2GBJ4mRusJFu0rv-tlJ_LDbf/view?usp=share_link)
+![Gradio Install](https://dl.dropbox.com/s/vazcnlc3b37w1pe/5%202nd.png?dl=0)
+![Error Resolved](https://dl.dropbox.com/s/qbasux4nobvi6lm/5%203rd.png?dl=0)
 6. Then since we are good to go this process is specifically for windows then type the following command
-![startwin.py](https://drive.google.com/file/d/1uLDojTgLjfciZUbx8weth3Uu0BnWKkNn/view?usp=share_link)
+![startwin.py](https://dl.dropbox.com/s/69h917ldziomsjp/6.png?dl=0)
 ```
 python startwin.py
 ```
 7. After this it will ask you to download model just hit 'y' and press enter it will take its time to download the model for you
-![Model Install](https://drive.google.com/file/d/1-9Qs40vBBhO2oQt8Qt0sX-MORXH7sUNE/view?usp=share_link)
-![Progress](https://drive.google.com/file/d/1fy7PnuhXF4hPuYSIlqBb-cmwQ2cuOatH/view?usp=share_link)
-![Completed installation of model](https://drive.google.com/file/d/1iZ4u6ZmONG38lRd0Fk4TSYXFNuWj2v9z/view?usp=share_link)
+![Model Install](https://dl.dropbox.com/s/uor22ox6h91lhut/8.png?dl=0)
+![Progress](https://dl.dropbox.com/s/ftxdbe7uj75zcsc/10.png?dl=0)
+![Completed installation of model](https://dl.dropbox.com/s/gel46m4gtuaizhy/11.png?dl=0)
 8. Now the concluding step to run our webui of Alpaca-Turbo
-![Running alpaca-turbo webui.py](https://drive.google.com/file/d/1taFz1WIo17r2pRsOQzOUkJ7KPLX2-kQ3/view?usp=share_link)
+![Running alpaca-turbo webui.py](https://dl.dropbox.com/s/vvmeki04jkesdng/12.png?dl=0)
 ```
 python webui.py
 ```
 9. Just now go to locahost:8000 or 127.0.0.1:8000 to see your Alpaca-Turbo in Action
-![Running webui](https://drive.google.com/file/d/1TSrrMy7c92EB0_MfAj1LA7ZSD3Q9HPyQ/view?usp=share_link)
-![Firstlook](https://drive.google.com/file/d/1FfMohbT4clh0Sspc-pjSEk5BqG0mhuYJ/view?usp=share_link)
-![Model loading logs](https://drive.google.com/file/d/1yU0L_ZBwWujSPGXM3PoGMbScx2hejc2q/view?usp=share_link)
+![Running webui](https://dl.dropbox.com/s/3cd8jxs9wos47yp/13.png?dl=0)
+![Firstlook](https://dl.dropbox.com/s/3lpolb29wq1moh3/14.png?dl=0)
+![Model loading logs](https://dl.dropbox.com/s/7pyqksvryatx9xs/15.png?dl=0)
 10. If this `python webui.py` command gives any error just simply delete the `settings.dat` by typing
 
 ```
