@@ -3,9 +3,10 @@ Interactive library
 """
 import os
 from signal import SIGTERM
-from rich import print as eprint
 
+from colorama import Fore
 from pexpect.popen_spawn import PopenSpawn
+from rich import print as eprint
 
 
 class Process(PopenSpawn):
@@ -36,15 +37,18 @@ class Process(PopenSpawn):
             codec_errors,
             preexec_fn,
         )
-        eprint(cmd)
         with open("./pid", "w", encoding="utf-8") as file:
             file.writelines([str(self.pid)])
+
+        self.debug=False
+        eprint(cmd)
 
     def kill(self, sig):
         os.remove("pid")
         return super().kill(sig)
 
     def killx(self):
+        """kill the process with sigterm"""
         return self.kill(SIGTERM)
 
     def recvuntil(self, data):
@@ -53,16 +57,30 @@ class Process(PopenSpawn):
         info = b""
         while data not in info:
             info += self.read(1)
-            # print(info)
         return info
 
-    def recv(self, *cfg):
-        data = self.read(*cfg)
+    def read(self, size=-1):
+        data = super().read(size)
+        _ = print(
+            Fore.BLUE + str(data)[2:-1] + Fore.RESET,
+            end="" if data[-1] != b"\n" else "\n",
+        ) if self.debug else None
+        return data
+
+    def readline(self, size=-1):
+        data = super().readline(size)
+        _ = print(Fore.BLUE + str(data)[2:-1] + Fore.RESET) if self.debug else None
+        return data
+
+    def send(self, s):
+        data = s.encode("utf-8") if isinstance(s, bytes) else s
+        _ = print(Fore.BLUE + str(data)[1:-1] + Fore.RESET) if self.debug else None
+        data = super().send(data)
         # print(data)
         return data
 
-    def interactive(self, *cfg):
-        return self.interact(*cfg)
+    # def interactive(self, *cfg):
+    #     return self.interactive(*cfg)
 
     def sendline(self, line):
         msg = line + "\n"
