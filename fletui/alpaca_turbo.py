@@ -6,6 +6,7 @@ from time import time
 from interaction import Process
 from rich import print as eprint
 from rich.progress import track
+from dtype import Conversation
 
 
 class Assistant:
@@ -22,22 +23,23 @@ class Assistant:
         self.repeat_penalty = 1.3
         # self.history_size = 1500
 
-        self.format = (
-            """### Instruction:\n\n{instruction}\n### Response:\n{response}"""
-        )
-        self.enable_history = False
-        self.history  = []
+        self.format = """### Instruction:\n{instruction}\n### Response:\n{response}\n"""
+        # self.pre_prompt = "you are a highly intelligent chatbot named devil and you remember all conversation history."
+        self.pre_prompt = " Below are instructions to a smart bot named devil, provide response inteligently to instructions.\n\n"
+        self.enable_history = True
+        self.history: list[Conversation] = []
 
         self.end_marker = b"RSTsr"
 
         self.chat_history = []
+        self.model_idx = 0
 
-    def list_available_models(directory_path="models", extension="bin"):
+    def list_available_models(self, directory_path="models", extension="bin"):
         """Returns a list of file names with the given extension in the given directory"""
         file_list = []
         for file in os.listdir(directory_path):
             if file.endswith(extension):
-                file_list.append(file)
+                file_list.append(os.path.join(directory_path, file))
         return file_list
 
     @staticmethod
@@ -79,7 +81,7 @@ class Assistant:
             "--n_predict",
             f"{self.n_predict}",
             "-m",
-            f"{self.model_path}",
+            f"{self.list_available_models()[self.model_idx]}",
             "--interactive-start",
         ]
         return command
@@ -130,10 +132,24 @@ class Assistant:
         self.process.send("\003")
         self.current_state = "prompt"
 
-
+    def chatbot(self, prompt: Conversation):
+        """Adds history support"""
+        self.history.append(prompt)
+        # build history chahe
+        final_prompt_2_send = []
+        data2use = self.history if self.enable_history else [self.history[-1]]
+        for convo in data2use:
+            for sequence in convo.get_prompt():
+                final_prompt_2_send.append(sequence)
+        final_prompt_2_send = "".join(final_prompt_2_send)
+        self.send_prompts(final_prompt_2_send)
+        for char in self.stream_generation():
+            self.history[-1].response += char
+            yield char
 
     def send_prompts(self, txtblob):
         """send the prompts with bos token"""
+        eprint(txtblob)
         txtblob = txtblob if isinstance(txtblob, list) else [txtblob]
         _ = eprint(txtblob) if self.DEBUG else None
         if self.action("generate"):
@@ -145,7 +161,6 @@ class Assistant:
                 for line in lines:
                     self.process.recvuntil(") :  ")
                     self.process.sendline(line)
-
 
                 self.process.recvuntil(") :  ")
                 self.process.sendline("@end@")
@@ -210,13 +225,14 @@ class Assistant:
         """Repl for my chat bot"""
         assistant = Assistant()
         assistant.load_model()
+        fmt = [assistant.pre_prompt, assistant.format]
         while True:
             # print("=====")
-            prompt = "### Instruction:\n\n"
-            prompt += input(">>> ")
-            prompt += "\n### Response:\n\n"
-            assistant.send_prompts(prompt)
-            resp = assistant.stream_generation()
+            prompt = input(">>>>>> ")
+            conv = Conversation(fmt, prompt)
+            fmt = assistant.format
+
+            resp = assistant.chatbot(conv)
 
             for char in resp:
                 print(char, end="")
