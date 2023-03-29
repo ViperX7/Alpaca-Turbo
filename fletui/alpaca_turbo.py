@@ -25,12 +25,10 @@ class Assistant:
 
         # self.history_size = 1500
 
-        self.pre_prompt = " Below are instructions to a smart bot named devil, provide response inteligently to instructions.\n\n"
-        self.pre_prompt = " Below are instructions provide best possible response and take into account entire history.\n\n"
+        # self.pre_prompt = " Below are instructions to a smart bot named devil, provide response inteligently to instructions.\n\n"
+        # self.pre_prompt = " Below are instructions provide best possible response and take into account entire history.\n\n"
         self.pre_prompt = "  Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n"
-        self.format = (
-            """### Instruction:\n\n{instruction}\n\n### Response:\n\n{response}"""
-        )
+        self.format = "### Instruction:\n\n{instruction}\n\n### Response:\n\n{response}"
         # self.pre_prompt = "you are a highly intelligent chatbot named devil and you remember all conversation history."
         self.enable_history = True
         self.history: list[Conversation] = []
@@ -38,10 +36,14 @@ class Assistant:
         self.end_marker = b"RSTsr"
 
         self.chat_history = []
+
         self.model_idx = 0
+        self.is_loaded = ""
+
+        self.current_state = "Initialised"
 
     def list_available_models(self, directory_path="models", extension="bin"):
-        """Returns a list of file names with the given extension in the given directory"""
+        """Returns a list of file names with the given extension  given dir"""
         file_list = []
         for file in os.listdir(directory_path):
             if file.endswith(extension):
@@ -96,34 +98,46 @@ class Assistant:
 
     def load_model(self):
         """load binary in memory"""
-        self.process = Process(self.command, timeout=10000)
-        self.process.readline()
-        self.process.readline()
-        self.process.readline()
-        self.process.readline()
-        self.process.readline()
-        self.process.recvuntil("load: ")
-        is_loaded = False
-        for _ in track(range(100)):
-            if is_loaded:
-                continue
-            ppt = self.process.read(1)
-            is_loaded = b"d" == ppt
+        if self.is_loaded:
+            return (
+                f"model already loaded {self.list_available_models()[self.model_idx]}"
+            )
+        try:
+            self.process = Process(self.command, timeout=10000)
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.recvuntil("load: ")
+            is_loaded = False
+            for _ in track(range(100)):
+                if is_loaded:
+                    continue
+                ppt = self.process.read(1)
+                is_loaded = b"d" == ppt
 
-        self.process.readline()
-        self.process.readline()
-        self.process.readline()
-        self.process.readline()
-        self.process.readline()
-        self.process.readline()
-        self.process.readline()
-        self.process.readline()
-        self.process.readline()
-        self.process.readline()
-        self.process.readline()
-        self.process.readline()
-        self.process.recvuntil(self.end_marker)
-        self.current_state = "prompt"
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.recvuntil(self.end_marker)
+            self.current_state = "prompt"
+
+            self.is_loaded = self.list_available_models()[self.model_idx]
+        except Exception:
+            self.is_loaded = ""
+            return f"Failed loading {self.list_available_models()[self.model_idx]}"
+
+        return f"loaded successfully {self.list_available_models()[self.model_idx]}"
 
     def action(self, command):
         """returns whether a request can be colmpleted or not"""
@@ -153,6 +167,7 @@ class Assistant:
         if prompt.preprompt:
             final_prompt_2_send = [prompt.preprompt, final_prompt_2_send]
         self.send_prompts(final_prompt_2_send)
+
         for char in self.stream_generation():
             self.history[-1].response += char
             yield char
@@ -246,6 +261,12 @@ class Assistant:
 
         # return buffer
 
+    def send_conv(self, preprompt, fmt, prompt):
+        """function to simplify interface"""
+        conv = Conversation(preprompt, fmt, prompt)
+        resp = self.chatbot(conv)
+        return resp
+
     @staticmethod
     def repl():
         """Repl for my chat bot"""
@@ -258,20 +279,16 @@ class Assistant:
         while True:
             # print("=====")
             prompt = input(">>>>>> ")
-            conv = Conversation(preprompt, fmt, prompt)
             preprompt = ""
 
-            resp = assistant.chatbot(conv)
+            resp = assistant.send_conv(preprompt, fmt, prompt)
 
             for char in resp:
                 print(char, end="")
             print()
 
 
-Assistant.repl()
-
-
-
+_ = Assistant.repl() if __name__ == "__main__" else None
 """
 
 /list_models
