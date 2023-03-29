@@ -3,29 +3,35 @@ import platform
 import sys
 from time import time
 
+from dtype import Conversation
 from interaction import Process
 from rich import print as eprint
 from rich.progress import track
-from dtype import Conversation
 
 
 class Assistant:
 
     def __init__(self):
         self.DEBUG = "-d" in sys.argv
+
         self.seed = 888777
         self.threads = 4
         self.n_predict = 200
         self.top_k = 40
         self.top_p = 0.9
-        self.temp = 0.5
+        self.temp = 0.1
         self.repeat_last_n = 64
         self.repeat_penalty = 1.3
+
         # self.history_size = 1500
 
-        self.format = """### Instruction:\n{instruction}\n### Response:\n{response}\n"""
-        # self.pre_prompt = "you are a highly intelligent chatbot named devil and you remember all conversation history."
         self.pre_prompt = " Below are instructions to a smart bot named devil, provide response inteligently to instructions.\n\n"
+        self.pre_prompt = " Below are instructions provide best possible response and take into account entire history.\n\n"
+        self.pre_prompt = "  Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n"
+        self.format = (
+            """### Instruction:\n\n{instruction}\n\n### Response:\n\n{response}"""
+        )
+        # self.pre_prompt = "you are a highly intelligent chatbot named devil and you remember all conversation history."
         self.enable_history = True
         self.history: list[Conversation] = []
 
@@ -78,6 +84,8 @@ class Assistant:
             f"{self.repeat_last_n}",
             "--repeat_penalty",
             f"{self.repeat_penalty}",
+            "--temp",
+            f"{self.temp}",
             "--n_predict",
             f"{self.n_predict}",
             "-m",
@@ -142,6 +150,8 @@ class Assistant:
             for sequence in convo.get_prompt():
                 final_prompt_2_send.append(sequence)
         final_prompt_2_send = "".join(final_prompt_2_send)
+        if prompt.preprompt:
+            final_prompt_2_send = [prompt.preprompt, final_prompt_2_send]
         self.send_prompts(final_prompt_2_send)
         for char in self.stream_generation():
             self.history[-1].response += char
@@ -154,8 +164,20 @@ class Assistant:
         _ = eprint(txtblob) if self.DEBUG else None
         if self.action("generate"):
             bos = len(txtblob)
-            self.process.recvuntil("bos> ")
+            self.process.recvuntil("n_inps>  ")
             self.process.sendline(str(bos))
+
+            self.process.recvuntil("n_threads> ")
+            self.process.sendline(str(self.threads))
+            self.process.recvuntil("top_k> ")
+            self.process.sendline(str(self.top_k))
+            self.process.recvuntil("top_p> ")
+            self.process.sendline(str(self.top_p))
+            self.process.recvuntil("temperature> ")
+            self.process.sendline(str(self.temp))
+            self.process.recvuntil("repeat_penalty> ")
+            self.process.sendline(str(self.repeat_penalty))
+
             for txt in txtblob:
                 lines = txt.split("\n")
                 for line in lines:
@@ -163,7 +185,7 @@ class Assistant:
                     self.process.sendline(line)
 
                 self.process.recvuntil(") :  ")
-                self.process.sendline("@end@")
+                self.process.sendline("@done@")
             self.process.readline()
             self.current_state = "generating"
         else:
@@ -182,6 +204,7 @@ class Assistant:
             # Detect end of text if detected try to confirm else reset
             if char == b"R" or len(marker_detected) > 0:
                 marker_detected += char
+                char_old += char
                 # print("==========")
                 # print(marker_detected)
                 # print(self.end_marker[:len(marker_detected)])
@@ -192,7 +215,10 @@ class Assistant:
 
             if self.end_marker in buffer:
                 buffer = buffer.replace(self.end_marker, b"")
+                char_old += char
+                char_old = char_old.replace(self.end_marker, b"")
                 self.current_state = "prompt"
+                yield char_old.decode("utf-8")
                 # print(f"\nStream Ended {buffer}")
                 break
 
@@ -225,12 +251,15 @@ class Assistant:
         """Repl for my chat bot"""
         assistant = Assistant()
         assistant.load_model()
-        fmt = [assistant.pre_prompt, assistant.format]
+        assistant.enable_history = False
+        fmt = assistant.format
+        # assistant.pre_prompt = ""
+        preprompt = assistant.pre_prompt
         while True:
             # print("=====")
             prompt = input(">>>>>> ")
-            conv = Conversation(fmt, prompt)
-            fmt = assistant.format
+            conv = Conversation(preprompt, fmt, prompt)
+            preprompt = ""
 
             resp = assistant.chatbot(conv)
 
@@ -240,3 +269,38 @@ class Assistant:
 
 
 Assistant.repl()
+
+
+
+"""
+
+/list_models
+/load_model (idx)
+
+/send_input {inp="dsfasf",t="12"}
+
+
+/get_generation
+/stop
+/status
+
+/settings
+
+/chat_history []
+/save_chat {}
+/chat 1
+
+
+/get_personas
+
+{
+name
+persona
+format
+}
+
+Generate a passage on alpacap @T/12@
+
+
+
+"""

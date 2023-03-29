@@ -220,4 +220,4 @@ def main(page: Page):
     page.update()
 
 
-ft.app(target=main, assets_dir="assets",)#view=ft.WEB_BROWSER)
+ft.app(target=main, assets_dir="assets",view=ft.WEB_BROWSER)

@@ -10,16 +10,24 @@ class Conversation:
     FILE_EXTENSION = "json"
     CONVERSATION_COUNTER = 0
 
-    def __init__(self, fmt: list[str] | str, instruction: str = "", response: str = ""):
+    def __init__(
+        self,
+        preprompt: str = "",
+        fmt: list[str] | str=[""],
+        instruction: str = "",
+        response: str = "",
+    ):
         self.format = fmt if isinstance(fmt, list) else [fmt]
         self.response = response
         self.instruction = instruction
+        self.preprompt = preprompt
 
     def get_prompt(self):
         """Return the prompt filled with conversation"""
         convo = []
         for data in self.format:
-            data = data.format(instruction=self.instruction, response=self.response)
+            data = data.format(instruction=self.instruction,
+                               response=self.response)
             convo.append(data)
         return convo
 
@@ -29,13 +37,15 @@ class Conversation:
         convo_dict = {}
         for filename in os.listdir(Conversation.SAVE_DIR):
             if filename.endswith(Conversation.FILE_EXTENSION):
-                with open(os.path.join(Conversation.SAVE_DIR, filename), "r") as f:
+                with open(os.path.join(Conversation.SAVE_DIR, filename),
+                          "r") as f:
                     convo_data = json.load(f)
                     fmt = convo_data["format"]
                     instruction = convo_data["instruction"]
                     response = convo_data["response"]
+                    preprompt = convo_data["preprompt"]
                     convo_list = [
-                        Conversation(fmt, instruction, response)
+                        Conversation(fmt, instruction, response, preprompt)
                         for convo_data in convo_data
                     ]
                     convo_dict[filename] = convo_list
@@ -58,6 +68,7 @@ class Conversation:
                     "format": convo.format,
                     "instruction": convo.instruction,
                     "response": convo.response,
+                    "preprompt": convo.preprompt,
                 }
                 convo_list.append(convo_dict)
             json.dump(convo_list, f)
