@@ -1,0 +1,8 @@
+flask
+flask-cors
+flask-socketio
+rich
+pexpect
+colorama
+psutil
+requests
