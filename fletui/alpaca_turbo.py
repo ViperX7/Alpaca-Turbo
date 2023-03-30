@@ -10,7 +10,6 @@ from rich.progress import track
 
 
 class Assistant:
-
     def __init__(self):
         self.DEBUG = "-d" in sys.argv
 
@@ -43,6 +42,19 @@ class Assistant:
 
         self.current_state = "Initialised"
         self.is_first_request = True
+
+    def safe_kill(self):
+        """kill the bot if not in use"""
+        if self.current_state == "generating":
+            return "Can't kill bot busy"
+
+        self.process.killx()
+        self.is_first_request = True
+        self.current_state = "Initialised"
+        self.chat_history = []
+        self.is_loaded = ""
+
+        return "killed the bot"
 
     def list_available_models(self, directory_path="models", extension="bin"):
         """Returns a list of file names with the given extension  given dir"""
@@ -230,7 +242,7 @@ class Assistant:
                 # print("==========")
                 # print(marker_detected)
                 # print(self.end_marker[:len(marker_detected)])
-                if marker_detected in self.end_marker[:len(marker_detected)]:
+                if marker_detected in self.end_marker[: len(marker_detected)]:
                     # print("cont")
                     continue
                 marker_detected = b""
@@ -252,9 +264,7 @@ class Assistant:
                 if len(char) == 1 and char[0] <= 0x7E and char[0] >= 0x21:
                     char = char.decode("utf-8")
                     char_old = b""
-                elif len(char) in [
-                        4, 6
-                ]:  # If 4 byte code or handle weird edge cases
+                elif len(char) in [4, 6]:  # If 4 byte code or handle weird edge cases
                     char = char.decode("utf-8")
                     char_old = b""
                 else:

@@ -31,9 +31,19 @@ def send_conv(data):
     preprompt = data.get("pre", "")
     output = assistant.send_conv(preprompt, fmt, inp)
     print("Attempting to GENERATE======================")
+    buffer = ""
     for value in output:  # (output, "Generating"):
-        print(value, end="")
+        buffer += value
         emit("data", value)
+    print("=====LOG=====")
+    print(buffer)
+    print("=====LOG=====")
+
+
+@app.route("/unload")
+def unload_model():
+    result = assistant.safe_kill()
+    return jsonify({"result": result})
 
 
 @socketio.on("test")
@@ -96,16 +106,19 @@ def status():
 
 @app.route("/config", methods=["GET"])
 def get_config():
-    return jsonify({
-        "threads": assistant.threads,
-        "top_k": assistant.top_k,
-        "top_p": assistant.top_p,
-        "temp": assistant.temp,
-        "repeat_penalty": assistant.repeat_penalty,
-        "seed": assistant.seed,
-        "n_predict": assistant.n_predict,
-        "repeat_last_n": assistant.repeat_last_n
-    })
+    return jsonify(
+        {
+            "threads": assistant.threads,
+            "top_k": assistant.top_k,
+            "top_p": assistant.top_p,
+            "temp": assistant.temp,
+            "repeat_penalty": assistant.repeat_penalty,
+            "seed": assistant.seed,
+            "n_predict": assistant.n_predict,
+            "repeat_last_n": assistant.repeat_last_n,
+        }
+    )
+
 
 @app.route("/config", methods=["POST"])
 def set_config():
@@ -119,7 +132,6 @@ def set_config():
     assistant.n_predict = data.get("n_predict", assistant.n_predict)
     assistant.repeat_last_n = data.get("repeat_last_n", assistant.repeat_last_n)
     return jsonify({"success": True})
-
 
 
 @app.route("/chat_history")
