@@ -4,6 +4,7 @@ from alpaca_turbo import Assistant
 from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
+from prompts import Personas
 from rich.progress import track
 
 app = Flask(__name__)
@@ -12,6 +13,7 @@ assistant = Assistant()
 ################################
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="http://localhost:4200")
+personas = Personas("./prompts.json")
 
 
 @socketio.on("connect")
@@ -44,11 +46,6 @@ def send_conv(data):
 def unload_model():
     result = assistant.safe_kill()
     return jsonify({"result": result})
-
-
-@socketio.on("test")
-def send_conv():
-    print("TEXTEXTE")
 
 
 ########################
@@ -134,28 +131,62 @@ def set_config():
     return jsonify({"success": True})
 
 
-@app.route("/chat_history")
-def chat_history():
-    return jsonify({"chat_history": assistant.chat_history})
+@app.route("/load_chat/<int:id>", methods=["GET"])
+def load_chat(id):
+    result = assistant.load_chat(id)
+    return jsonify(result)
 
 
-@app.route("/save_chat", methods=["POST"])
+@app.route("/save_chat")
 def save_chat():
-    data = request.json
-    assistant.save_chat(data)
-    return jsonify({"status": "success"})
+    result = assistant.save_chat()
+    return jsonify(result)
 
 
-@app.route("/chat/<int:persona_id>")
-def chat(persona_id):
-    response = assistant.chat_with_persona(persona_id)
-    return jsonify(response)
+@app.route("/get_conv_logs", methods=["GET"])
+def get_conv_logs():
+    result = assistant.get_conv_logs()
+    return jsonify(result)
 
 
-@app.route("/get_personas")
+@app.route("/clear_chat", methods=["POST"])
+def clear_chat():
+    result = assistant.clear_chat()
+    return jsonify(result)
+
+
+@app.route("/personas", methods=["GET"])
 def get_personas():
-    personas = assistant.get_personas()
-    return jsonify(personas)
+    personas_list = personas.get_all()
+    return jsonify(personas_list)
+
+
+@app.route("/personas/<string:name>", methods=["GET"])
+def get_persona(name):
+    persona_data = personas.get(name)
+    if persona_data:
+        return jsonify(persona_data)
+    else:
+        return jsonify({"error": "Persona not found."})
+
+
+@app.route("/personas", methods=["POST"])
+def add_persona():
+    data = request.json
+    if "name" not in data or "data" not in data:
+        return jsonify({"error": "Name and data fields are required."})
+    name = data["name"]
+    persona_data = data["data"]
+    personas.add(name, persona_data)
+    return jsonify({"success": True})
+
+
+@app.route("/personas/<string:name>", methods=["PUT"])
+def update_persona(name):
+    data = request.json
+    persona_data = data["data"]
+    personas.update(name, persona_data)
+    return jsonify({"success": True})
 
 
 if __name__ == "__main__":

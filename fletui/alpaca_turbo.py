@@ -35,13 +35,40 @@ class Assistant:
 
         self.end_marker = b"RSTsr"
 
-        self.chat_history = []
-
         self.model_idx = 0
         self.is_loaded = ""
 
         self.current_state = "Initialised"
         self.is_first_request = True
+
+    def load_chat(self, id):
+        """load chat"""
+        result = {"can't load generation going on"}}
+        if self.current_state != "generating":
+            data = Conversation.load()
+            result = data[id] if id in data else {}
+        return result
+
+    def save_chat(self):
+        """load chat"""
+        result = "can't save generation going on"
+        if self.current_state != "generating":
+            data = Conversation.save(self.history)
+            result = "success"
+        return result
+
+    def get_conv_logs(self):
+        """conversation logs"""
+        data = Conversation.load()
+        return list(data.keys())
+
+    def clear_chat(self):
+        """clear current history context"""
+        result = "can't save generation going on"
+        if self.current_state != "generating":
+            self.history = []
+            result =  "success"
+        return result
 
     def safe_kill(self):
         """kill the bot if not in use"""
@@ -51,7 +78,8 @@ class Assistant:
         self.process.killx()
         self.is_first_request = True
         self.current_state = "Initialised"
-        self.chat_history = []
+        Conversation.save(self.history)
+        self.history = []
         self.is_loaded = ""
 
         return "killed the bot"
@@ -310,35 +338,3 @@ class Assistant:
 
 
 _ = Assistant.repl() if __name__ == "__main__" else None
-"""
-
-/list_models
-/load_model (idx)
-
-/send_input {inp="dsfasf",t="12"}
-
-
-/get_generation
-/stop
-/status
-
-/settings
-
-/chat_history []
-/save_chat {}
-/chat 1
-
-
-/get_personas
-
-{
-name
-persona
-format
-}
-
-Generate a passage on alpacap @T/12@
-
-
-
-"""
