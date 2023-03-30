@@ -11,7 +11,8 @@ assistant = Assistant()
 
 ################################
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins='http://localhost:4200')
+socketio = SocketIO(app, cors_allowed_origins="http://localhost:4200")
+
 
 @socketio.on("connect")
 def test_connect():
@@ -30,15 +31,14 @@ def send_conv(data):
     preprompt = data.get("pre", "")
     output = assistant.send_conv(preprompt, fmt, inp)
     print("Attempting to GENERATE======================")
-    for value in output:#(output, "Generating"):
-        print(value,end="")
+    for value in output:  # (output, "Generating"):
+        print(value, end="")
         emit("data", value)
+
 
 @socketio.on("test")
 def send_conv():
     print("TEXTEXTE")
-
-
 
 
 ########################
@@ -63,24 +63,63 @@ def stop():
     return jsonify({"status": res})
 
 
-
 import psutil
+
 
 @app.route("/status")
 def status():
     cpu_percent = psutil.cpu_percent()
     ram_usage = psutil.virtual_memory().percent
-    threads_above_80 = len([thread for thread in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent']) if thread.info['cpu_percent'] > 80])
+    total_ram = psutil.virtual_memory().total / (1024**3)  # convert to GB
+    total_cores = psutil.cpu_count(logical=False)
+    total_threads = psutil.cpu_count(logical=True)
+    threads_above_80 = len(
+        [
+            thread
+            for thread in psutil.process_iter(attrs=["pid", "name", "cpu_percent"])
+            if thread.info["cpu_percent"] > 80
+        ]
+    )
+    return jsonify(
+        {
+            "cpu_percent": cpu_percent,
+            "ram_usage": ram_usage,
+            "total_ram": total_ram,
+            "total_cores": total_cores,
+            "total_threads": total_threads,
+            "threads_above_80": threads_above_80,
+            "is_model_loaded": assistant.is_loaded,
+            "turbo_status": assistant.current_state,
+        }
+    )
+
+
+@app.route("/config", methods=["GET"])
+def get_config():
     return jsonify({
-        "cpu_percent": cpu_percent,
-        "ram_usage": ram_usage,
-        "threads_above_80": threads_above_80
+        "threads": assistant.threads,
+        "top_k": assistant.top_k,
+        "top_p": assistant.top_p,
+        "temp": assistant.temp,
+        "repeat_penalty": assistant.repeat_penalty,
+        "seed": assistant.seed,
+        "n_predict": assistant.n_predict,
+        "repeat_last_n": assistant.repeat_last_n
     })
 
+@app.route("/config", methods=["POST"])
+def set_config():
+    data = request.get_json()
+    assistant.threads = data.get("threads", assistant.threads)
+    assistant.top_k = data.get("top_k", assistant.top_k)
+    assistant.top_p = data.get("top_p", assistant.top_p)
+    assistant.temp = data.get("temp", assistant.temp)
+    assistant.repeat_penalty = data.get("repeat_penalty", assistant.repeat_penalty)
+    assistant.seed = data.get("seed", assistant.seed)
+    assistant.n_predict = data.get("n_predict", assistant.n_predict)
+    assistant.repeat_last_n = data.get("repeat_last_n", assistant.repeat_last_n)
+    return jsonify({"success": True})
 
-@app.route("/settings")
-def settings():
-    return jsonify({"settings": assistant.__dict__})
 
 
 @app.route("/chat_history")
@@ -108,4 +147,4 @@ def get_personas():
 
 
 if __name__ == "__main__":
-    socketio.run(app)
+    socketio.run(app, host="0.0.0.0", allow_unsafe_werkzeug=True, debug=True)

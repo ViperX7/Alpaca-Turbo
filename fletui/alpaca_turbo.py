@@ -14,14 +14,15 @@ class Assistant:
     def __init__(self):
         self.DEBUG = "-d" in sys.argv
 
-        self.seed = 888777
         self.threads = 4
-        self.n_predict = 200
         self.top_k = 40
         self.top_p = 0.9
         self.temp = 0.1
-        self.repeat_last_n = 64
         self.repeat_penalty = 1.3
+
+        self.seed = 888777
+        self.n_predict = 200
+        self.repeat_last_n = 64
 
         # self.history_size = 1500
 

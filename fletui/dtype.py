@@ -32,7 +32,7 @@ class Conversation:
         return convo
 
     @staticmethod
-    def load() -> dict[str, list["Conversation"]]:
+    def load(): #-> dict[str, list["Conversation"]]:
         """Load a list of conversations and return as a dictionary"""
         convo_dict = {}
         for filename in os.listdir(Conversation.SAVE_DIR):
@@ -52,7 +52,7 @@ class Conversation:
         return convo_dict
 
     @staticmethod
-    def save(conversations: list["Conversation"]) -> None:
+    def save(conversations): #list["Conversation"]) -> None:
         """Save a list of conversations"""
         if not os.path.exists(Conversation.SAVE_DIR):
             os.makedirs(Conversation.SAVE_DIR)
