@@ -30,7 +30,7 @@ class Assistant:
         self.pre_prompt = "  Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n"
         self.format = "### Instruction:\n\n{instruction}\n\n### Response:\n\n{response}"
         # self.pre_prompt = "you are a highly intelligent chatbot named devil and you remember all conversation history."
-        self.enable_history = True
+        self.enable_history = False
         self.history: list[Conversation] = []
 
         self.end_marker = b"RSTsr"
@@ -150,9 +150,14 @@ class Assistant:
 
     def stop_generation(self):
         """Interrupts generation"""
-        self.current_state = "stoping_generation"
-        self.process.send("\003")
-        self.current_state = "prompt"
+        if self.current_state == "generating":
+            self.current_state = "stoping_generation"
+            # self.process.send("\003")
+            self.process.interrupt()
+            self.current_state = "prompt"
+            return "Stopped"
+
+        return f"failed to stop current status {self.current_state}"
 
     def chatbot(self, prompt: Conversation):
         """Adds history support"""
@@ -263,6 +268,8 @@ class Assistant:
 
     def send_conv(self, preprompt, fmt, prompt):
         """function to simplify interface"""
+        preprompt = self.pre_prompt if preprompt is None else preprompt
+        fmt = self.format if fmt is None else fmt
         conv = Conversation(preprompt, fmt, prompt)
         resp = self.chatbot(conv)
         return resp

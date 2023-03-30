@@ -13,7 +13,7 @@ class Conversation:
     def __init__(
         self,
         preprompt: str = "",
-        fmt: list[str] | str=[""],
+        fmt=[""],
         instruction: str = "",
         response: str = "",
     ):

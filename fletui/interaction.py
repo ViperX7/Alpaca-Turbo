@@ -2,7 +2,7 @@
 Interactive library
 """
 import os
-from signal import SIGTERM
+from signal import SIGINT, SIGTERM
 
 from colorama import Fore
 from pexpect.popen_spawn import PopenSpawn
@@ -40,8 +40,13 @@ class Process(PopenSpawn):
         with open("./pid", "w", encoding="utf-8") as file:
             file.writelines([str(self.pid)])
 
-        self.debug=False
+        self.debug = False
         eprint(cmd)
+
+    def interrupt(self):
+        """kill the process with sigterm"""
+        super().kill(SIGINT)
+        return "done"
 
     def kill(self, sig):
         os.remove("pid")
@@ -61,20 +66,22 @@ class Process(PopenSpawn):
 
     def read(self, size=-1):
         data = super().read(size)
-        _ = print(
+        _ = (print(
             Fore.BLUE + str(data)[2:-1] + Fore.RESET,
             end="" if data[-1] != b"\n" else "\n",
-        ) if self.debug else None
+        ) if self.debug else None)
         return data
 
     def readline(self, size=-1):
         data = super().readline(size)
-        _ = print(Fore.BLUE + str(data)[2:-1] + Fore.RESET) if self.debug else None
+        _ = print(Fore.BLUE + str(data)[2:-1] +
+                  Fore.RESET) if self.debug else None
         return data
 
     def send(self, s):
         data = s.encode("utf-8") if isinstance(s, bytes) else s
-        _ = print(Fore.BLUE + str(data)[1:-1] + Fore.RESET) if self.debug else None
+        _ = print(Fore.BLUE + str(data)[1:-1] +
+                  Fore.RESET) if self.debug else None
         data = super().send(data)
         # print(data)
         return data
@@ -88,14 +95,18 @@ class Process(PopenSpawn):
 
 
 def main():
-    prog = Process("cmd.exe")
+    prog = Process("cat")
     prog.sendline("hi")
+    print(prog.recvuntil("hi"))
 
     # o = prog.read(1)
     # print(o)
     # input()
     # prog.recvuntil("..............")
-    prog.interact()
+    prog.send(chr(27) + chr(79) + chr(83))
+
+    prog.sendline("hi")
+    print(prog.recvuntil("hi"))
 
 
 _ = main() if __name__ == "__main__" else None

@@ -1,4 +1,5 @@
 import requests
+import sys
 from rich import print as eprint
 
 sess = requests.Session()
@@ -20,40 +21,70 @@ msg = f"Testing {endpoint} ({resp.status_code})"
 eprint(msg)
 eprint("\t\t" + str(resp.json()))
 
-# Send atest input
-endpoint = "send_input"
-data = {
-    "inp": "hi",
-    "pre": "",
-    "fmt": "### Instruction:\n\n{instruction}\n\n### Response:\n\n{response}",
-}
-
-resp = sess.post(URL + endpoint, json=data)
+# Stop generation
+endpoint = "stop"
+idx = 0
+resp = sess.get(URL + endpoint)
 msg = f"Testing {endpoint} ({resp.status_code})"
-eprint(resp.text)
+eprint(msg)
+eprint("\t\t" + str(resp.json()))
 
-# Send another input
-endpoint = "send_input"
-data = {
-    "inp": "give me a thumbs up emoji",
-    "pre": "",
-    "fmt": "### Instruction:\n\n{instruction}\n\n### Response:\n\n{response}",
-}
+######################################
+import socketio
 
-resp = sess.post(URL + endpoint, json=data)
-msg = f"Testing {endpoint} ({resp.status_code})"
-eprint(resp.text)
+sio = socketio.Client()
 
 
+@sio.on("connect")
+def on_connect():
+    print("Connected to server")
 
 
+@sio.on("disconnect")
+def on_disconnect():
+    print("Disconnected from server")
 
 
+@sio.on("data")
+def on_data(data):
+    print(data, "")
 
 
+sio.connect("http://localhost:5000")
 
+sio.emit("test")
+print("OOKO")
+inp = {"inp": "write me a 100 word essay on humans", "fmt": None, "pre": None}
+_ = sio.emit("send_input", inp) if "KK" in sys.argv else None
+print("OOKO")
 
+sio.wait()
 
+######################################
+
+# # Send atest input
+# endpoint = "send_input"
+# data = {
+#     "inp": "hi",
+#     "pre": "",
+#     "fmt": "### Instruction:\n\n{instruction}\n\n### Response:\n\n{response}",
+# }
+#
+# resp = sess.post(URL + endpoint, json=data)
+# msg = f"Testing {endpoint} ({resp.status_code})"
+# eprint(resp.text)
+#
+# # Send another input
+# endpoint = "send_input"
+# data = {
+#     "inp": "give me a thumbs up emoji",
+#     "pre": "",
+#     "fmt": "### Instruction:\n\n{instruction}\n\n### Response:\n\n{response}",
+# }
+#
+# resp = sess.post(URL + endpoint, json=data)
+# msg = f"Testing {endpoint} ({resp.status_code})"
+# eprint(resp.text)
 
 # stream generation
 # Load a model

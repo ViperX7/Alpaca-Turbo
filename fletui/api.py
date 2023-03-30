@@ -1,16 +1,48 @@
+import time
+
 from alpaca_turbo import Assistant
 from flask import Flask, Response, jsonify, request
+from flask_cors import CORS
+from flask_socketio import SocketIO, emit
+from rich.progress import track
 
 app = Flask(__name__)
 assistant = Assistant()
+CORS(app)
+
+################################
+socketio = SocketIO(app)
 
 
-# Set the CSP header to allow POST requests from any origin
-@app.after_request
-def set_csp_header(response):
-    response.headers[
-        "Content-Security-Policy"] = "default-src 'self'; script-src 'self'; object-src 'none'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src *; frame-src 'none'; media-src 'none'; form-action 'self'; frame-ancestors 'none'; base-uri 'self';"
-    return response
+@socketio.on("connect")
+def test_connect():
+    print("Socket connected")
+
+
+@socketio.on("disconnect")
+def test_disconnect():
+    print("socket disconnected")
+
+
+@socketio.on("send_input")
+def send_conv(data):
+    inp = data["inp"]
+    fmt = data.get("fmt", "")
+    preprompt = data.get("pre", "")
+    output = assistant.send_conv(preprompt, fmt, inp)
+    print("Attempting to GENERATE======================")
+    for value in output:#(output, "Generating"):
+        print(value,end="")
+        emit("data", f"data: {value}")
+
+@socketio.on("test")
+def send_conv():
+    print("TEXTEXTE")
+
+
+
+
+########################
 
 
 @app.route("/list_models")
@@ -22,30 +54,14 @@ def list_models():
 @app.route("/load_model/<int:model_idx>")
 def load_model(model_idx):
     assistant.models_idx = model_idx
-    assistant.load_model()
-    return jsonify({"status": "success"})
-
-
-@app.route("/send_input", methods=["POST"])
-def send_conv():
-    data = request.json
-    inp = data["inp"]
-    fmt = data["fmt"] if "fmt" in data else ""
-    preprompt = data["pre"] if "pre" in data else ""
-
-    return Response(assistant.send_conv(preprompt, fmt, inp))
-
-
-@app.route("/stream_generation")
-def stream_generation():
-    response = assistant.stream_generation()
-    return jsonify(list(response))
+    resp = assistant.load_model()
+    return jsonify({"status": resp})
 
 
 @app.route("/stop")
 def stop():
-    assistant.stop_generation()
-    return jsonify({"status": "success"})
+    res = assistant.stop_generation()
+    return jsonify({"status": res})
 
 
 @app.route("/status")
@@ -83,4 +99,4 @@ def get_personas():
 
 
 if __name__ == "__main__":
-    app.run()
+    socketio.run(app)
