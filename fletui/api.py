@@ -8,11 +8,10 @@ from rich.progress import track
 
 app = Flask(__name__)
 assistant = Assistant()
-CORS(app)
 
 ################################
-socketio = SocketIO(app)
-
+CORS(app)
+socketio = SocketIO(app, cors_allowed_origins='http://localhost:4200')
 
 @socketio.on("connect")
 def test_connect():
@@ -33,7 +32,7 @@ def send_conv(data):
     print("Attempting to GENERATE======================")
     for value in output:#(output, "Generating"):
         print(value,end="")
-        emit("data", f"data: {value}")
+        emit("data", value)
 
 @socketio.on("test")
 def send_conv():
@@ -64,9 +63,19 @@ def stop():
     return jsonify({"status": res})
 
 
+
+import psutil
+
 @app.route("/status")
 def status():
-    return jsonify({"status": assistant.current_state})
+    cpu_percent = psutil.cpu_percent()
+    ram_usage = psutil.virtual_memory().percent
+    threads_above_80 = len([thread for thread in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent']) if thread.info['cpu_percent'] > 80])
+    return jsonify({
+        "cpu_percent": cpu_percent,
+        "ram_usage": ram_usage,
+        "threads_above_80": threads_above_80
+    })
 
 
 @app.route("/settings")

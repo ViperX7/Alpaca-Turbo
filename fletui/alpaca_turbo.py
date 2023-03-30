@@ -41,6 +41,7 @@ class Assistant:
         self.is_loaded = ""
 
         self.current_state = "Initialised"
+        self.is_first_request = True
 
     def list_available_models(self, directory_path="models", extension="bin"):
         """Returns a list of file names with the given extension  given dir"""
@@ -268,7 +269,9 @@ class Assistant:
 
     def send_conv(self, preprompt, fmt, prompt):
         """function to simplify interface"""
-        preprompt = self.pre_prompt if preprompt is None else preprompt
+        preprompt = preprompt if preprompt is not None else None
+        preprompt = self.pre_prompt if self.is_first_request else preprompt
+        self.is_first_request = False
         fmt = self.format if fmt is None else fmt
         conv = Conversation(preprompt, fmt, prompt)
         resp = self.chatbot(conv)
