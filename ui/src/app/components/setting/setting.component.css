@@ -1,0 +1,91 @@
+.card {
+  position: absolute;
+  left: calc(50% - 250px);
+  top: 5%;
+  background: darkcyan;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+  border-radius: 8px;
+  width: 500px;
+  padding: 50px;
+  z-index: 99;
+}
+@media screen and (max-width: 400px) {
+  .card {
+    border-radius: 0;
+  }
+}
+.top {
+  align-items: center;
+  background: rgba(0, 0, 0, 0) linear-gradient(-135deg, rgb(33, 32, 36), rgb(70, 62, 90)) repeat scroll 0% 0%;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  color: white;
+  display: flex;
+  font-size: 2em;
+  font-weight: bold;
+  height: 100px;
+  justify-content: center;
+  width: 100%;
+}
+.row {
+  display: flex;
+  margin: 15px 0;
+  align-items: center;
+}
+.entry {
+  flex: 1;
+  font-family: "Inconsolata", sans-serif;
+  margin-left: 30px;
+}
+.value {
+  border: none;
+  border-bottom: 1px solid black;
+  font-size: 1em;
+  margin-right: 10px;
+  outline: none !important;
+  text-align: center;
+  width: 100px;
+  padding: 10px;
+}
+
+.value.active ~ .old-value-container {
+  transform: translateY(20%);
+}
+.button-container {
+  display: flex;
+  justify-content: center;
+}
+.button {
+  align-self: center;
+  background: white;
+  border: 1.5px solid black;
+  color: black;
+  cursor: pointer;
+  font-family: "Inconsolata", sans-serif;
+  font-size: 1em;
+  margin-top: 5px;
+  padding: 12px 40px;
+  text-align: center;
+}
+.button:hover {
+  background: #f2f2f2;
+}
+.button:active {
+  background: #eeeeee;
+}
+.buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
+.message {
+  display: block;
+  margin: 10px 0;
+  text-align: center;
+}
+
+.notification {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 18px;
+}

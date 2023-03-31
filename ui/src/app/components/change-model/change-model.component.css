@@ -1,0 +1,73 @@
+.card {
+  position: absolute;
+  left: calc(50% - 250px);
+  background: #e1e1e1;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+  border-radius: 8px;
+  width: 500px;
+  padding: 20px;
+  z-index: 99;
+}
+.button-container {
+  display: flex;
+  justify-content: center;
+}
+.button {
+  align-self: center;
+  background: white;
+  border: 1.5px solid black;
+  color: black;
+  cursor: pointer;
+  font-family: "Inconsolata", sans-serif;
+  font-size: 1em;
+  margin-top: 5px;
+  padding: 12px 40px;
+  text-align: center;
+}
+.button:hover {
+  background: #f2f2f2;
+}
+.button:active {
+  background: #eeeeee;
+}
+.buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+select {
+  font-size: 1em;
+}
+select::-ms-expand {
+  display: none;
+}
+.select {
+  position: relative;
+  display: flex;
+  height: 3em;
+  line-height: 3;
+  background: #5c6664;
+  overflow: hidden;
+  border-radius: .25em;
+  width: 100%;
+  margin-top: 50px;
+}
+.select::after {
+  content: '\25BC';
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0 1em;
+  background: #2b2e2e;
+  cursor:pointer;
+  pointer-events:none;
+  transition:.25s all ease;
+}
+.select:hover::after {
+  color: #23b499;
+}
+h2 {
+  text-align: center;
+  margin-top: 20px;
+}
