@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+gradio = "==3.22.1"
+rich = "*"
+pexpect = "*"
+psutil = "*"
+fastapi = "*"
+uvicorn = "*"
+flask = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"
+python_full_version = "3.9.16"
