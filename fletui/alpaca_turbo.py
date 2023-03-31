@@ -1,10 +1,20 @@
+#!/bin/python3
+"""
+     ▄▄▄· ▄▄▌   ▄▄▄· ▄▄▄·  ▄▄·  ▄▄▄·     ▄▄▄▄▄▄• ▄▌▄▄▄  ▄▄▄▄·       
+    ▐█ ▀█ ██•  ▐█ ▄█▐█ ▀█ ▐█ ▌▪▐█ ▀█     •██  █▪██▌▀▄ █·▐█ ▀█▪▪     
+    ▄█▀▀█ ██▪   ██▀·▄█▀▀█ ██ ▄▄▄█▀▀█      ▐█.▪█▌▐█▌▐▀▀▄ ▐█▀▀█▄ ▄█▀▄ 
+    ▐█ ▪▐▌▐█▌▐▌▐█▪·•▐█ ▪▐▌▐███▌▐█ ▪▐▌     ▐█▌·▐█▄█▌▐█•█▌██▄▪▐█▐█▌.▐▌
+     ▀  ▀ .▀▀▀ .▀    ▀  ▀ ·▀▀▀  ▀  ▀      ▀▀▀  ▀▀▀ .▀  ▀·▀▀▀▀  ▀█▄▀▪
+
+https;//github.comViperX7/Alpaca-Turbo
+"""
+
 import os
 import platform
 import sys
-from time import time
 
-from dtype import Conversation,load_all_conversations
-from interaction import Process
+from helpers.dtype import Conversation,load_all_conversations
+from helpers.interaction import Process
 from rich import print as eprint
 from rich.progress import track
 
@@ -35,7 +45,7 @@ class Assistant:
 
         self.end_marker = b"RSTsr"
 
-        self.model_idx = 0
+        self.model_idx = 1
         self.is_loaded = ""
 
         self.current_state = "Initialised"

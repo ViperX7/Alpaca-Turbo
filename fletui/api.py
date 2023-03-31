@@ -4,7 +4,7 @@ from alpaca_turbo import Assistant
 from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
-from prompts import Personas
+from helpers.prompts import Personas
 from rich.progress import track
 
 app = Flask(__name__)
@@ -59,7 +59,7 @@ def list_models():
 
 @app.route("/load_model/<int:model_idx>")
 def load_model(model_idx):
-    assistant.models_idx = model_idx
+    assistant.model_idx = model_idx
     resp = assistant.load_model()
     return jsonify({"status": resp})
 
