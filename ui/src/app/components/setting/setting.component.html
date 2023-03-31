@@ -25,10 +25,6 @@
       <input class="value" type="text"  [(ngModel)]="repeat_penalty">
     </div>
 
-    <hr>
-      <span class="message" >This setting needs to reload the mode !</span>
-    <hr>
-
     <div class="row">
       <div class="entry">self.seed</div>
       <input class="value" type="text"  [(ngModel)]="seed">
@@ -49,9 +45,9 @@
       <div class="button-container">
         <button class="button" id="change" (click)="changeSetting()">Save</button>
       </div>
-      <div class="button-container">
-        <button class="button" id="reset" (click)="resetSetting()">Reset</button>
-      </div>
+<!--      <div class="button-container">-->
+<!--        <button class="button" id="reset" (click)="resetSetting()">Reset</button>-->
+<!--      </div>-->
       <div class="button-container">
         <button class="button" id="close" (click)="closeSetting()">Close</button>
       </div>
