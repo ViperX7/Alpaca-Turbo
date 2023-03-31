@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="./assets/alpaca.png" type="image/png">
+  <title>Alpaca Turbo</title>
+</head>
+
+<body>
+<app-setting [model_loaded]="model_loaded" id="setting-page"></app-setting>
+<app-change-model [model_loaded]="model_loaded"></app-change-model>
+<div class="container">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <img class="logo" src="/assets/imgs/alpaca.png" alt="logo">
+      <h3>Alpaca Turbo</h3>
+    </div>
+    <div class="sidebar-new-chat" (click)="openNewChat()">
+      <img src="/assets/imgs/circle-plus-solid.svg" alt="new chat">
+      <h3>New Chat</h3>
+    </div>
+
+    <div class="recent-chats">
+      <h3 id="recentChatTitle">Recent Chats</h3>
+    </div>
+
+    <div class="advanced-mode">
+      <h3>Advanced mode</h3>
+      <div class="select-persona">
+        <select class="savedPersona" (change)="changePersona($event)"></select>
+      </div>
+
+      <div class="persona">
+        <h4>Persona</h4>
+        <textarea name="persona-box" id="persona-box" cols="30" rows="6" style="resize: none;height: 200px;">chat transcript between human and a bot named devil and the bot remembers everything from previous response Below is an instruction that describes a task. Write a response that appropriately completes the request.
+        </textarea>
+      </div>
+      <div class="format">
+        <h4>Format</h4>
+        <textarea name="format-box" id="format-box" cols="30" rows="6" style="resize: none;">### Instruction:{instruction}### Response:{response}
+        </textarea>
+      </div>
+
+    </div>
+    <div class="sidebar-menu">
+      <div class="sidebar-menu-item">
+        <img src="/assets/imgs/paper-plane-solid.svg" alt="Clear conversations">
+        <h4 (click)="removeHistory()">Clear conversations</h4>
+      </div>
+      <div class="sidebar-menu-item" (click)="openChangeModel()">
+        <img src="/assets/imgs/robot-solid.svg" alt="Change model">
+        <h4>Change model</h4>
+      </div>
+      <div class="icons">
+        <img src="/assets/imgs/moon-solid.svg" alt="dark mode" (click)="turnDarkMode()">
+        <img src="/assets/imgs/github.svg" alt="github">
+        <img src="/assets/imgs/discord.svg" alt="discord">
+      </div>
+    </div>
+  </div>
+  <div class="main">
+    <div class="main-header">
+      <div class="left">
+        <div class="ram-usage">
+          <h4>RAM: {{(total_ram * (ram_usage / 100)).toFixed(2)}}/{{total_ram}}GB</h4>
+          <div class="usage">
+            <div class="total-bar"></div>
+            <div class="used-bar ram"></div>
+          </div>
+        </div>
+        <div class="cpu-usage">
+          <h4>CPU: {{cpu_percent}}%, {{threads_above_80}}/{{total_threads}} threads</h4>
+          <div class="usage">
+            <div class="total-bar"></div>
+            <div class="used-bar cpu"></div>
+          </div>
+        </div>
+      </div>
+      <div class="right">
+        <img src="/assets/imgs/gear-solid.svg" (click)="openSettingPage()" class="settings" id="settings" alt="settings" title="Setting">
+        <img src="/assets/imgs/sliders-solid.svg" (click)="openAdvancedMode()" class="advanced" id="advanced" alt="advanced" title="Advanced mode">
+      </div>
+    </div>
+    <div class="conversation">
+      <div class="hero-section">
+        <div class="hero-header">
+          <img class="logo" src="/assets/imgs/alpaca.png" alt="hero">
+          <h3>Hi, I'm Alpaca Turbo, I'm here to help you with your questions.</h3>
+        </div>
+        <div class="hero-content">
+          <div class="examples">
+            <div class="top">
+              <img class="shuttle-space" src="/assets/imgs/shuttle-space-solid.svg" alt="Examples">
+              <h2>Examples</h2>
+            </div>
+            <div class="bot">
+              <h4 class="clickable" (click)="samplePrompt($event)">Explain quantum computing in simple terms</h4>
+              <h4 class="clickable" (click)="samplePrompt($event)">Got any creative ideas for a 10 year old’s birthday?</h4>
+              <h4 class="clickable" (click)="samplePrompt($event)">How do I make an HTTP request in Javascript?</h4>
+            </div>
+          </div>
+          <div class="capabilities">
+            <div class="top">
+              <img src="/assets/imgs/computer-solid.svg" alt="Capabilities">
+              <h2>Capabilities</h2>
+              <div class="bot">
+                <h4>Remembers what user said earlier in the conversation.</h4>
+                <h4>Can answer questions naturally, try to use "you" rather than "I".</h4>
+                <h4>Your prompting will not be denied.</h4>
+              </div>
+            </div>
+          </div>
+          <div class="limitations">
+            <div class="top">
+              <img src="/assets/imgs/flag-solid.svg" alt="Limitations">
+              <h2>Limitations</h2>
+              <div class="bot">
+                <h4>May occasionally generate incorrect information.</h4>
+                <h4>May occasionally produce harmful instructions or biased content.</h4>
+                <h4>Does not trained to write code.</h4>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="chat-section">
+
+      </div>
+    </div>
+    <div class="new-chat">
+      <h2 *ngIf="server_status === 'generating'" class="stopBtn" (click)="stopGenerating()">Stop Generating</h2>
+      <textarea [disabled]="server_status === 'generating'" class="chat-input" name="chat-input" id="chat-input" placeholder="What can I help you with today?"></textarea>
+      <button id="send-chat" (click)="sendPrompt()">
+        <img  class="sendChat" src="/assets/imgs/paper-plane-solid.svg" alt="send">
+      </button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

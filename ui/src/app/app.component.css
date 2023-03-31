@@ -1,0 +1,22 @@
+.stopBtn {
+  top: -60px;
+  color: #ffffff;
+  position: absolute;
+  cursor: pointer;
+  background-color: #3b3b3b;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #fff;
+  font-weight: lighter;
+}
+
+.chatTools {
+  background-color: #2b2e2e;
+  padding: 5px;
+  color: #E7E7E7;
+  cursor: pointer;
+  position: absolute;
+  right: 10px;
+  border-radius: 5px;
+  top: 10px;
+}

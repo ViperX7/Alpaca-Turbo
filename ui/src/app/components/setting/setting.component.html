@@ -1,0 +1,59 @@
+  <div class="card">
+    <div class="notification"></div>
+
+    <div class="top">Settings</div>
+    <div class="row">
+      <div class="entry">self.threads</div>
+      <input class="value" type="text"  [(ngModel)]="threads">
+    </div>
+    <div class="row">
+      <div class="entry">self.top_k</div>
+      <input class="value" type="text" [(ngModel)]="top_k">
+    </div>
+    <div class="row">
+      <div class="entry">self.top_p</div>
+      <input class="value" type="text"  [(ngModel)]="top_p">
+    </div>
+
+    <div class="row">
+      <div class="entry">self.temp</div>
+      <input class="value" type="text"   [(ngModel)]="temp">
+    </div>
+
+    <div class="row">
+      <div class="entry">self.repeat_penalty</div>
+      <input class="value" type="text"  [(ngModel)]="repeat_penalty">
+    </div>
+
+    <hr>
+      <span class="message" >This setting needs to reload the mode !</span>
+    <hr>
+
+    <div class="row">
+      <div class="entry">self.seed</div>
+      <input class="value" type="text"  [(ngModel)]="seed">
+    </div>
+
+    <div class="row">
+      <div class="entry">self.n_predict</div>
+      <input class="value" type="text" [(ngModel)]="n_predict">
+    </div>
+
+    <div class="row">
+      <div class="entry">self.repeat_last_n</div>
+      <input class="value" type="text"  [(ngModel)]="repeat_last_n">
+    </div>
+
+
+    <div class="buttons">
+      <div class="button-container">
+        <button class="button" id="change" (click)="changeSetting()">Save</button>
+      </div>
+      <div class="button-container">
+        <button class="button" id="reset" (click)="resetSetting()">Reset</button>
+      </div>
+      <div class="button-container">
+        <button class="button" id="close" (click)="closeSetting()">Close</button>
+      </div>
+    </div>
+  </div>
