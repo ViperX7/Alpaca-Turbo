@@ -131,10 +131,11 @@ def set_config():
     return jsonify({"success": True})
 
 
-@app.route("/load_chat/<int:id>", methods=["GET"])
+@app.route("/load_chat/<string:id>", methods=["GET"])
 def load_chat(id):
     result = assistant.load_chat(id)
-    return jsonify(result)
+    new_res = [res.to_json() for res in result]
+    return jsonify(new_res)
 
 
 @app.route("/save_chat")
@@ -149,7 +150,7 @@ def get_conv_logs():
     return jsonify(result)
 
 
-@app.route("/clear_chat", methods=["POST"])
+@app.route("/clear_chat", methods=["GET"])
 def clear_chat():
     result = assistant.clear_chat()
     return jsonify(result)

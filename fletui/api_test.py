@@ -77,6 +77,7 @@ def get_generations():
     sio.wait()
 
 
+stop_generation()
 status()
 list_models()
 load_model()

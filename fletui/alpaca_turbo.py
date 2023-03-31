@@ -3,7 +3,7 @@ import platform
 import sys
 from time import time
 
-from dtype import Conversation
+from dtype import Conversation,load_all_conversations
 from interaction import Process
 from rich import print as eprint
 from rich.progress import track
@@ -43,10 +43,11 @@ class Assistant:
 
     def load_chat(self, id):
         """load chat"""
-        result = {"can't load generation going on"}}
+        result = {"can't load generation going on"}
         if self.current_state != "generating":
             data = Conversation.load()
             result = data[id] if id in data else {}
+            print(result)
         return result
 
     def save_chat(self):
@@ -59,8 +60,8 @@ class Assistant:
 
     def get_conv_logs(self):
         """conversation logs"""
-        data = Conversation.load()
-        return list(data.keys())
+        data = load_all_conversations()
+        return data
 
     def clear_chat(self):
         """clear current history context"""
