@@ -3,6 +3,7 @@ Interactive library
 """
 import os
 from signal import SIGTERM
+from rich import print as eprint
 
 from pexpect.popen_spawn import PopenSpawn
 
@@ -35,6 +36,7 @@ class Process(PopenSpawn):
             codec_errors,
             preexec_fn,
         )
+        eprint(cmd)
         with open("./pid", "w", encoding="utf-8") as file:
             file.writelines([str(self.pid)])
 

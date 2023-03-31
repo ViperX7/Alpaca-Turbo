@@ -1,150 +1,157 @@
 #!/bin/python3
 """
-Alpaca Turbo
+     ▄▄▄· ▄▄▌   ▄▄▄· ▄▄▄·  ▄▄·  ▄▄▄·     ▄▄▄▄▄▄• ▄▌▄▄▄  ▄▄▄▄·       
+    ▐█ ▀█ ██•  ▐█ ▄█▐█ ▀█ ▐█ ▌▪▐█ ▀█     •██  █▪██▌▀▄ █·▐█ ▀█▪▪     
+    ▄█▀▀█ ██▪   ██▀·▄█▀▀█ ██ ▄▄▄█▀▀█      ▐█.▪█▌▐█▌▐▀▀▄ ▐█▀▀█▄ ▄█▀▄ 
+    ▐█ ▪▐▌▐█▌▐▌▐█▪·•▐█ ▪▐▌▐███▌▐█ ▪▐▌     ▐█▌·▐█▄█▌▐█•█▌██▄▪▐█▐█▌.▐▌
+     ▀  ▀ .▀▀▀ .▀    ▀  ▀ ·▀▀▀  ▀  ▀      ▀▀▀  ▀▀▀ .▀  ▀·▀▀▀▀  ▀█▄▀▪
+
+https;//github.comViperX7/Alpaca-Turbo
 """
-import json
-import logging
 import os
 import platform
-import signal
 import sys
-from time import sleep, time
 
-import psutil
-from interact import Process as process
+from helpers.dtype import Conversation, load_all_conversations
+from helpers.interaction import Process
 from rich import print as eprint
-from rich.logging import RichHandler
 from rich.progress import track
-
-# from pwn import  process
-
-# pylint: disable=C0103
-# pylint: disable=C0114
-# pylint: disable=C0116
-
-
-class AssistantSettings:
-    """Settings handler for assistant"""
-
-    def __init__(self, assistant) -> None:
-        self.assistant = assistant
-
-    def load_settings(self):
-        if os.path.exists("settings.dat"):
-            with open("settings.dat", "r") as file:
-                settings = json.load(file)
-                _ = eprint(settings) if self.assistant.DEBUG else None
-                self.assistant.seed = settings["seed"]
-                self.assistant.top_k = settings["top_k"]
-                self.assistant.top_p = settings["top_p"]
-                self.assistant.temp = settings["temp"]
-                self.assistant.threads = settings["threads"]
-                self.assistant.repeat_penalty = settings["repeat_penalty"]
-                self.assistant.repeat_last_n = settings["repeat_last_n"]
-                self.assistant.model_path = settings["model_path"]
-                self.assistant.n_predict = settings["n_predict"]
-
-
-    def save_settings(self):
-        settings = {
-            "seed": self.assistant.seed,
-            "top_k": self.assistant.top_k,
-            "top_p": self.assistant.top_p,
-            "temp": self.assistant.temp,
-            "threads": self.assistant.threads,
-            "repeat_penalty": self.assistant.repeat_penalty,
-            "repeat_last_n": self.assistant.repeat_last_n,
-            "model_path": self.assistant.model_path,
-            "n_predict":self.assistant.n_predict 
-        }
-        print(settings)
-        with open("settings.dat", "w") as file:
-            json.dump(settings, file)
 
 
 class Assistant:
-    """Alpaca Assistant"""
-
-    model_path = "~/dalai/alpaca/models/7B/ggml-model-q4_0.bin" if "-m" not in sys.argv else sys.argv[-1]
-
-    models = []
-    files = os.listdir()
-    for file in files:
-        if ".bin" in file:
-            models.append(file)
-    model_path  = model_path if not models else models[0]
-
-
-
-
-    def __init__(self, auto_load=True, DEBUG=False) -> None:
+    def __init__(self):
         self.DEBUG = "-d" in sys.argv
-        self.seed = 888777
+
         self.threads = 4
-        self.n_predict = 200
         self.top_k = 40
         self.top_p = 0.9
-        self.temp = 0.5
-        self.repeat_last_n = 64
+        self.temp = 0.1
         self.repeat_penalty = 1.3
-        self.history_size = 1500
 
-        if platform.system() == "Windows":
-            Assistant.model_path = os.path.expanduser(Assistant.model_path).replace(
-                "/", "\\"
-            )
-        else:
-            Assistant.model_path = os.path.expanduser(Assistant.model_path)
+        self.seed = 888777
+        self.n_predict = 200
+        self.repeat_last_n = 64
 
-        self.persona = "chat transcript between human and a bot named devil and the bot remembers everything from previous response"
+        # self.history_size = 1500
 
-        self.prompt = f"""Below is an instruction that describes a task. Write a response that appropriately completes the request."""
-
-        self.format = (
-            """\n### Instruction:\n{instruction}\n\n### Response:\n{response}"""
-        )
+        # self.pre_prompt = " Below are instructions to a smart bot named devil, provide response inteligently to instructions.\n\n"
+        # self.pre_prompt = " Below are instructions provide best possible response and take into account entire history.\n\n"
+        self.pre_prompt = "  Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n"
+        self.format = "### Instruction:\n\n{instruction}\n\n### Response:\n\n{response}"
+        # self.pre_prompt = "you are a highly intelligent chatbot named devil and you remember all conversation history."
         self.enable_history = False
-        self.is_ready = False
+        self.history: list[Conversation] = []
 
-        self.settings = AssistantSettings(self)
+        self.end_marker = b"RSTsr"
 
-        self.end_marker = b"[end of text]"
+        self.model_idx = 0
+        self.is_loaded = ""
 
-        self.chat_history = []
-        self._killed=False
-        try:
-            self.settings.load()
-        except:
-            pass
+        self.current_state = "Initialised"
+        self.is_first_request = True
 
+    def load_chat(self, id):
+        """load chat"""
+        result = {"can't load generation going on"}
+        if self.current_state != "generating":
+            data = load_all_conversations()
+            print(data)
+        return data[id]
 
-    def reload(self):
-        try:
-            self._killed = True
-            self.program.kill(signal.SIGTERM)
-            sleep(2)
-        except:
-            pass
-        self.is_ready = False
-        self.prep_model()
+    def remove_all_chat(self):
+        """hello world"""
+
+        # specify the path of the folder
+        folder_path = "conversations"
+
+        # loop through all files in the folder
+        r_count = 0
+        for file_name in os.listdir(folder_path):
+            # join the folder path and file name
+            file_path = os.path.join(folder_path, file_name)
+            # check if the file exists
+            if os.path.isfile(file_path):
+                # delete the file
+                os.remove(file_path)
+                r_count += 1
+        print(f"{r_count} deleted successfully")
+        return f"{r_count} files removed"
+
+    def save_chat(self):
+        """load chat"""
+        result = "can't save generation going on"
+        if self.current_state != "generating":
+            if self.history:
+                Conversation.save(self.history)
+                result = "success"
+            else:
+                result = "no conversation to save"
+        return result
+
+    def get_conv_logs(self):
+        """conversation logs"""
+        data = load_all_conversations()
+        return data
+
+    def clear_chat(self):
+        """clear current history context"""
+        result = "can't save generation going on"
+        if self.current_state != "generating":
+            self.history = []
+            result = "success"
+        return result
+
+    def safe_kill(self):
+        """kill the bot if not in use"""
+        if self.current_state == "generating":
+            return "Can't kill bot busy"
+
+        self.process.killx()
+        self.is_first_request = True
+        self.current_state = "Initialised"
+        if self.history:
+            Conversation.save(self.history)
+        self.history = []
+        self.is_loaded = ""
+
+        return "killed the bot"
+
+    def list_available_models(self, directory_path="models", extension="bin"):
+        """Returns a list of file names with the given extension  given dir"""
+        file_list = []
+        for file in os.listdir(directory_path):
+            if file.endswith(extension):
+                file_list.append(os.path.join(directory_path, file))
+        return file_list
 
     @staticmethod
     def get_bin_path():
-        if os.path.exists("bin/local"):
-            return "bin/local"
-        system_name = platform.system()
-        if system_name == "Linux":
-            name = "linux"
-        elif system_name == "Windows":
-            name = "win.exe"
-        elif system_name == "Darwin":
-            name = "mac"
+        if os.path.exists("chat"):
+            return "./chat"
+        elif os.path.exists("/chat"):
+            return "/chat"
+        else:
+            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+            print("XXXXXXXXXXXXXXX    CHAT BINARY MISSING    XXXXXXXXXXXXXXXXX")
+            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+        # system_name = platform.system()
+        # if system_name == "Linux":
+        #     name = "linux"
+        # elif system_name == "Windows":
+        #     name = "win.exe"
+        # elif system_name == "Darwin":
+        #     name = "mac"
         # elif system_name == "Android":
         #     return "Android"
-        else:
-            exit()
+        # else:
+        #     exit()
 
-        return os.path.join("bin", name)
 
     @property
     def command(self):
@@ -164,311 +171,213 @@ class Assistant:
             f"{self.repeat_last_n}",
             "--repeat_penalty",
             f"{self.repeat_penalty}",
+            "--temp",
+            f"{self.temp}",
             "--n_predict",
             f"{self.n_predict}",
             "-m",
-            f"{self.model_path}" ,
+            f"{self.list_available_models()[self.model_idx]}",
             "--interactive-start",
         ]
         return command
 
-    def prep_bot_input(self):
-        """
-        prep_bot_input
-        """
-        character = self.persona + "\n" + self.prompt
+    def load_model(self):
+        """load binary in memory"""
+        if self.is_loaded:
+            return (
+                f"model already loaded {self.list_available_models()[self.model_idx]}"
+            )
+        try:
+            self.process = Process(self.command, timeout=10000)
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.recvuntil("load: ")
+            is_loaded = False
+            for _ in track(range(100)):
+                if is_loaded:
+                    continue
+                ppt = self.process.read(1)
+                is_loaded = b"d" == ppt
 
-        history = self.chat_history if self.enable_history else [self.chat_history[-1]]
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.readline()
+            self.process.recvuntil(self.end_marker)
+            self.current_state = "prompt"
 
-        prompt = "" 
-        for instr, resp in history:
-            prompt += self.format.format(instruction=instr, response=resp)
+            self.is_loaded = self.list_available_models()[self.model_idx]
+        except Exception:
+            self.is_loaded = ""
+            return f"Failed loading {self.list_available_models()[self.model_idx]}"
 
-        # prompt = prompt[-1*self.history_size:] if len(prompt) > self.history_size else prompt
-        prompt = character + prompt
+        return f"loaded successfully {self.list_available_models()[self.model_idx]}"
 
-        prompt = prompt.strip("\n")
-        prompt = prompt.replace("\n", "\\\n")
-        print("======")
-        print(prompt)
-        print("======")
-        return prompt
+    def action(self, command):
+        """returns whether a request can be colmpleted or not"""
 
-    def prep_model(self):
-        if self.is_ready:
-            return None
-        _ = (
-            ""
-            if os.path.exists(self.model_path)
-            else print("Set the model path in settings")
-        )
-        if not os.path.exists(self.model_path):
-            return
+        if command == "generate":
+            is_possible = self.current_state == "prompt"
+        if command == "stop":
+            is_possible = self.current_state == "generating"
+        return is_possible
 
-        if os.path.exists("./pid"):
-            try:
-                with open("./pid") as file:
-                    pid = int(file.readline())
-                    if psutil.pid_exists(pid):
-                        os.kill(pid, signal.SIGTERM)
-                    # os.remove("./pid")
-            except (ProcessLookupError, FileNotFoundError):
-                pass
-        tstart = time()
-        cmd = self.command
-        _ = eprint(cmd) if self.DEBUG else None
-        self.program = process(cmd, timeout=600)
-        self._killed = False
-        self.program.readline()
-        self.program.recvuntil(b".")
+    def stop_generation(self):
+        """Interrupts generation"""
+        if self.current_state == "generating":
+            self.current_state = "stoping_generation"
+            # self.process.send("\003")
+            self.process.interrupt()
+            self.current_state = "prompt"
+            return "Stopped"
 
-        model_done = False
-        for _ in track(range(40), "Loading Model"):
-            data = self.program.recv(1).decode("utf-8") if not model_done else None
-            model_done = True if data == "d" else model_done
-            if model_done:
-                continue
-        self.program.recvuntil("\n")
-        self.is_ready = True
-        tend = time()
-        eprint(f"Model Loaded in {(tend-tstart)} s")
+        return f"failed to stop current status {self.current_state}"
 
-    def streamer(
-        self,
-        stuff_to_type,
-        pre_recv_hook=None,
-        post_recv_hook=None,
-    ):
-        _ = self.prep_model() if not self.is_ready else None
-        if not self.is_ready:
-            raise FileNotFoundError(
-                f"Cannot locate the specified model : {Assistant.model_path}\n Did you put the correct path in settings=>model_path?\n"
-           )
+    def chatbot(self, prompt: Conversation):
+        """Adds history support"""
+        self.history.append(prompt)
+        # build history chahe
+        final_prompt_2_send = []
+        data2use = self.history if self.enable_history else [self.history[-1]]
+        for convo in data2use:
+            for sequence in convo.get_prompt():
+                final_prompt_2_send.append(sequence)
+        final_prompt_2_send = "".join(final_prompt_2_send)
+        if prompt.preprompt:
+            final_prompt_2_send = [prompt.preprompt, final_prompt_2_send]
+        self.send_prompts(final_prompt_2_send)
 
-        self.program.recvuntil(">")
+        for char in self.stream_generation():
+            self.history[-1].response += char
+            yield char
 
-        opts = stuff_to_type.split("\n")
-        for opt in opts:
-            self.program.sendline(opt)
+    def send_prompts(self, txtblob):
+        """send the prompts with bos token"""
+        eprint(txtblob)
+        txtblob = txtblob if isinstance(txtblob, list) else [txtblob]
+        _ = eprint(txtblob) if self.DEBUG else None
+        if self.action("generate"):
+            bos = len(txtblob)
+            self.process.recvuntil("n_inps>  ")
+            self.process.sendline(str(bos))
 
-        while True:
-            # _ = pre_recv_hook(self.program) if pre_recv_hook is not None else None
-            if self._killed:
-                return b""
-            yield self.program.recv(1)
-            # _ = post_recv_hook(self.program) if pre_recv_hook is not None else None
+            self.process.recvuntil("n_threads> ")
+            self.process.sendline(str(self.threads))
+            self.process.recvuntil("top_k> ")
+            self.process.sendline(str(self.top_k))
+            self.process.recvuntil("top_p> ")
+            self.process.sendline(str(self.top_p))
+            self.process.recvuntil("temperature> ")
+            self.process.sendline(str(self.temp))
+            self.process.recvuntil("repeat_penalty> ")
+            self.process.sendline(str(self.repeat_penalty))
 
-    def ask_bot(self, question, answer=""):
-        self.chat_history.append((question, answer))
-        inp_to_send = self.prep_bot_input()
+            for txt in txtblob:
+                lines = txt.split("\n")
+                for line in lines:
+                    self.process.recvuntil(") :  ")
+                    self.process.sendline(line)
 
-        opt_stream = self.streamer(inp_to_send)
-        tstart = time()
+                self.process.recvuntil(") :  ")
+                self.process.sendline("@done@")
+            self.process.readline()
+            self.current_state = "generating"
+        else:
+            print("CRITICAL")
+
+    def stream_generation(self):
+        """returns a generator that returns the generation"""
 
         buffer = b""
+        marker_detected = b""
+        char_old = b""
+        while self.current_state == "generating":
+            char = self.process.read(1)
+            buffer += char  # update the buffer
 
-        try:
-            isfirst = True
-            marker_detected = b""
-            char_old = b""
-            for char in opt_stream:
-                buffer += char  # update the buffer
+            # Detect end of text if detected try to confirm else reset
+            if char == b"R" or len(marker_detected) > 0:
+                marker_detected += char
+                char_old += char
+                # print("==========")
+                # print(marker_detected)
+                # print(self.end_marker[:len(marker_detected)])
+                if marker_detected in self.end_marker[: len(marker_detected)]:
+                    # print("cont")
+                    continue
+                marker_detected = b""
 
-                if isfirst:
-                    t_firstchar = time()
-                    wcount = len(question.replace("\n", " ").split(" "))
-                    if self.DEBUG:
-                        eprint(
-                            f"Size of Input: {len(question)} chars || {wcount} words"
-                        )
-                        eprint(
-                            f"Time taken to analyze the user input {t_firstchar-tstart} s"
-                        )
-                    isfirst = False
+            if self.end_marker in buffer:
+                buffer = buffer.replace(self.end_marker, b"")
+                char_old += char
+                char_old = char_old.replace(self.end_marker, b"")
+                self.current_state = "prompt"
+                yield char_old.decode("utf-8")
+                # print(f"\nStream Ended {buffer}")
+                break
+
+            try:
+                # Load the full character cache
+                char = char_old + char
+
+                # print single printable chars
+                if len(char) == 1 and char[0] <= 0x7E and char[0] >= 0x21:
+                    char = char.decode("utf-8")
+                    char_old = b""
+                elif len(char) in [4, 6]:  # If 4 byte code or handle weird edge cases
+                    char = char.decode("utf-8")
+                    char_old = b""
                 else:
-                    # Detect end of text if detected try to confirm else reset
-                    if char == b"[" or marker_detected:
-                        marker_detected += char
-                        if marker_detected in self.end_marker[: len(marker_detected)]:
-                            continue
-                        marker_detected = b""
-
-                    if self.end_marker in buffer:
-                        buffer = buffer.replace(b"[end of text]", b"")
-                        tend = time()
-                        wcount = len(buffer.replace(b"\n", b" ").split(b" "))
-                        if self.DEBUG == True:
-                            eprint(
-                                f"Size of output: {len(buffer)} chars || {wcount} words"
-                            )
-                            eprint(f"Time taken to for generation {(tend-tstart)} s")
-                        break
-                try:
-                    # Load the full buffer
-                    char = char_old + char
-
-                    # print single printable chars
-                    if len(char) == 1 and char[0] <= 0x7E and char[0] >= 0x21:
-                        char = char.decode("utf-8")
-                        char_old = b""
-                    elif len(char) in [4, 6]:  # If 4 byte code or 6 byte code
-                        char = char.decode("utf-8")
-                        char_old = b""
-                    else:
-                        char_old = char
-                        continue
-                except UnicodeDecodeError:
                     char_old = char
                     continue
-                # print(char, end="")
-                yield char
+            except UnicodeDecodeError:
+                char_old = char
+                continue
+            # print(char, end="")
+            yield char
 
-        except (KeyboardInterrupt, EOFError):
-            print("Stooping")
+        # return buffer
 
-        self.chat_history[-1] = (question, buffer.decode("utf-8").strip("\n"))
-        return buffer
-
-    def ask_bot_old(self, question, answer=""):
-        """
-        run
-        """
-        tend = 0
-        _ = self.prep_model() if not self.is_ready else None
-        tstart = time()
-
-        self.program.recvuntil(">")
-
-        self.chat_history.append((question, answer))
-
-        opts = self.prep_bot_input.split("\n")
-        for opt in opts:
-            self.program.sendline(opt)
-
-        data = None
-
-        try:
-            marker_detected = b""
-            char = self.program.recv(1)
-            tfirstchar = time()
-            wcount = len(question.replace("\n", " ").split(" "))
-            if self.DEBUG:
-                eprint(f"Size of Input: {len(question)} chars || {wcount} words")
-                eprint(f"Time taken to analyze the user input {(tfirstchar-tstart)} s")
-            data = char
-            yield char.decode("utf-8")
-            while True:
-                char = self.program.recv(1)
-
-                data += char
-
-                if char == b"[" or marker_detected:
-                    marker_detected += char
-                    if marker_detected in self.end_marker:
-                        continue
-                    marker_detected = b""
-
-                if self.end_marker in data:
-                    data = data.replace(b"[end of text]", b"")
-                    tend = time()
-                    wcount = len(data.replace(b"\n", b" ").split(b" "))
-                    if self.DEBUG:
-                        eprint(f"Size of output: {len(data)} chars || {wcount} words")
-                        eprint(f"Time taken to for generation {(tend-tstart)} s")
-                    break
-
-                yield char.decode("utf-8")
-        except (KeyboardInterrupt, EOFError):
-            print("Stooping")
-
-        self.chat_history[-1] = (question, data.decode("utf-8").strip("\n"))
-
-        return data
+    def send_conv(self, preprompt, fmt, prompt):
+        """function to simplify interface"""
+        preprompt = preprompt if preprompt is not None else None
+        preprompt = self.pre_prompt if self.is_first_request else preprompt
+        self.is_first_request = False
+        fmt = self.format if fmt is None else fmt
+        conv = Conversation(preprompt, fmt, prompt)
+        resp = self.chatbot(conv)
+        return resp
 
     @staticmethod
-    def repl(debug=False):
-        assistant = Assistant(DEBUG=debug)
-        assistant.prep_model()
+    def repl():
+        """Repl for my chat bot"""
+        assistant = Assistant()
+        assistant.load_model()
+        assistant.enable_history = False
+        fmt = assistant.format
+        # assistant.pre_prompt = ""
+        preprompt = assistant.pre_prompt
         while True:
-            _ = eprint(assistant.chat_history) if debug else None
-            resp = assistant.ask_bot(input(">>> "), "")
+            # print("=====")
+            prompt = input(">>>>>> ")
+            preprompt = ""
+
+            resp = assistant.send_conv(preprompt, fmt, prompt)
 
             for char in resp:
                 print(char, end="")
             print()
 
 
-def health_checks():
-    FORMAT = "%(message)s"
-    logging.basicConfig(
-        level="NOTSET", format=FORMAT, datefmt="[%X]", handlers=[RichHandler()]
-    )
-    log = logging.getLogger("rich")
-
-    log.info("Running health checks ")
-    test_assistant = Assistant(auto_load=False)
-
-    # check if binary is available for system
-    log.info("Checking for dependencies")
-    if os.path.exists(Assistant.get_bin_path()):
-        log.info("Found binary")
-    else:
-        log.fatal("Binary Not Found")
-        log.info("Check https://github.com/ViperX7/alpaca.cpp")
-        log.info("put the compiled file in (./bin/main or ./bin/main.exe )")
-        exit()
-
-    log.info("checking if system is supported")
-    try:
-        prog = process(Assistant.get_bin_path())
-        log.info("Supported system")
-    except OSError:
-        log.fatal("Binary Not supported on this system")
-        log.info("Check https://github.com/ViperX7/alpaca.cpp")
-        log.info("put the compiled file in (./bin/main or ./bin/main.exe )")
-        exit()
-
-    log.info("Looking for the models to load")
-    if os.path.exists(os.path.expanduser(Assistant.model_path)):
-        log.info(f"Found Model {Assistant.model_path}")
-        sz = os.path.getsize(test_assistant.model_path) // (1024 * 1024)
-        log.info(f"size of your model is {sz} MB (approx)")
-    else:
-        log.fatal(
-            "model not found you need to download the models and set the model path in settings"
-        )
-
-    if os.path.exists("./pid"):
-        log.info("Other checks")
-        log.fatal("Already running another instance or dirty exit last time")
-        with open("./pid") as file:
-            pid = int(file.readline())
-        log.info("Attempting to kill the process")
-        try:
-            os.kill(pid, signal.SIGTERM)
-        except OSError:
-            pass
-        os.remove("./pid")
-        log.info("Fixed the Issue Now Retry running")
-        exit()
-
-    memstat = psutil.virtual_memory()
-    log.info("checking memory")
-    log.info(f"Total memory {memstat.total//(1024*1024)} MB")
-    log.info(f"Used memory {memstat.used//(1024*1024)} MB")
-    log.info(f"Free memory {memstat.free//(1024*1024)} MB")
-    exit()
-    log.level = 5
-
-
-# health_checks()
-
-
-def main():
-    # Too lazy to add arg parse
-    debug = "-d" in sys.argv
-    Assistant.repl(debug) if "-i" in sys.argv else None
-    health_checks() if "--check" in sys.argv else None
-
-
-assistant = main() if __name__ == "__main__" else None
+_ = Assistant.repl() if __name__ == "__main__" else None

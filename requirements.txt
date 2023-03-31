@@ -1,7 +1,8 @@
-gradio==3.22.1
+flask
+flask-cors
+flask-socketio
 rich
 pexpect
+colorama
 psutil
-fastapi
-uvicorn
-jinja2
+requests
