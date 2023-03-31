@@ -128,19 +128,30 @@ class Assistant:
     def get_bin_path():
         if os.path.exists("chat"):
             return "./chat"
-        system_name = platform.system()
-        if system_name == "Linux":
-            name = "linux"
-        elif system_name == "Windows":
-            name = "win.exe"
-        elif system_name == "Darwin":
-            name = "mac"
+        elif os.path.exists("/chat"):
+            return "/chat"
+        else:
+            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+            print("XXXXXXXXXXXXXXX    CHAT BINARY MISSING    XXXXXXXXXXXXXXXXX")
+            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+        # system_name = platform.system()
+        # if system_name == "Linux":
+        #     name = "linux"
+        # elif system_name == "Windows":
+        #     name = "win.exe"
+        # elif system_name == "Darwin":
+        #     name = "mac"
         # elif system_name == "Android":
         #     return "Android"
-        else:
-            exit()
+        # else:
+        #     exit()
 
-        return os.path.join("bin", name)
 
     @property
     def command(self):
