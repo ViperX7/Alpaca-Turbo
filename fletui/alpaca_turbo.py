@@ -8,12 +8,11 @@
 
 https;//github.comViperX7/Alpaca-Turbo
 """
-
 import os
 import platform
 import sys
 
-from helpers.dtype import Conversation,load_all_conversations
+from helpers.dtype import Conversation, load_all_conversations
 from helpers.interaction import Process
 from rich import print as eprint
 from rich.progress import track
@@ -59,12 +58,34 @@ class Assistant:
             print(data)
         return data[id]
 
+    def remove_all_chat(self):
+        """hello world"""
+
+        # specify the path of the folder
+        folder_path = "conversation"
+
+        # loop through all files in the folder
+        r_count = o
+        for file_name in os.listdir(folder_path):
+            # join the folder path and file name
+            file_path = os.path.join(folder_path, file_name)
+            # check if the file exists
+            if os.path.isfile(file_path):
+                # delete the file
+                os.remove(file_path)
+                r_count += 1
+        print(f"{r_count} deleted successfully")
+        return f"{r_count} files removed"
+
     def save_chat(self):
         """load chat"""
         result = "can't save generation going on"
         if self.current_state != "generating":
-            data = Conversation.save(self.history)
-            result = "success"
+            if self.history:
+                Conversation.save(self.history)
+                result = "success"
+            else:
+                result = "no conversation to save"
         return result
 
     def get_conv_logs(self):
@@ -77,7 +98,7 @@ class Assistant:
         result = "can't save generation going on"
         if self.current_state != "generating":
             self.history = []
-            result =  "success"
+            result = "success"
         return result
 
     def safe_kill(self):

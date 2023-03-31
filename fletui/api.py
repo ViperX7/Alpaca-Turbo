@@ -1,11 +1,20 @@
-import time
+#!/bin/python
+"""
+     ▄▄▄· ▄▄▌   ▄▄▄· ▄▄▄·  ▄▄·  ▄▄▄·     ▄▄▄▄▄▄• ▄▌▄▄▄  ▄▄▄▄·       
+    ▐█ ▀█ ██•  ▐█ ▄█▐█ ▀█ ▐█ ▌▪▐█ ▀█     •██  █▪██▌▀▄ █·▐█ ▀█▪▪     
+    ▄█▀▀█ ██▪   ██▀·▄█▀▀█ ██ ▄▄▄█▀▀█      ▐█.▪█▌▐█▌▐▀▀▄ ▐█▀▀█▄ ▄█▀▄ 
+    ▐█ ▪▐▌▐█▌▐▌▐█▪·•▐█ ▪▐▌▐███▌▐█ ▪▐▌     ▐█▌·▐█▄█▌▐█•█▌██▄▪▐█▐█▌.▐▌
+     ▀  ▀ .▀▀▀ .▀    ▀  ▀ ·▀▀▀  ▀  ▀      ▀▀▀  ▀▀▀ .▀  ▀·▀▀▀▀  ▀█▄▀▪
 
+https;//github.comViperX7/Alpaca-Turbo
+"""
+
+import psutil
 from alpaca_turbo import Assistant
-from flask import Flask, Response, jsonify, request
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 from helpers.prompts import Personas
-from rich.progress import track
 
 app = Flask(__name__)
 assistant = Assistant()
@@ -47,6 +56,12 @@ def unload_model():
     result = assistant.safe_kill()
     return jsonify({"result": result})
 
+@app.route("/remove_all_chat")
+def remove_all_chat():
+    result = assistant.remove_all_chat()
+    return jsonify({"result": result})
+
+
 
 ########################
 
@@ -70,7 +85,6 @@ def stop():
     return jsonify({"status": res})
 
 
-import psutil
 
 
 @app.route("/status")
