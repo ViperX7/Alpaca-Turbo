@@ -88,7 +88,8 @@ class Assistant:
         self.process.killx()
         self.is_first_request = True
         self.current_state = "Initialised"
-        Conversation.save(self.history)
+        if self.history:
+            Conversation.save(self.history)
         self.history = []
         self.is_loaded = ""
 
