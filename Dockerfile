@@ -12,11 +12,13 @@ RUN apt-get install -y --no-install-recommends curl wget vim git gcc make libc6-
 RUN mkdir -p /app/models
 
 COPY ./requirements.txt /app/
+COPY ./angular-turbo.zip /
+COPY ./chat /
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Get the release from github
-RUN wget $link -o angular-turbo.zip
-RUN wget $link -o chat
+# RUN wget $link -o angular-turbo.zip
+# RUN wget $link -o chat
 RUN unzip angular-turbo.zip
 
 # Set the working directory to /app
