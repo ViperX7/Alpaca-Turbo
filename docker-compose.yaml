@@ -4,5 +4,6 @@ services:
     build: .
     ports:
       - 5000:5000
+      - 4200:4200
     volumes:
       - ./:/app
