@@ -75,22 +75,19 @@ export class SettingComponent {
       }
     });
 
-    this.SettingService.getSetting().subscribe((oldSetting) => {
-      if (oldSetting.seed !== this.seed || oldSetting.n_predict !== this.n_predict || oldSetting.repeat_last_n !== this.repeat_last_n) {
-        this.homeService.stopGenerating().subscribe();
-        this.SettingService.onloadModel().subscribe();
-        this.changeModelService.loadModels().subscribe((res) => {
-          this.models = res;
-          //@ts-ignore
-          document.querySelector('.notification').innerText = "Setting has been changed successfully, Waiting to reload the model !";
-          // @ts-ignore
-          this.changeModelService.changeModel(this.models.indexOf(this.model_loaded)).subscribe((res) => {
-            //@ts-ignore
-            document.querySelector('.notification').innerText = "Setting has been changed successfully !";
-          })
-        })
-      }
-    });
+    this.homeService.stopGenerating().subscribe();
+    this.SettingService.onloadModel().subscribe();
+
+    this.changeModelService.loadModels().subscribe((res) => {
+      this.models = res;
+      //@ts-ignore
+      document.querySelector('.notification').innerText = "Setting has been changed successfully, Waiting to reload the model !";
+      // @ts-ignore
+      this.changeModelService.changeModel(this.models.indexOf(this.model_loaded)).subscribe((res) => {
+        //@ts-ignore
+        document.querySelector('.notification').innerText = "Setting has been changed successfully !";
+      })
+    })
 
   }
 }

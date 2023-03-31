@@ -2,7 +2,7 @@
   position: absolute;
   left: calc(50% - 250px);
   top: 5%;
-  background: darkcyan;
+  background: #878585;
   box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
   border-radius: 8px;
   width: 500px;
@@ -57,9 +57,9 @@
 }
 .button {
   align-self: center;
-  background: white;
+  background: #3f3950;
   border: 1.5px solid black;
-  color: black;
+  color: #ffffff;
   cursor: pointer;
   font-family: "Inconsolata", sans-serif;
   font-size: 1em;
@@ -68,14 +68,14 @@
   text-align: center;
 }
 .button:hover {
-  background: #f2f2f2;
+  background: #62587c;
 }
 .button:active {
   background: #eeeeee;
 }
 .buttons {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-evenly;
 }
 
 .message {
