@@ -45,10 +45,9 @@ class Assistant:
         """load chat"""
         result = {"can't load generation going on"}
         if self.current_state != "generating":
-            data = Conversation.load()
-            result = data[id] if id in data else {}
-            print(result)
-        return result
+            data = load_all_conversations()
+            print(data)
+        return data[id]
 
     def save_chat(self):
         """load chat"""

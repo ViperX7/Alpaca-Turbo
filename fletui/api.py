@@ -134,7 +134,10 @@ def set_config():
 @app.route("/load_chat/<string:id>", methods=["GET"])
 def load_chat(id):
     result = assistant.load_chat(id)
-    new_res = [res.to_json() for res in result]
+    try:
+        new_res = [res.to_json() for res in result]
+    except AttributeError:
+        new_res = result
     return jsonify(new_res)
 
 
