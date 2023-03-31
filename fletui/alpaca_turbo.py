@@ -44,7 +44,7 @@ class Assistant:
 
         self.end_marker = b"RSTsr"
 
-        self.model_idx = 1
+        self.model_idx = 0
         self.is_loaded = ""
 
         self.current_state = "Initialised"
@@ -62,10 +62,10 @@ class Assistant:
         """hello world"""
 
         # specify the path of the folder
-        folder_path = "conversation"
+        folder_path = "conversations"
 
         # loop through all files in the folder
-        r_count = o
+        r_count = 0
         for file_name in os.listdir(folder_path):
             # join the folder path and file name
             file_path = os.path.join(folder_path, file_name)
