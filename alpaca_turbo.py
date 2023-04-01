@@ -218,11 +218,17 @@ class Assistant:
             self.current_state = "prompt"
 
             self.is_loaded = self.list_available_models()[self.model_idx]
-        except Exception:
+        except Exception as e:
+            print(e)
             self.is_loaded = ""
             return f"Failed loading {self.list_available_models()[self.model_idx]}"
 
         return f"loaded successfully {self.list_available_models()[self.model_idx]}"
+
+    def unload_model(self):
+        if self.is_loaded:
+            self.safe_kill()
+            self.is_loaded = False
 
     def action(self, command):
         """returns whether a request can be colmpleted or not"""
