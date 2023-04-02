@@ -1,14 +1,16 @@
 .stopBtn {
-  top: -60px;
+  top: -25px;
   color: #ffffff;
   position: absolute;
   cursor: pointer;
   background-color: #3b3b3b;
-  padding: 10px;
+  padding: 5px 10px;
   border-radius: 10px;
   border: 1px solid #fff;
   font-weight: lighter;
+  font-size: 16px;
 }
+
 
 .chatTools {
   background-color: #2b2e2e;
@@ -20,3 +22,5 @@
   border-radius: 5px;
   top: 10px;
 }
+
+
