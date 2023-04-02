@@ -64,9 +64,10 @@ body {
 /* Side Bar */
 .sidebar {
   background-color: var(--sidebar-bg-color);
-  width: 20%;
-  max-width: 300px;
+  width: 30%;
+  max-width: 350px;
   height: 100vh;
+  transition: transform .3s ease-in-out;
 }
 
 .sidebar-header {
@@ -283,11 +284,15 @@ select::-ms-expand {
   width: 100%;
   flex-direction: column;
 }
+.conversation {
+  height: 100%;
+}
 .chat-section {
   display: none;
-  height: 800px;
+  height: 100%;
   width: 100%;
   overflow: auto;
+  padding: 0 0 250px 0;
 }
 .hero-header {
   display: flex;
@@ -302,9 +307,8 @@ select::-ms-expand {
 }
 
 .hero-content {
-  margin-top: 50px;
   display: flex;
-  justify-content: center;
+  padding: 50px;
   align-items: center;
   width: 100%;
   justify-content: space-evenly;
@@ -324,7 +328,6 @@ select::-ms-expand {
 }
 .hero-content .bot h4 {
   margin-top: 20px;
-  font-weight: 400;
 }
 .clickable {
   cursor: pointer;
@@ -334,34 +337,41 @@ select::-ms-expand {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 100px;
-  background-color: #3c3c3c47;
+  padding: 10px;
+  position: fixed;
   bottom: 0;
-  margin-top: auto;
-  position: relative;
+  width: 80%;
 }
 
-.new-chat .chat-input {
-  padding: 15px;
-  width: 70%;
-  margin-left: 10px;
+.inputForm {
+  width: 80%;
+  display: flex;
+  justify-content: center;
+  background: #c3c3c3;
+  align-items: center;
+  padding: 10px;
   border-radius: 10px;
-  border: none;
-  outline: #3c3c3c6b 1px solid;
-  resize: none;
-  font-size: 16px;
-  font-family: 'Ubuntu', sans-serif;
+}
+.new-chat .chat-input {
+padding: 15px;
+width: 100%;
+margin-left: 10px;
+border-radius: 10px;
+border: none;
+outline: #3c3c3c6b 1px solid;
+resize: none;
+font-size: 16px;
+font-family: 'Ubuntu', sans-serif;
 }
 
 .new-chat button {
-  width: 40px;
-  height: 40px;
-  cursor: pointer;
-  background-color: transparent;
-  border: none;
-  margin-left: 20px;
-  filter: invert(100%) sepia(3%) saturate(11%) hue-rotate(348deg) brightness(102%) contrast(105%);
+width: 40px;
+height: 40px;
+cursor: pointer;
+background-color: transparent;
+border: none;
+margin-left: 20px;
+filter: invert(100%) sepia(3%) saturate(11%) hue-rotate(348deg) brightness(102%) contrast(105%);
 }
 /* MAIN CHAT */
 
@@ -382,7 +392,7 @@ select::-ms-expand {
 }
 .chat-section .prompt,
 .chat-section .response{
-  padding: 30px 100px 30px 20px;
+  padding: 50px 100px 50px 30px;
   word-break: normal;
   line-height: 25px;
 }
@@ -441,12 +451,106 @@ select::-ms-expand {
 }
 
 .chatTools {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  width: 200px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.copy {
   background-color: #2b2e2e;
   padding: 5px;
   color: #E7E7E7;
   cursor: pointer;
-  position: absolute;
-  right: 10px;
   border-radius: 5px;
-  top: 10px;
+}
+
+.infoDiv {
+  background-color: #7a7a7a;
+  padding: 5px;
+  color: #E7E7E7;
+  border-radius: 5px;
+}
+
+.toggleSideBar{
+  transform: translateX(0) !important;
+}
+.openSideBar {
+  display: none;
+}
+
+@media screen and (max-width: 1000px) {
+  .hero-content .top img {
+    width: 50px;
+  }
+}
+
+@media screen and (max-width: 700px) {
+  .hero-content {
+    display: none;
+  }
+  .hero-section {
+    display: block;
+    align-items: center;
+    padding: 100px;
+    text-align: center;
+  }
+  .main {
+    width: 65%;
+  }
+  .sidebar {
+    width: auto;
+  }
+}
+
+@media screen and (max-width: 650px) {
+  .main {
+    width: 100%;
+  }
+  .new-chat {
+    width: 100%;
+    padding: 0;
+  }
+  .openSideBar{
+    display: block;
+  }
+  .inputForm {
+    width: 100%;
+    border-radius: 0;
+  }
+  .sidebar {
+    position: absolute;
+    transform: translateX(-100%);
+    width: 100% !important;
+    max-width: none;
+    z-index: 1;
+  }
+  .stopBtn {
+    font-size: 14px;
+    top: -45px;
+  }
+  .card {
+    width: 400px !important;
+    left: calc(50% - 200px) !important;
+  }
+  .main .main-header .left {
+    margin-left: 0 !important;
+    justify-content: space-evenly !important;
+  }
+  .main .main-header .left .usage .total-bar {
+    width: 100px;
+  }
+  .right {
+    display: flex;
+  }
+  .ram-usage h4, .cpu-usage h4 {
+    font-size: 12px;
+  }
+  .main .main-header img {
+    width: 20px;
+    margin: 0 10px;
+    z-index: 9;
+  }
 }

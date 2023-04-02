@@ -76,17 +76,17 @@ export class SettingComponent {
     });
 
     this.homeService.stopGenerating().subscribe();
-    this.SettingService.onloadModel().subscribe();
+    //this.SettingService.onloadModel().subscribe();
 
     this.changeModelService.loadModels().subscribe((res) => {
       this.models = res;
       //@ts-ignore
       document.querySelector('.notification').innerText = "Setting has been changed successfully, Waiting to reload the model !";
       // @ts-ignore
-      this.changeModelService.changeModel(this.models.indexOf(this.model_loaded)).subscribe((res) => {
+      //this.changeModelService.changeModel(this.models.indexOf(this.model_loaded)).subscribe((res) => {
         //@ts-ignore
-        document.querySelector('.notification').innerText = "Setting has been changed successfully !";
-      })
+        //document.querySelector('.notification').innerText = "Setting has been changed successfully !";
+      //})
     })
 
   }

@@ -15,7 +15,6 @@ export class AppComponent implements AfterViewInit{
   private chatInput: HTMLElement | undefined;
   private chatHistory: HTMLElement | undefined;
   private chatSection: HTMLElement | undefined;
-  private darkMode: boolean = false;
   private outputText: string = "";
   private personas: [] = [];
 
@@ -28,8 +27,9 @@ export class AppComponent implements AfterViewInit{
   public total_cores: number = 0;
   public threads_above_80: number = 0;
   public total_threads: number = 0;
-  private pre: string = "";
-  private fmt: string = "";
+  private pre: string = "chat transcript between human and a bot named devil and the bot remembers everything from previous response Below is an instruction that describes a task. Write a response that appropriately completes the request.";
+  private fmt: string = "### Instruction:{instruction}### Response:{response}";
+  private timer: number = 0;
   chatHistoryData: { name: string; data: any; }[] = [];
   //information variables
 
@@ -50,6 +50,15 @@ export class AppComponent implements AfterViewInit{
     this.chatSection = document.querySelector('.chat-section') as HTMLElement;
     this.getAllPersonas();
     this.getHistoryChat();
+
+    this.chatInput.addEventListener('keydown', (event) => {
+      if (event.keyCode === 13 && !event.shiftKey) {
+        event.preventDefault();
+        this.sendPrompt();
+      }
+    });
+    this.loadDarkModeSetting();
+
   }
 
   openSettingPage() {
@@ -78,6 +87,7 @@ export class AppComponent implements AfterViewInit{
   }
 
   sendPrompt() {
+    this.timer = 0;
     if (this.server_status !== "prompt") return;
     this.showConversation();
     // @ts-ignore
@@ -95,10 +105,10 @@ export class AppComponent implements AfterViewInit{
 
   ReceiveResponseStream() {
     this.outputText = '';
+    
     const subscription = this.homeService.ReceiveResponse().subscribe(
       data => {
         this.outputText += data;
-        console.log(data)
         // @ts-ignore
         let waiting_icon = document.querySelector('.jawn');
         if(waiting_icon) waiting_icon.remove();
@@ -106,12 +116,12 @@ export class AppComponent implements AfterViewInit{
         document.getElementById('waiting_prompt').innerHTML = this.outputText;
         // @ts-ignore
         document.getElementById('waiting_prompt').style.whiteSpace = "pre-wrap";
+
       },
       error => {
         console.log(error);
       },
       () => {
-        console.log('Stream completed');
         subscription.unsubscribe();
       }
     );
@@ -131,16 +141,16 @@ export class AppComponent implements AfterViewInit{
     let img = document.createElement('img');
     let h4 = document.createElement('h4');
     let chatToolsDiv = document.createElement('div');
+
     let copyDiv = document.createElement('div');
+
     mainNod.style.position = "relative";
     chatToolsDiv.classList.add('chatTools');
+
     copyDiv.classList.add('copy');
     copyDiv.textContent = 'copy';
 
-
-
     copyDiv.addEventListener('click', (event) => this.copyTheText(event));
-    chatToolsDiv.appendChild(copyDiv);
 
 
     // @ts-ignore
@@ -148,17 +158,28 @@ export class AppComponent implements AfterViewInit{
     if(waiting_prompt) waiting_prompt.id = '';
 
     if (type === 'prompt') {
+      chatToolsDiv.style.width = "auto";
+      
       mainNod.className = 'prompt';
       img.src = '/assets/imgs/circle-user-solid.svg';
       img.alt = 'user logo';
       h4.innerHTML = text;
     }else if ('response') {
+      let infoDiv = document.createElement('div');
+      infoDiv.classList.add('infoDiv');
+      infoDiv.textContent = '0 words / 0s';
+      chatToolsDiv.appendChild(infoDiv);
+
       mainNod.className = 'response';
       img.src = '/assets/imgs/alpaca.png';
       img.alt = 'alpaca logo';
+      img.classList.add("chatlogo");
       h4.innerHTML = text;
       h4.id = 'waiting_prompt';
     }
+
+    chatToolsDiv.appendChild(copyDiv);
+
     mainNod.appendChild(img);
     mainNod.appendChild(h4);
     mainNod.appendChild(chatToolsDiv);
@@ -172,34 +193,47 @@ export class AppComponent implements AfterViewInit{
     this.chatSection.appendChild(mainNod);
   }
 
-  turnDarkMode() {
-    let images = document.querySelectorAll('img');
+  loadDarkModeSetting() {
+    this.lightMode();
+    if (localStorage.getItem('isDarkMode') === 'true') this.darkMode();
+  }
 
-    if (this.darkMode){
-      // @ts-ignore
-      document.querySelector('.container').style.backgroundColor = "var(--main-bg-color)";
-      // @ts-ignore
-      document.querySelector('.container').style.color = "var(--light-mode-text-color)";
-      // @ts-ignore
-      document.querySelector('.sidebar').style.backgroundColor = "var(--sidebar-bg-color)";
-      images.forEach(image => {
-        if (image.classList.contains('logo') || image.classList.contains('sendChat')) return;
-        image.classList.remove("darkMode");
-      });
-      this.darkMode = false;
-    }else{
-      // @ts-ignore
-      document.querySelector('.container').style.backgroundColor = "var(--dark-mode-main-bg-color)";
-      // @ts-ignore
-      document.querySelector('.container').style.color = "var(--dark-mode-text-color)";
-      // @ts-ignore
-      document.querySelector('.sidebar').style.backgroundColor = "var(--dark-mode-sidebar-bg-color)";
-      images.forEach(image => {
-        if (image.classList.contains('logo') || image.classList.contains('sendChat')) return;
-        image.classList.add("darkMode");
-      });
-      this.darkMode = true;
+  turnDarkMode() {
+    if (localStorage.getItem('isDarkMode') === 'true') {
+      this.lightMode();
+      localStorage.setItem('isDarkMode', 'false');
+    } else{
+      this.darkMode();
+      localStorage.setItem('isDarkMode', 'true');
     }
+  }
+
+  darkMode(){
+    let images = document.querySelectorAll('img');
+    // @ts-ignore
+    document.querySelector('.container').style.backgroundColor = "var(--dark-mode-main-bg-color)";
+    // @ts-ignore
+    document.querySelector('.container').style.color = "var(--dark-mode-text-color)";
+    // @ts-ignore
+    document.querySelector('.sidebar').style.backgroundColor = "var(--dark-mode-sidebar-bg-color)";
+    images.forEach(image => {
+      if (image.classList.contains('logo') || image.classList.contains('sendChat') || image.classList.contains('chatlogo')) return;
+      image.classList.add("darkMode");
+    });
+  }
+
+  lightMode() {
+    let images = document.querySelectorAll('img');
+    // @ts-ignore
+    document.querySelector('.container').style.backgroundColor = "var(--main-bg-color)";
+    // @ts-ignore
+    document.querySelector('.container').style.color = "var(--light-mode-text-color)";
+    // @ts-ignore
+    document.querySelector('.sidebar').style.backgroundColor = "var(--sidebar-bg-color)";
+    images.forEach(image => {
+      if (image.classList.contains('logo') || image.classList.contains('sendChat') || image.classList.contains('chatlogo')) return;
+      image.classList.remove("darkMode");
+    });
   }
 
   clearConversation(){
@@ -222,11 +256,19 @@ export class AppComponent implements AfterViewInit{
         this.total_cores = response.total_cores;
         this.total_threads = response.total_threads;
         this.model_loaded = response.is_model_loaded;
-
+        if(this.server_status === 'generating') this.timer += 1;
         // @ts-ignore
         document.querySelector('.ram').style.width =  this.ram_usage + '%';
         // @ts-ignore
         document.querySelector('.cpu').style.width =  this.cpu_percent + '%';
+        if(this.server_status == 'input')  { // @ts-ignore
+          this.chatInput.innerText = "";
+        }
+
+        // @ts-ignore
+        let lastResponse = document.querySelectorAll('.infoDiv')[document.querySelectorAll('.infoDiv').length - 1] as HTMLElement;
+        if(lastResponse) lastResponse.innerText = `${this.outputText.split(' ').length - 1} words / ${this.timer}s!`;
+        
       });
     },1000);
   }
@@ -344,10 +386,10 @@ export class AppComponent implements AfterViewInit{
         .then(() => {
           document.querySelectorAll('.copy').forEach((copy) => {
             // @ts-ignore
-            copy.parentElement.style.backgroundColor = "#2b2e2e";
+            copy.style.backgroundColor = "#2b2e2e";
           });
           // @ts-ignore
-          event.target.parentElement.style.backgroundColor = "green";
+          event.target.style.backgroundColor = "green";
         })
         .catch((error) => {
           console.error('Error copying text to clipboard:', error);
@@ -361,5 +403,10 @@ export class AppComponent implements AfterViewInit{
     this.chatHistoryData = [];
     let recentChats = document.querySelectorAll('.recent-chat');
     recentChats.forEach((history) => history.remove());
+  }
+
+  openSideBarMenu() {
+    // @ts-ignore
+    this.sideBar.classList.toggle('toggleSideBar');
   }
 }
