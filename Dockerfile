@@ -11,9 +11,13 @@ RUN apt-get install -y --no-install-recommends curl wget vim git gcc make libc6-
 
 RUN mkdir -p /app/models
 
+RUN git clone https://github.com/ViperX7/llama.cpp /llama.cpp
+RUN cd /llama.cpp && make
+RUN mv /llama.cpp/main /chat
+
 COPY ./requirements.txt /app/
 COPY ./angular-turbo.zip /
-COPY ./chat /
+# COPY ./chat /
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Get the release from github
