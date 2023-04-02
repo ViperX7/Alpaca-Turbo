@@ -23,10 +23,11 @@ class Assistant:
         self.DEBUG = "-d" in sys.argv
 
         self.threads = 4
-        self.top_k = 40
-        self.top_p = 0.9
-        self.temp = 0.1
-        self.repeat_penalty = 1.3
+        self.top_k = 1000
+        self.top_p = 0.95
+        self.temp = 0.2
+        self.repeat_penalty = 1
+        self.batch_size = 256
 
         self.seed = 888777
         self.n_predict = 200
@@ -36,7 +37,7 @@ class Assistant:
 
         # self.pre_prompt = " Below are instructions to a smart bot named devil, provide response inteligently to instructions.\n\n"
         # self.pre_prompt = " Below are instructions provide best possible response and take into account entire history.\n\n"
-        self.pre_prompt = "  Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n"
+        self.pre_prompt = " Below is an instruction that describes a task. Write a response that appropriately completes the request."
         self.format = "### Instruction:\n\n{instruction}\n\n### Response:\n\n{response}"
         # self.pre_prompt = "you are a highly intelligent chatbot named devil and you remember all conversation history."
         self.enable_history = False
@@ -152,17 +153,19 @@ class Assistant:
         # else:
         #     exit()
 
-
     @property
     def command(self):
         command = [
             Assistant.get_bin_path(),
             # "--color",
-            # "-i",
+            "-i",
             "--seed",
             f"{self.seed}",
+            "-ins",
             "-t",
             f"{self.threads}",
+            "-b",
+            f"{self.batch_size}",
             "--top_k",
             f"{self.top_k}",
             "--top_p",
@@ -177,7 +180,8 @@ class Assistant:
             f"{self.n_predict}",
             "-m",
             f"{self.list_available_models()[self.model_idx]}",
-            "--interactive-start",
+            # "--interactive-start",
+            "--interactive-first",
         ]
         return command
 
@@ -189,31 +193,20 @@ class Assistant:
             )
         try:
             self.process = Process(self.command, timeout=10000)
-            self.process.readline()
-            self.process.readline()
-            self.process.readline()
-            self.process.readline()
-            self.process.readline()
-            self.process.recvuntil("load: ")
+            for _ in range(6):
+                _ = (
+                    [print("ERRoR" * 20), exit(1)]
+                    if "error" in self.process.readline().decode("utf-8").lower()
+                    else None
+                )
             is_loaded = False
             for _ in track(range(100)):
                 if is_loaded:
                     continue
                 ppt = self.process.read(1)
                 is_loaded = b"d" == ppt
-
-            self.process.readline()
-            self.process.readline()
-            self.process.readline()
-            self.process.readline()
-            self.process.readline()
-            self.process.readline()
-            self.process.readline()
-            self.process.readline()
-            self.process.readline()
-            self.process.readline()
-            self.process.readline()
-            self.process.readline()
+            for _ in range(12):
+                (self.process.readline())
             self.process.recvuntil(self.end_marker)
             self.current_state = "prompt"
 
@@ -291,13 +284,12 @@ class Assistant:
 
             for txt in txtblob:
                 lines = txt.split("\n")
+                lines[-1] = lines[-1] + "@done@"
                 for line in lines:
                     self.process.recvuntil(") :  ")
                     self.process.sendline(line)
 
-                self.process.recvuntil(") :  ")
-                self.process.sendline("@done@")
-            self.process.readline()
+            # print(self.process.readline())
             self.current_state = "generating"
         else:
             print("CRITICAL")
