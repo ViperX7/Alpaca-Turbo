@@ -82,6 +82,7 @@
       <div class="right">
         <img src="/assets/imgs/gear-solid.svg" (click)="openSettingPage()" class="settings" id="settings" alt="settings" title="Setting">
         <img src="/assets/imgs/sliders-solid.svg" (click)="openAdvancedMode()" class="advanced" id="advanced" alt="advanced" title="Advanced mode">
+        <img src="/assets/imgs/bars-solid.svg" (click)="openSideBarMenu()" class="openSideBar" alt="openSideBar" title="open side bar menu">
       </div>
     </div>
     <div class="conversation">
@@ -132,10 +133,13 @@
     </div>
     <div class="new-chat">
       <h2 *ngIf="server_status === 'generating'" class="stopBtn" (click)="stopGenerating()">Stop Generating</h2>
-      <textarea [disabled]="server_status === 'generating'" class="chat-input" name="chat-input" id="chat-input" placeholder="What can I help you with today?"></textarea>
-      <button id="send-chat" (click)="sendPrompt()">
-        <img  class="sendChat" src="/assets/imgs/paper-plane-solid.svg" alt="send">
-      </button>
+      <form class="inputForm">
+        <textarea [disabled]="server_status === 'generating'" class="chat-input" name="chat-input" id="chat-input" placeholder="What can I help you with today?"></textarea>
+        <button id="send-chat" (click)="sendPrompt()">
+          <img class="sendChat" src="/assets/imgs/paper-plane-solid.svg" alt="send">
+        </button>
+      </form>
+
     </div>
   </div>
 </div>
