@@ -21,7 +21,7 @@ assistant = Assistant()
 
 ################################
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="http://localhost:4200")
+socketio = SocketIO(app, cors_allowed_origins="*")
 personas = Personas("./prompts.json")
 
 
