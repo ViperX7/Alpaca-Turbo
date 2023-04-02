@@ -11,9 +11,13 @@ psutil = "*"
 fastapi = "*"
 uvicorn = "*"
 flask = "*"
+flask-cors = "*"
+flask-socketio = "*"
+colorama = "*"
+requests = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.9"
-python_full_version = "3.9.16"
+python_version = "3.8"
+python_full_version = "3.8.0"
