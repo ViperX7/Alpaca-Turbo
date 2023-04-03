@@ -33,9 +33,9 @@ Alpaca-Turbo is a language model that can be run locally without much setup requ
 3. Copy your alpaca models to alpaca-turbo/models/ directory.
 4. Run the following commands inside the Alpaca-Turbo directory:
     ```
-    python -m pip install pipenv
+    python -m pip install pipenv --user
     python -m pipenv shell
-    pip install -r requirements.txt --user
+    pip install -r requirements.txt
     python api.py
     ```
 5. Visit http://localhost:5000 to use the chat interface of the chatbot.
