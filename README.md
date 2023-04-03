@@ -26,7 +26,9 @@ Alpaca-Turbo is a language model that can be run locally without much setup requ
 
 #### Windows/Mac M1/M2 (miniconda)
 
-1. Install miniconda [windows](https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe) [Mac M1/M2](https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.pkg)
+1. Install miniconda 
+    - [windows](https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe) 
+    - [Mac M1/M2](https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.pkg)
 
    > - Install for all users
    > - Make sure to add `c:\ProgramData\miniconda3\condabin` to your environment variables
