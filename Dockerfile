@@ -16,7 +16,6 @@ RUN cd /llama.cpp && make
 RUN mv /llama.cpp/main /main
 
 COPY ./requirements.txt /app/
-COPY ./angular-turbo.zip /
 # COPY ./main /
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
