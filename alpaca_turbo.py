@@ -134,6 +134,8 @@ class Assistant:
             name = "bin/main"
         elif system_name == "Windows":
             name = "bin/main.exe"
+        elif system_name == "Darwin":
+            name = "bin/mac"
         else:
             print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
             print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
@@ -145,8 +147,6 @@ class Assistant:
             print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
             print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 
-        # elif system_name == "Darwin":
-        #     name = "mac"
         # elif system_name == "Android":
         #     return "Android"
         # else:

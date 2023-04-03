@@ -96,13 +96,13 @@ def status():
     total_ram = psutil.virtual_memory().total / (1024**3)  # convert to GB
     total_cores = psutil.cpu_count(logical=False)
     total_threads = psutil.cpu_count(logical=True)
-    threads_above_80 = len(
-        [
-            thread
-            for thread in psutil.process_iter(attrs=["pid", "name", "cpu_percent"])
-            if thread.info["cpu_percent"] > 80
-        ]
-    )
+    # threads_above_80 = len(
+    #     [
+    #         thread
+    #         for thread in psutil.process_iter(attrs=["pid", "name", "cpu_percent"])
+    #         if thread.info["cpu_percent"] > 80
+    #     ]
+    # )
     return jsonify(
         {
             "cpu_percent": cpu_percent,
@@ -110,7 +110,7 @@ def status():
             "total_ram": total_ram,
             "total_cores": total_cores,
             "total_threads": total_threads,
-            "threads_above_80": threads_above_80,
+            # "threads_above_80": threads_above_80,
             "is_model_loaded": assistant.is_loaded,
             "turbo_status": assistant.current_state,
         }
