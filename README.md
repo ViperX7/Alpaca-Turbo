@@ -36,7 +36,7 @@ Alpaca-Turbo is a language model that can be run locally without much setup requ
     ```
     python -m pip install pipenv
     python -m pipenv shell
-    pip install -r requirements.txt
+    pip install -r requirements.txt --user
     python api.py
     ```
 5. Visit http://localhost:5000 to use the chat interface of the chatbot.
