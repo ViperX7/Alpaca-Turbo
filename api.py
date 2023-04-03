@@ -8,10 +8,9 @@
 
 https;//github.comViperX7/Alpaca-Turbo
 """
-
 import psutil
 from alpaca_turbo import Assistant
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 from helpers.prompts import Personas
@@ -19,7 +18,7 @@ from helpers.prompts import Personas
 app = Flask(
     __name__,
     static_url_path="",
-    static_folder="angular-turbo",
+    static_folder="templates",
 )
 assistant = Assistant()
 
@@ -59,6 +58,7 @@ def send_conv(data):
 def unload_model():
     result = assistant.safe_kill()
     return jsonify({"result": result})
+
 
 @app.route("/remove_all_chat")
 def remove_all_chat():
@@ -207,6 +207,11 @@ def update_persona(name):
     persona_data = data["data"]
     personas.update(name, persona_data)
     return jsonify({"success": True})
+
+
+@app.route("/")
+def index():
+    return render_template("index.html")
 
 
 if __name__ == "__main__":
