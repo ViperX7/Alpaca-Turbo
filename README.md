@@ -24,27 +24,42 @@ Alpaca-Turbo is a language model that can be run locally without much setup requ
    ```
 5. Visit http://localhost:5000 to use the chat interface of the chatbot.
 
+#### Windows (miniconda)
 
-#### Using pipenv
+1. Install miniconda [here](https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe)
+    >    - Install for all users
+    >    - Make sure to add `c:\ProgramData\miniconda3\condabin` to your environment variables
 
-**Note**  Install Python 3.8 [here](https://www.python.org/ftp/python/3.8.0/python-3.8.0.exe) (if you are on windows)  
 
-1. Download the latest alpaca-turbo.zip from the release page. [here](https://github.com/ViperX7/Alpaca-Turbo/releases/)
-2. Extract Alpaca-Turbo.zip to Alpaca-Turbo
-3. Copy your alpaca models to alpaca-turbo/models/ directory.
-4. Run the following commands inside the Alpaca-Turbo directory:
-    ```
-    python -m pip install pipenv
-    python -m pipenv shell
-    pip install -r requirements.txt --user
-    python api.py
-    ```
-5. Visit http://localhost:5000 to use the chat interface of the chatbot.
+2. Download the latest alpaca-turbo.zip from the release page. [here](https://github.com/ViperX7/Alpaca-Turbo/releases/)
+3. Extract Alpaca-Turbo.zip to Alpaca-Turbo 
+    > Make sure you have enough space for the models in the extracted location
+4. Copy your alpaca models to alpaca-turbo/models/ directory.
 
-## Note
+5. Open cmd as Admin and type
+   ```
+   conda init
+   ```
+6. close that window
+7. open a new cmd window in your Alpaca-Turbo dir and type
+   ```
+   conda create -n alpaca_turbo python=3.8 -y
+   conda activate alpaca_turbo
+   pip install -r requirements.txt
+   python api.py
+   ```
+8. Visit http://localhost:5000 select your model and click change wait for the model to load
+9. ready to interact
 
-- The previous version of Alpaca-Turbo has been moved to the gradio_impl directory.
 
-## Support
 
-If you find this project useful, please consider giving it a star on GitHub. You can also join our Discord server for any queries or feedback.
+# CREDITS
+
+- [ggerganov/LLaMA.cpp](https//github.com/ggerganov/LLaMA.cpp) For their amazing cpp library
+- [antimatter15/alpaca.cpp](https://github.com/antimatter15/alpaca.cpp) For initial versions of thier chat app
+- [cocktailpeanut/dalai](https://github.com/cocktailpeanut/dalai) For the Inspiration
+- MetaAI for the LLaMA models
+- Stanford for the alpaca [models](https://github.com/tatsu-lab/stanford_alpaca) 
+
+
+
