@@ -13,20 +13,15 @@ RUN mkdir -p /app/models
 
 RUN git clone https://github.com/ViperX7/llama.cpp /llama.cpp
 RUN cd /llama.cpp && make
-RUN mv /llama.cpp/main /chat
+RUN mv /llama.cpp/main /main
 
 COPY ./requirements.txt /app/
 COPY ./angular-turbo.zip /
-# COPY ./chat /
+# COPY ./main /
 RUN pip install --no-cache-dir -r /app/requirements.txt
-
-# Get the release from github
-# RUN wget $link -o angular-turbo.zip
-# RUN wget $link -o chat
-RUN unzip angular-turbo.zip
 
 # Set the working directory to /app
 WORKDIR /app
 
 # Start the webui.py file when the container is started
-CMD python3 /app/api.py & cd /angular-turbo;python3 -m http.server 4200
+CMD python3 /app/api.py
