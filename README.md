@@ -27,15 +27,14 @@ Alpaca-Turbo is a language model that can be run locally without much setup requ
 #### Windows (miniconda)
 
 1. Install miniconda [here](https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe)
-    >    - Install for all users
-    >    - Make sure to add `c:\ProgramData\miniconda3\condabin` to your environment variables
 
+   > - Install for all users
+   > - Make sure to add `c:\ProgramData\miniconda3\condabin` to your environment variables
 
 2. Download the latest alpaca-turbo.zip from the release page. [here](https://github.com/ViperX7/Alpaca-Turbo/releases/)
-3. Extract Alpaca-Turbo.zip to Alpaca-Turbo 
-    > Make sure you have enough space for the models in the extracted location
+3. Extract Alpaca-Turbo.zip to Alpaca-Turbo
+   > Make sure you have enough space for the models in the extracted location
 4. Copy your alpaca models to alpaca-turbo/models/ directory.
-
 5. Open cmd as Admin and type
    ```
    conda init
@@ -51,15 +50,10 @@ Alpaca-Turbo is a language model that can be run locally without much setup requ
 8. Visit http://localhost:5000 select your model and click change wait for the model to load
 9. ready to interact
 
-
-
 # CREDITS
 
 - [ggerganov/LLaMA.cpp](https//github.com/ggerganov/LLaMA.cpp) For their amazing cpp library
-- [antimatter15/alpaca.cpp](https://github.com/antimatter15/alpaca.cpp) For initial versions of thier chat app
+- [antimatter15/alpaca.cpp](https://github.com/antimatter15/alpaca.cpp) For initial versions of their chat app
 - [cocktailpeanut/dalai](https://github.com/cocktailpeanut/dalai) For the Inspiration
 - MetaAI for the LLaMA models
-- Stanford for the alpaca [models](https://github.com/tatsu-lab/stanford_alpaca) 
-
-
-
+- Stanford for the alpaca [models](https://github.com/tatsu-lab/stanford_alpaca)
