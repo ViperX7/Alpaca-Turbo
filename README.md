@@ -4,28 +4,42 @@ Alpaca-Turbo is a language model that can be run locally without much setup requ
 
 ##### [Discord](https://discord.gg/pm4JzCBHNn)
 
-
-
 ![Alpaca-Turbo Screenshot 2](./screenshots/screenshot2.png)
 ![Alpaca-Turbo Screenshot 1](./screenshots/screenshot1.png)
 
-
 ## Installation Steps
 
+#### Using Docker
 
+**Note**: for some reason this docker container works on linux but not on windows
 
 > Docker must be installed on your system
 
-1. Download the alpaca-turbo.zip from the release page. [here](https://github.com/ViperX7/Alpaca-Turbo/releases/tag/beta_v0.1)
+1. Download the latest alpaca-turbo.zip from the release page. [here](https://github.com/ViperX7/Alpaca-Turbo/releases/)
 2. Extract the contents of the zip file into a directory named alpaca-turbo.
 3. Copy your alpaca models to alpaca-turbo/models/ directory.
 4. Run the following command to set everything up:
    ```
      docker-compose up
-     ```
-  5. Visit http://localhost:4200 to use the chat interface of the chatbot.
+   ```
+5. Visit http://localhost:5000 to use the chat interface of the chatbot.
 
-- Other methods will be added soon
+
+### Using pipenv
+
+**Note**  Install Python 3.8 [here](https://www.python.org/ftp/python/3.8.0/python-3.8.0.exe) (if you are on windows)  
+
+1. Download the latest alpaca-turbo.zip from the release page. [here](https://github.com/ViperX7/Alpaca-Turbo/releases/)
+2. Extract Alpaca-Turbo.zip to Alpaca-Turbo
+3. Copy your alpaca models to alpaca-turbo/models/ directory.
+4. Run the following commands inside the Alpaca-Turbo directory:
+    ```
+    python -m pip install pipenv
+    python -m pipenv shell
+    pip install -r requirements.txt
+    python api.py
+    ```
+5. Visit http://localhost:5000 to use the chat interface of the chatbot.
 
 ## Note
 
