@@ -26,9 +26,8 @@ Alpaca-Turbo is a language model that can be run locally without much setup requ
 
 
 #### Using pipenv
-
-**Note**  Install Python 3.8 [here](https://www.python.org/ftp/python/3.8.0/python-3.8.0.exe) (if you are on windows)  
-
+[video guide for windows](https://drive.google.com/file/d/1tipagDTSAzbRYIMKNlxpP5xbS8mArbCq/view?usp=sharing)
+1. Install Python 3.8 [here](https://www.python.org/ftp/python/3.8.0/python-3.8.0.exe) (if you are on windows else ignore)  
 1. Download the latest alpaca-turbo.zip from the release page. [here](https://github.com/ViperX7/Alpaca-Turbo/releases/)
 2. Extract Alpaca-Turbo.zip to Alpaca-Turbo
 3. Copy your alpaca models to alpaca-turbo/models/ directory.
