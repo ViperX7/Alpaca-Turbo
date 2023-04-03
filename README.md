@@ -9,7 +9,7 @@ Alpaca-Turbo is a language model that can be run locally without much setup requ
 
 ## Installation Steps
 
-#### Using Docker
+#### Using Docker (only Linux is supported with docker)
 
 **Note**: for some reason this docker container works on linux but not on windows
 
