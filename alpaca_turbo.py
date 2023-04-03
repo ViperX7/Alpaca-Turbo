@@ -127,6 +127,8 @@ class Assistant:
 
     @staticmethod
     def get_bin_path():
+        if "--windows" in sys.argv:
+            return "main.exe"
         if os.path.exists("chat"):
             return "./chat"
         elif os.path.exists("/chat"):

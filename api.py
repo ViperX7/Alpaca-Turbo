@@ -16,7 +16,11 @@ from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 from helpers.prompts import Personas
 
-app = Flask(__name__)
+app = Flask(
+    __name__,
+    static_url_path="",
+    static_folder="angular-turbo",
+)
 assistant = Assistant()
 
 ################################
@@ -62,7 +66,6 @@ def remove_all_chat():
     return jsonify({"result": result})
 
 
-
 ########################
 
 
@@ -84,8 +87,6 @@ def load_model(model_idx):
 def stop():
     res = assistant.stop_generation()
     return jsonify({"status": res})
-
-
 
 
 @app.route("/status")
@@ -209,4 +210,9 @@ def update_persona(name):
 
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", allow_unsafe_werkzeug=True, debug=True)
+    socketio.run(
+        app,
+        host="0.0.0.0",
+        allow_unsafe_werkzeug=True,
+        debug=True,
+    )

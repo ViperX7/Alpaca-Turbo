@@ -2,5 +2,11 @@ models
 alpaca.cpp
 conversations
 pid
+angular-turbo
+angular-turbo.zip
+chat
+main
+*.zip
+__pycache__
 ./Pipfile.lock
 
