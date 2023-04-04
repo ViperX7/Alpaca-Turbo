@@ -8,12 +8,16 @@
 
 https;//github.comViperX7/Alpaca-Turbo
 """
+import mimetypes
 import psutil
 from alpaca_turbo import Assistant
 from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 from helpers.prompts import Personas
+
+mimetypes.add_type('application/javascript', '.js')
+mimetypes.add_type('text/css', '.css')
 
 app = Flask(
     __name__,
