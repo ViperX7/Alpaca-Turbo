@@ -67,7 +67,7 @@ class Process(PopenSpawn):
     def read(self, size=-1):
         data = super().read(size)
         _ = (print(
-            Fore.BLUE + str(data)[2:-1] + Fore.RESET,
+            Fore.RED + str(data)[2:-1] + Fore.RESET,
             end="" if data[-1] != b"\n" else "\n",
         ) if self.debug else None)
         return data
@@ -79,8 +79,8 @@ class Process(PopenSpawn):
         return data
 
     def send(self, s):
-        data = s.encode("utf-8") if isinstance(s, bytes) else s
-        _ = print(Fore.BLUE + str(data)[1:-1] +
+        data = s.encode("utf-8") if  isinstance(s, str) else s
+        _ = print(Fore.GREEN + str(data) +
                   Fore.RESET) if self.debug else None
         data = super().send(data)
         # print(data)
@@ -90,7 +90,8 @@ class Process(PopenSpawn):
     #     return self.interactive(*cfg)
 
     def sendline(self, line):
-        msg = line + "\n"
+        line = line.encode("utf-8") if isinstance(line,str) else line
+        msg = line + b"\n"
         self.send(msg)
 
 
