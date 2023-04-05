@@ -3,6 +3,7 @@ Interactive library
 """
 import os
 from signal import SIGINT, SIGTERM
+import sys
 
 from colorama import Fore
 from pexpect.popen_spawn import PopenSpawn
@@ -40,7 +41,7 @@ class Process(PopenSpawn):
         with open("./pid", "w", encoding="utf-8") as file:
             file.writelines([str(self.pid)])
 
-        self.debug = False
+        self.debug = "show-interaction" in sys.argv
         eprint(cmd)
 
     def interrupt(self):
