@@ -20,7 +20,11 @@ Alpaca-Turbo is a language model that can be run locally without much setup requ
 3. Copy your alpaca models to alpaca-turbo/models/ directory.
 4. Run the following command to set everything up:
    ```
+  -For Docker Compose Standalone
      docker-compose up
+     
+  -For Docker Compose Plugin
+     docker compose up
    ```
 5. Visit http://localhost:5000 to use the chat interface of the chatbot.
 
@@ -28,11 +32,10 @@ Alpaca-Turbo is a language model that can be run locally without much setup requ
 
 1. Install miniconda 
     - [windows](https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe) 
-    - [Mac M1/M2](https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.pkg)
-
    > - Install for all users
    > - Make sure to add `c:\ProgramData\miniconda3\condabin` to your environment variables
-
+   - [Mac M1/M2](https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.pkg)
+   
 2. Download the latest alpaca-turbo.zip from the release page. [here](https://github.com/ViperX7/Alpaca-Turbo/releases/)
 3. Extract Alpaca-Turbo.zip to Alpaca-Turbo
    > Make sure you have enough space for the models in the extracted location
