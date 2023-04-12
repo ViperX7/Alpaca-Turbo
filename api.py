@@ -133,6 +133,8 @@ def get_config():
             "seed": assistant.seed,
             "n_predict": assistant.n_predict,
             "repeat_last_n": assistant.repeat_last_n,
+            "batch_size": assistant.batch_size,
+            "antiprompt": assistant.antiprompt,
         }
     )
 
@@ -148,6 +150,8 @@ def set_config():
     assistant.seed = data.get("seed", assistant.seed)
     assistant.n_predict = data.get("n_predict", assistant.n_predict)
     assistant.repeat_last_n = data.get("repeat_last_n", assistant.repeat_last_n)
+    assistant.batch_size = data.get("batch_size", assistant.batch_size)
+    assistant.antiprompt = data.get("antiprompt", assistant.antiprompt)
     return jsonify({"success": True})
 
 

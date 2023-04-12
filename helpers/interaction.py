@@ -2,12 +2,17 @@
 Interactive library
 """
 import os
-from signal import SIGINT, SIGTERM
 import sys
+from signal import SIGINT, SIGTERM
 
 from colorama import Fore
 from pexpect.popen_spawn import PopenSpawn
 from rich import print as eprint
+
+
+def log(text):
+    with open("./turbo.log", "a", encoding="utf-8") as file:
+        file.write(text)
 
 
 class Process(PopenSpawn):
@@ -41,7 +46,7 @@ class Process(PopenSpawn):
         with open("./pid", "w", encoding="utf-8") as file:
             file.writelines([str(self.pid)])
 
-        self.debug = "show-interaction" in sys.argv
+        self.debug = True
         eprint(cmd)
 
     def interrupt(self):
@@ -67,22 +72,26 @@ class Process(PopenSpawn):
 
     def read(self, size=-1):
         data = super().read(size)
-        _ = (print(
-            Fore.RED + str(data)[2:-1] + Fore.RESET,
-            end="" if data[-1] != b"\n" else "\n",
-        ) if self.debug else None)
+        _ = (
+            log(
+                Fore.RED
+                + str(data)[2:-1]
+                + Fore.RESET
+                # end="" if data[-1] != b"\n" else "\n",
+            )
+            if self.debug
+            else None
+        )
         return data
 
     def readline(self, size=-1):
         data = super().readline(size)
-        _ = print(Fore.BLUE + str(data)[2:-1] +
-                  Fore.RESET) if self.debug else None
+        _ = log(Fore.BLUE + str(data)[2:-1] + Fore.RESET) if self.debug else None
         return data
 
     def send(self, s):
-        data = s.encode("utf-8") if  isinstance(s, str) else s
-        _ = print(Fore.GREEN + str(data) +
-                  Fore.RESET) if self.debug else None
+        data = s.encode("utf-8") if isinstance(s, str) else s
+        _ = log(Fore.GREEN + str(data) + Fore.RESET) if self.debug else None
         data = super().send(data)
         # print(data)
         return data
@@ -91,7 +100,7 @@ class Process(PopenSpawn):
     #     return self.interactive(*cfg)
 
     def sendline(self, line):
-        line = line.encode("utf-8") if isinstance(line,str) else line
+        line = line.encode("utf-8") if isinstance(line, str) else line
         msg = line + b"\n"
         self.send(msg)
 
