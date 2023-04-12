@@ -20,7 +20,7 @@ Alpaca-Turbo is a language model that can be run locally without much setup requ
 3. Copy your alpaca models to alpaca-turbo/models/ directory.
 4. Run the following command to set everything up:
    ```
-     docker-compose up
+     docker compose up
    ```
 5. Visit http://localhost:5000 to use the chat interface of the chatbot.
 
