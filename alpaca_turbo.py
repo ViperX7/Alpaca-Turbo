@@ -15,7 +15,6 @@ import sys
 from helpers.dtype import Conversation, load_all_conversations
 from helpers.interaction import Process
 from rich import print as eprint
-from rich.progress import track
 
 
 class Assistant:
@@ -32,6 +31,8 @@ class Assistant:
         self.seed = 888777
         self.n_predict = 200
         self.repeat_last_n = 64
+        self.use_bos = True
+        self.antiprompt = "### Human:"
 
         # self.history_size = 1500
 
@@ -49,6 +50,7 @@ class Assistant:
         self.is_loaded = ""
 
         self.current_state = "Initialised"
+        self.old_preprompt = None
         self.is_first_request = True
 
     def load_chat(self, id):
@@ -100,6 +102,8 @@ class Assistant:
         if self.current_state != "generating":
             self.history = []
             result = "success"
+            self.is_first_request = True
+            self.use_bos = True
         return result
 
     def safe_kill(self):
@@ -200,7 +204,7 @@ class Assistant:
                     else None
                 )
             is_loaded = False
-            for _ in track(range(100)):
+            for _ in range(100):
                 if is_loaded:
                     continue
                 ppt = self.process.read(1)
@@ -281,10 +285,15 @@ class Assistant:
             self.process.sendline(str(self.temp))
             self.process.recvuntil("repeat_penalty> ")
             self.process.sendline(str(self.repeat_penalty))
+            self.process.recvuntil("n_batch> ")
+            self.process.sendline(str(self.batch_size))
+            self.process.recvuntil("antiprompt> ")
+            self.process.sendline(str(self.antiprompt))
 
             for txt in txtblob:
                 lines = txt.split("\n")
-                lines[-1] = lines[-1] + "@done@"
+                lines[-1] += "@end@" if self.use_bos else "@done@"
+                self.use_bos = False
                 for line in lines:
                     self.process.recvuntil(") :  ")
                     self.process.sendline(line)
@@ -299,13 +308,17 @@ class Assistant:
 
         buffer = b""
         marker_detected = b""
+        antiprompt_detected = b""
         char_old = b""
         while self.current_state == "generating":
             char = self.process.read(1)
             buffer += char  # update the buffer
 
             # Detect end of text if detected try to confirm else reset
-            if char == b"R" or len(marker_detected) > 0:
+            if (
+                char == self.end_marker.decode()[0].encode("utf-8")
+                or len(marker_detected) > 0
+            ):
                 marker_detected += char
                 char_old += char
                 # print("==========")
@@ -315,13 +328,38 @@ class Assistant:
                     # print("cont")
                     continue
                 marker_detected = b""
+            elif (
+                char == self.antiprompt[0].encode("utf-8")
+                or len(antiprompt_detected) > 0
+            ):
+                antiprompt_detected += char
+                char_old += char
+                # print("==========")
+                # print(antiprompt_detected)
+                # print(self.end_antiprompt[:len(antiprompt_detected)])
+                if antiprompt_detected in self.antiprompt[
+                    : len(antiprompt_detected)
+                ].encode("utf-8"):
+                    # print("cont")
+                    continue
+                antiprompt_detected = b""
+
+            if self.antiprompt.encode("utf-8") in buffer:
+                buffer = buffer.replace(self.antiprompt.encode("utf-8"), b"")
+                buffer = buffer[:-1] if buffer[-1] == 10 else buffer
+                char_old = char_old.replace(self.antiprompt.encode("utf-8"), b"")
+                char_old = char_old[:-1] if char_old[-1] == 10 else char_old
 
             if self.end_marker in buffer:
                 buffer = buffer.replace(self.end_marker, b"")
                 char_old += char
                 char_old = char_old.replace(self.end_marker, b"")
                 self.current_state = "prompt"
-                yield char_old.decode("utf-8")
+                try:
+                    res = char_old.decode("utf-8")
+                except UnicodeDecodeError:
+                    res = f">{str(char_old)}<"
+                yield res
                 # print(f"\nStream Ended {buffer}")
                 break
 
@@ -349,8 +387,17 @@ class Assistant:
 
     def send_conv(self, preprompt, fmt, prompt):
         """function to simplify interface"""
+
+        if self.old_preprompt is None:
+            self.old_preprompt = preprompt
+        elif self.old_preprompt is not None and self.old_preprompt != preprompt:
+            self.old_preprompt = preprompt
+        elif self.old_preprompt == preprompt:
+            preprompt = None
+
         preprompt = preprompt if preprompt is not None else None
         preprompt = self.pre_prompt if self.is_first_request else preprompt
+
         self.is_first_request = False
         fmt = self.format if fmt is None else fmt
         conv = Conversation(preprompt, fmt, prompt)
