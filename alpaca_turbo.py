@@ -33,6 +33,7 @@ class Assistant:
         self.repeat_last_n = 512
         self.use_bos = True
         self.antiprompt = "### Human:"
+        self.models_directory = "models"
 
         # self.history_size = 1500
 
@@ -193,7 +194,7 @@ class Assistant:
         """load binary in memory"""
         if self.is_loaded:
             return (
-                f"model already loaded {self.list_available_models()[self.model_idx]}"
+                f"model already loaded {self.list_available_models(self.models_directory)[self.model_idx]}"
             )
         try:
             self.process = Process(self.command, timeout=10000)

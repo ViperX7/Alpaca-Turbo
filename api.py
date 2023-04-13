@@ -44,6 +44,12 @@ def test_disconnect():
 
 @socketio.on("send_input")
 def send_conv(data):
+    print("-----------")
+    print(data)
+    print("-----------")
+
+
+
     inp = data["inp"]
     fmt = data.get("fmt", "")
     preprompt = data.get("pre", "")
@@ -139,6 +145,7 @@ def get_config():
             "repeat_last_n": assistant.repeat_last_n,
             "batch_size": assistant.batch_size,
             "antiprompt": assistant.antiprompt,
+            "models_directory": assistant.models_directory,
         }
     )
 
@@ -156,6 +163,7 @@ def set_config():
     assistant.repeat_last_n = data.get("repeat_last_n", assistant.repeat_last_n)
     assistant.batch_size = data.get("batch_size", assistant.batch_size)
     assistant.antiprompt = data.get("antiprompt", assistant.antiprompt)
+    assistant.models_directory = data.get("models_directory", assistant.models_directory)
     return jsonify({"success": True})
 
 
