@@ -22,15 +22,15 @@ class Assistant:
         self.DEBUG = "-d" in sys.argv
 
         self.threads = 4
-        self.top_k = 1000
-        self.top_p = 0.95
-        self.temp = 0.2
+        self.top_k = 200
+        self.top_p = 0.99
+        self.temp = 0.7
         self.repeat_penalty = 1
         self.batch_size = 256
 
         self.seed = 888777
-        self.n_predict = 200
-        self.repeat_last_n = 64
+        self.n_predict = 1000
+        self.repeat_last_n = 512
         self.use_bos = True
         self.antiprompt = "### Human:"
 
