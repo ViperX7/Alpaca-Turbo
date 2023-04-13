@@ -371,7 +371,7 @@ class Assistant:
                 if len(char) == 1 and char[0] <= 0x7E and char[0] >= 0x21:
                     char = char.decode("utf-8")
                     char_old = b""
-                elif len(char) in [4, 6]:  # If 4 byte code or handle weird edge cases
+                elif len(char) >= 4:
                     char = char.decode("utf-8")
                     char_old = b""
                 else:

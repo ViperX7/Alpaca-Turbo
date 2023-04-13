@@ -47,6 +47,10 @@ def send_conv(data):
     inp = data["inp"]
     fmt = data.get("fmt", "")
     preprompt = data.get("pre", "")
+    if "\n" not in fmt:
+        fmt = fmt.replace("###","\n\n###")
+        fmt = fmt.replace(":",":\n\n")
+        fmt = fmt.strip("\n")
     output = assistant.send_conv(preprompt, fmt, inp)
     print("Attempting to GENERATE======================")
     buffer = ""
