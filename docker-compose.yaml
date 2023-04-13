@@ -3,6 +3,6 @@ services:
   alpaca:
     build: .
     ports:
-      - 7887:7887
+      - 5000:5000
     volumes:
       - ./:/app
