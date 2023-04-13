@@ -20,7 +20,7 @@ Alpaca-Turbo is a language model that can be run locally without much setup requ
 3. Copy your alpaca models to alpaca-turbo/models/ directory.
 4. Run the following command to set everything up:
    ```
-     docker-compose up
+     docker compose up
    ```
 5. Visit http://localhost:5000 to use the chat interface of the chatbot.
 
@@ -54,7 +54,7 @@ Alpaca-Turbo is a language model that can be run locally without much setup requ
 
 # CREDITS
 
-- [ggerganov/LLaMA.cpp](https//github.com/ggerganov/LLaMA.cpp) For their amazing cpp library
+- [ggerganov/LLaMA.cpp](https://github.com/ggerganov/LLaMA.cpp) For their amazing cpp library
 - [antimatter15/alpaca.cpp](https://github.com/antimatter15/alpaca.cpp) For initial versions of their chat app
 - [cocktailpeanut/dalai](https://github.com/cocktailpeanut/dalai) For the Inspiration
 - MetaAI for the LLaMA models
