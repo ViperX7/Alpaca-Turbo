@@ -26,7 +26,7 @@ Alpaca-Turbo is a language model that can be run locally without much setup requ
    ```
      docker-compose up
    ```
-5. Visit http://localhost:5000 to use the chat interface of the chatbot.
+5. Visit http://localhost:7887 to use the chat interface of the chatbot.
 
 #### Windows/Mac M1/M2 (miniconda)
 
@@ -55,7 +55,7 @@ Alpaca-Turbo is a language model that can be run locally without much setup requ
    pip install -r requirements.txt
    python api.py
    ```
-8. Visit http://localhost:5000 select your model and click change wait for the model to load
+8. Visit http://localhost:7887 select your model and click change wait for the model to load
 9. ready to interact
 
 # CREDITS
