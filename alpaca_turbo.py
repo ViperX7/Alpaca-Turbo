@@ -184,7 +184,7 @@ class Assistant:
             "--n_predict",
             f"{self.n_predict}",
             "-m",
-            f"{self.list_available_models()[self.model_idx]}",
+            f"{self.list_available_models(self.models_directory)[self.model_idx]}",
             # "--interactive-start",
             "--interactive-first",
         ]
@@ -215,13 +215,13 @@ class Assistant:
             self.process.recvuntil(self.end_marker)
             self.current_state = "prompt"
 
-            self.is_loaded = self.list_available_models()[self.model_idx]
+            self.is_loaded = self.list_available_models(self.models_directory)[self.model_idx]
         except Exception as e:
             print(e)
             self.is_loaded = ""
-            return f"Failed loading {self.list_available_models()[self.model_idx]}"
+            return f"Failed loading {self.list_available_models(self.models_directory)[self.model_idx]}"
 
-        return f"loaded successfully {self.list_available_models()[self.model_idx]}"
+        return f"loaded successfully {self.list_available_models(self.models_directory)[self.model_idx]}"
 
     def unload_model(self):
         if self.is_loaded:

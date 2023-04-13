@@ -85,7 +85,7 @@ def remove_all_chat():
 
 @app.route("/list_models")
 def list_models():
-    models = assistant.list_available_models()
+    models = assistant.list_available_models(assistant.models_directory)
     return jsonify(models)
 
 
