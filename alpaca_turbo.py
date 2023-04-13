@@ -221,7 +221,7 @@ class Assistant:
             self.is_loaded = ""
             return f"Failed loading {self.list_available_models(self.models_directory)[self.model_idx]}"
 
-        return f"loaded successfully {self.list_available_models(self.models_directoryh)[self.model_idx]}"
+        return f"loaded successfully {self.list_available_models(self.models_directory)[self.model_idx]}"
 
     def unload_model(self):
         if self.is_loaded:
