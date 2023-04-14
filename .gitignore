@@ -5,8 +5,13 @@ pid
 angular-turbo
 angular-turbo.zip
 chat
-main
+bin/main
+bin/main.exe
+bin/mac
+templates
 *.zip
+turbo.log
+downloader.py
 __pycache__
 ./Pipfile.lock
 
