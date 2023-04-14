@@ -3,4 +3,4 @@ from .models import AIModel, AIModelSettings
 
 # Register your models here.
 data = [AIModelSettings,AIModel]
-_ = [admin.register(mod) for mod in data]
+_ = [admin.site.register(mod) for mod in data]

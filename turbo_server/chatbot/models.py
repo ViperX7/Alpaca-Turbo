@@ -64,7 +64,10 @@ class Conversation(models.Model):
         objs.delete()
         return total
 
-
+    @staticmethod
+    def get_all_conversations():
+        conversations = Conversation.objects.all().values("id", "title", "created_at")
+        return list(conversations)
 
     @property
     def lastidx(self):
@@ -106,23 +109,12 @@ class Conversation(models.Model):
 
     def append(self, message):
         """Append a new message to the conversation."""
-        index = 0
-        last_message = (
-            Message.objects.filter(conversation=self).order_by("-index").first()
-        )
-        if last_message:
-            index = last_message.index + 1
         message.conversation = self
-        message.index = index
+        message.index = self.lastidx +1
         message.save()
-        if index == 0:
+        if message.index == 0:
             self.title = message.user_request
             self.save()
-
-    @staticmethod
-    def get_all_conversations():
-        conversations = Conversation.objects.all().values("id", "title", "created_at")
-        return list(conversations)
 
 
 class Message(models.Model):

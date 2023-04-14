@@ -3,7 +3,7 @@ from django.db import models
 
 
 class AIModelSettings(models.Model):
-    ai_model = models.ForeignKey("AIModel", on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
     temperature = models.FloatField()
     top_p = models.FloatField()
     top_k = models.IntegerField()
@@ -18,10 +18,13 @@ class AIModelSettings(models.Model):
 
 
 class AIModel(models.Model):
-    source = models.URLField()
-    model_format = models.CharField(max_length=255)
+    path = models.FilePathField(path="models")
     name = models.CharField(max_length=255)
-    path = models.FilePathField()
+    source = models.URLField(blank=True, null=True)
+    model_format = models.CharField(max_length=255, blank=True, null=True)
     settings = models.ForeignKey("AIModelSettings", on_delete=models.CASCADE)
 
 
+    @staticmethod
+    def list_all():
+        return AIModel.objects.all()
