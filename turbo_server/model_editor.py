@@ -1,13 +1,18 @@
+import os
 from random import choice
-from time import time
 
+import django
 import flet as ft
-from alpaca_turbo import Assistant
 from flet import *
 from flet import (ClipBehavior, Column, Container, CrossAxisAlignment, Image,
                   ListTile, MainAxisAlignment, Markdown, OutlinedButton, Page,
                   Row, Text, alignment, border, colors)
 from rich import print as eprint
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "turbo_server.settings")
+django.setup()
+
+from ai_model_manager.models import AIModel
 
 # from ai_model_manager.models import AIModel
 
@@ -23,13 +28,13 @@ def get_random_color():
     return "#" + "".join([choice("0123456789ABCDEF") for _ in range(6)])
 
 
-def easy_content_expander(content, vexpand=True, hexpand=True):
+def easy_content_expander(content, vexpand=True, hexpand=True, bgcolor=None):
     """Simple function to expand stuff"""
     obj = Row(
         expand=vexpand,
         controls=[
             Container(
-                bgcolor=get_random_color(),
+                bgcolor=bgcolor if bgcolor else get_random_color(),
                 expand=hexpand,
                 content=Column(controls=[content]),
                 padding=ft.padding.only(top=20, bottom=20, left=20, right=20),
@@ -54,6 +59,9 @@ def main(page: Page):
     print(page.window_width)
     print("---")
 
+    models_dir_picker = ft.FilePicker()
+    page.overlay.append(models_dir_picker)
+
     ___main_content__ = Column(
         expand=True,
         alignment=MainAxisAlignment.CENTER,
@@ -62,9 +70,14 @@ def main(page: Page):
         controls=[
             easy_content_expander(
                 vexpand=False,
+                bgcolor="#445566",
                 content=Column(
                     controls=[
-                        Text("jiji"),
+                        ElevatedButton(
+                            "hello",
+                            on_click=lambda _: models_dir_picker.pick_files(),
+                        ),
+                        Text("model/path/ggml_sadfkajdfs_Asdfaf23.bin"),
                         Text("jiji"),
                         Text("jiji"),
                         Text("jiji"),
