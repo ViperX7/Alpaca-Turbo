@@ -27,6 +27,7 @@ class Assistant:
         self.DEBUG = "-d" in sys.argv
 
         self.threads = 4
+
         self.top_k = 200
         self.top_p = 0.99
         self.temp = 0.7
@@ -36,6 +37,8 @@ class Assistant:
         self.seed = 888777
         self.n_predict = 1000
         self.repeat_last_n = 512
+
+
         self.use_bos = True
         self.antiprompt = "### Human:"
 

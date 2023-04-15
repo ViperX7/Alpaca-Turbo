@@ -72,7 +72,7 @@ class Conversation(models.Model):
     @property
     def lastidx(self):
         """returns the index of the last element"""
-        index = None
+        index = 0
         last_message = (
             Message.objects.filter(conversation=self).order_by("-index").first()
         )
@@ -110,7 +110,7 @@ class Conversation(models.Model):
     def append(self, message):
         """Append a new message to the conversation."""
         message.conversation = self
-        message.index = self.lastidx +1
+        message.index = self.lastidx + 1
         message.save()
         if message.index == 0:
             self.title = message.user_request
