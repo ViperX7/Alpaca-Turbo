@@ -412,4 +412,4 @@ def main(page: Page):
     page.update()
 
 
-ft.app(target=main, assets_dir="assets")
+_ = ft.app(target=main, assets_dir="assets") if __name__ == "__main__" else None

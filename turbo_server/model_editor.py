@@ -302,7 +302,7 @@ def main(page: Page):
             expand=True,
             # margin=100,
             bgcolor="blue",
-            alignment=alignment.center,
+            alignment=ft.alignment.center,
             content=Row(
                 expand=True,
                 alignment=MainAxisAlignment.CENTER,
@@ -312,8 +312,6 @@ def main(page: Page):
                     Container(
                         expand=True,
                         bgcolor="#45323e",
-                        # border_radius=40,
-                        # border=border.all(0.5, "red"),
                         clip_behavior=ClipBehavior.ANTI_ALIAS_WITH_SAVE_LAYER,
                         content=___main_content__,
                     )
@@ -324,4 +322,4 @@ def main(page: Page):
 
     page.update()
 
-ft.app(target=main, assets_dir="assets")
+_ = ft.app(target=main, assets_dir="assets") if __name__ == "__main__" else None
