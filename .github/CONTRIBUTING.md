@@ -17,12 +17,12 @@ First off, thank you for considering contributing to Alpaca-Turbo! We appreciate
 
 ## Code of Conduct
 
-By participating in this project, you are expected to uphold our [Code of Conduct](CODE_OF_CONDUCT.md).
+By participating in this project, you are expected to uphold our [Code of Conduct](../CODE_OF_CONDUCT.md).
 
 ## Getting Started
 
 1. Fork the repository and clone it to your local machine.
-2. Set up the development environment by following the instructions in the [README.md](README.md) file.
+2. Set up the development environment by following the instructions in the [README](../README.md) file.
 3. Explore the codebase, run tests, and verify that everything works as expected.
 
 ## How to Contribute
