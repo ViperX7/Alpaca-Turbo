@@ -41,17 +41,15 @@ Alpaca-Turbo is a language model that can be run locally without much setup requ
 
 **OR**
 
-#### 🪟 Windows/Mac M1/M2 (miniconda)
+#### 🪟 Using Windows (standalone or miniconda) AND Mac M1/M2 (using miniconda)
 
-#### For Windows users we have a [oneclick standalone launcher - Alpaca-Turbo.exe](https://github.com/ViperX7/Alpaca-Turbo/releases/latest).
+> #### For Windows users we have a [oneclick standalone launcher - Alpaca-Turbo.exe](https://github.com/ViperX7/Alpaca-Turbo/releases/latest).
 
-1. Install miniconda 
- - [windows](https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe) 
- - [Mac M1/M2](https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.pkg)
-
-> - Install for all users
-> - Make sure to add `c:\ProgramData\miniconda3\condabin` to your environment variables
-
+1. Links for installing miniconda:
+    - [Windows](https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe) 
+    - [Mac M1/M2](https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.pkg)
+      > - Install for all users
+      > - Make sure to add `c:\ProgramData\miniconda3\condabin` to your environment variables
 2. Download the [latest alpaca-turbo.zip from the release page](https://github.com/ViperX7/Alpaca-Turbo/releases/latest).
 3. Extract Alpaca-Turbo.zip to Alpaca-Turbo
 > Make sure you have enough space for the models in the extracted location
@@ -78,11 +76,12 @@ As an open source project in a rapidly developing field, I am open to contributi
 For detailed information on how to [contribute](.github/CONTRIBUTING.md).
 
 ## 🙌 Credits
-- ggerganov/LLaMA.cpp For their amazing cpp library
-- antimatter15/alpaca.cpp For initial versions of their chat app
-- cocktailpeanut/dalai For the Inspiration
+
+- [ggerganov/LLaMA.cpp](https://github.com/ggerganov/LLaMA.cpp) For their amazing cpp library
+- [antimatter15/alpaca.cpp](https://github.com/antimatter15/alpaca.cpp) For initial versions of their chat app
+- [cocktailpeanut/dalai](https://github.com/cocktailpeanut/dalai) For the Inspiration
 - MetaAI for the LLaMA models
-- Stanford for the alpaca models
+- Stanford for the alpaca [models](https://github.com/tatsu-lab/stanford_alpaca)
 
 ## 🌟 History
 [![Star History Chart](https://api.star-history.com/svg?repos=ViperX7/Alpaca-Turbo&type=Date)](https://star-history.com/#ViperX7/Alpaca-Turbo&Date)
