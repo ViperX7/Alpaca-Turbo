@@ -17,46 +17,34 @@ import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "turbo_server.settings")
 django.setup()
 
+from ai_model_manager.models import AIModel
 from chatbot.models import Conversation, Message
 from rich import print as eprint
 from utils.interaction import Process
 
 
 class Assistant:
-    def __init__(self):
+    def __init__(self, aimodel: AIModel):
         self.DEBUG = "-d" in sys.argv
 
+        self.model = aimodel
+        self.conversation: Conversation = Conversation()
+
+        # Configurables
         self.threads = 4
-
-        self.top_k = 200
-        self.top_p = 0.99
-        self.temp = 0.7
-        self.repeat_penalty = 1
-        self.batch_size = 256
-
-        self.seed = 888777
-        self.n_predict = 1000
-        self.repeat_last_n = 512
-
-
         self.use_bos = True
-        self.antiprompt = "### Human:"
+        self.enable_history = False
 
-        self.pre_prompt = " Below is an instruction that describes a task. Write a response that appropriately completes the request."
-        self.format = "### Instruction:\n\n{instruction}\n\n### Response:\n\n{response}"
+        self.new_chat()
 
-        self.end_marker = b"RSTsr"
-
-        self.model_idx = 0
+        # Internal state store
         self.is_loaded = ""
-
         self.current_state = "Initialised"
         self.old_preprompt = None
         self.is_first_request = True
 
-        self.enable_history = False
-        self.conversation: Conversation = Conversation()
-        self.new_chat()
+        # fixed values
+        self.end_marker = b"RSTsr"
 
     def new_chat(self):
         "save current conv and set proper title and start new conv"
@@ -88,7 +76,7 @@ class Assistant:
         data = Conversation.get_all_conversations()
         return data
 
-    def remove_chat(self,uuid):
+    def remove_chat(self, uuid):
         """-"""
         uuid = str(uuid)
         print(uuid)
@@ -163,26 +151,26 @@ class Assistant:
             # "--color",
             "-i",
             "--seed",
-            f"{self.seed}",
+            f"{self.model.settings.seed}",
             "-ins",
             "-t",
             f"{self.threads}",
             "-b",
-            f"{self.batch_size}",
+            f"{self.model.settings.batch_size}",
             "--top_k",
-            f"{self.top_k}",
+            f"{self.model.settings.top_k}",
             "--top_p",
-            f"{self.top_p}",
+            f"{self.model.settings.top_p}",
             "--repeat_last_n",
-            f"{self.repeat_last_n}",
+            f"{self.model.settings.repeat_last_n}",
             "--repeat_penalty",
-            f"{self.repeat_penalty}",
+            f"{self.model.settings.repetition_penalty}",
             "--temp",
-            f"{self.temp}",
+            f"{self.model.settings.temperature}",
             "--n_predict",
-            f"{self.n_predict}",
+            f"{self.model.settings.n_predict}",
             "-m",
-            f"{self.list_available_models()[self.model_idx]}",
+            f"{self.model.path}",
             # "--interactive-start",
             "--interactive-first",
         ]
@@ -191,9 +179,7 @@ class Assistant:
     def load_model(self):
         """load binary in memory"""
         if self.is_loaded:
-            return (
-                f"model already loaded {self.list_available_models()[self.model_idx]}"
-            )
+            return f"model already loaded {self.model.path}"
         try:
             self.process = Process(self.command, timeout=10000)
             for _ in range(6):
@@ -213,13 +199,13 @@ class Assistant:
             self.process.recvuntil(self.end_marker)
             self.current_state = "prompt"
 
-            self.is_loaded = self.list_available_models()[self.model_idx]
+            self.is_loaded = self.model.path
         except Exception as e:
             print(e)
             self.is_loaded = ""
-            return f"Failed loading {self.list_available_models()[self.model_idx]}"
+            return f"Failed loading {self.model.path}"
 
-        return f"loaded successfully {self.list_available_models()[self.model_idx]}"
+        return f"loaded successfully {self.model.path}"
 
     def unload_model(self):
         if self.is_loaded:
@@ -252,12 +238,10 @@ class Assistant:
         # build history chahe
         final_prompt_2_send = []
 
-
         data2use = self.conversation if self.enable_history else [prompt]
         for convo in data2use:
             for sequence in convo.get_prompt():
                 final_prompt_2_send.append(sequence)
-
 
         final_prompt_2_send = "".join(final_prompt_2_send)
         if prompt.preprompt:
@@ -282,17 +266,17 @@ class Assistant:
             self.process.recvuntil("n_threads> ")
             self.process.sendline(str(self.threads))
             self.process.recvuntil("top_k> ")
-            self.process.sendline(str(self.top_k))
+            self.process.sendline(str(self.model.settings.top_k))
             self.process.recvuntil("top_p> ")
-            self.process.sendline(str(self.top_p))
+            self.process.sendline(str(self.model.settings.top_p))
             self.process.recvuntil("temperature> ")
-            self.process.sendline(str(self.temp))
+            self.process.sendline(str(self.model.settings.temperature))
             self.process.recvuntil("repeat_penalty> ")
-            self.process.sendline(str(self.repeat_penalty))
+            self.process.sendline(str(self.model.settings.repetition_penalty))
             self.process.recvuntil("n_batch> ")
-            self.process.sendline(str(self.batch_size))
+            self.process.sendline(str(self.model.settings.batch_size))
             self.process.recvuntil("antiprompt> ")
-            self.process.sendline(str(self.antiprompt))
+            self.process.sendline(str(self.model.prompt.antiprompt))
 
             for txt in txtblob:
                 lines = txt.split("\n")
@@ -333,7 +317,7 @@ class Assistant:
                     continue
                 marker_detected = b""
             elif (
-                char == self.antiprompt[0].encode("utf-8")
+                char == self.model.prompt.antiprompt[0].encode("utf-8")
                 or len(antiprompt_detected) > 0
             ):
                 print("Antiprompt buffering started")
@@ -342,17 +326,21 @@ class Assistant:
                 # print("==========")
                 # print(antiprompt_detected)
                 # print(self.end_antiprompt[:len(antiprompt_detected)])
-                if antiprompt_detected in self.antiprompt[
+                if antiprompt_detected in self.model.prompt.antiprompt[
                     : len(antiprompt_detected)
                 ].encode("utf-8"):
                     # print("cont")
                     continue
                 antiprompt_detected = b""
 
-            if self.antiprompt.encode("utf-8") in buffer:
-                buffer = buffer.replace(self.antiprompt.encode("utf-8"), b"")
+            if self.model.prompt.antiprompt.encode("utf-8") in buffer:
+                buffer = buffer.replace(
+                    self.model.prompt.antiprompt.encode("utf-8"), b""
+                )
                 buffer = buffer[:-1] if buffer[-1] == 10 else buffer
-                char_old = char_old.replace(self.antiprompt.encode("utf-8"), b"")
+                char_old = char_old.replace(
+                    self.model.prompt.antiprompt.encode("utf-8"), b""
+                )
                 char_old = char_old[:-1] if char_old[-1] == 10 else char_old
 
             if self.end_marker in buffer:
@@ -376,7 +364,7 @@ class Assistant:
                 if len(char) == 1 and char[0] <= 0x7E and char[0] >= 0x21:
                     char = char.decode("utf-8")
                     char_old = b""
-                elif len(char) >=4 :
+                elif len(char) >= 4:
                     char = char.decode("utf-8")
                     char_old = b""
                 else:
@@ -401,10 +389,10 @@ class Assistant:
             preprompt = None
 
         preprompt = preprompt if preprompt is not None else None
-        preprompt = self.pre_prompt if self.is_first_request else preprompt
+        preprompt = self.model.prompt.preprompt if self.is_first_request else preprompt
 
         self.is_first_request = False
-        fmt = self.format if fmt is None else fmt
+        fmt = self.model.prompt.format if fmt is None else fmt
 
         msg = self.conversation.add_message(prompt, preprompt=preprompt, format=fmt)
 
@@ -414,12 +402,12 @@ class Assistant:
     @staticmethod
     def repl():
         """Repl for my chat bot"""
-        assistant = Assistant()
+        assistant = Assistant(AIModel.objects.all()[1])
         assistant.load_model()
         assistant.enable_history = False
-        fmt = assistant.format
+        fmt = assistant.model.prompt.format
         # assistant.pre_prompt = ""
-        preprompt = assistant.pre_prompt
+        preprompt = assistant.model.prompt.preprompt
         while True:
             # print("=====")
             prompt = input(">>>>>> ")

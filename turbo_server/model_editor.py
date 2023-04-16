@@ -12,90 +12,21 @@ from rich import print as eprint
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "turbo_server.settings")
 django.setup()
 
-from ai_model_manager.models import AIModel
+from ai_model_manager.models import AIModel, Prompt
 
+from utils.ui_elements import get_random_color,easy_content_expander
 # from ai_model_manager.models import AIModel
 
+def save_helper(obj, objvar: str, value):
+    print("_-------")
+    print(obj)
+    print(objvar)
+    print(value)
+    print("_-------")
+    setattr(obj, objvar, value)
+    # print(getattr(obj,objvar))
+    obj.save()
 
-class SliderWithInput:
-    def __init__(self, label="",min=0,max=100,divisions=100,value=None) -> None:
-        self.input = TextField(on_change=self.input_changed,border_color=ft.colors.TRANSPARENT,bgcolor="#3c507a",value=value)
-        self.slider = Slider(min=min,max=max,divisions=divisions,on_change=self.slider_changed,value=value)
-        self._value = 0
-        self.color = "#435782"
-
-
-        self.ui  = Container(
-            bgcolor=self.color,
-            content=Row(
-            alignment=MainAxisAlignment.SPACE_BETWEEN,
-            controls=[
-                    Container(
-                    expand=True,
-                    content=Column(
-                            controls=[
-                                Container(
-                                    margin=5,
-
-
-                                    content=Text(label)
-                                ),
-                                self.slider
-                            ]
-                        ),
-                ),
-                Container(
-                    # expand=True,
-                    width=100,
-                    content=self.input,
-                ),
-            ]
-        )
-
-
-
-
-        )
-
-    def input_changed(self,_):
-        new_val = float(self.input.value)
-        if self.slider.max < new_val:
-            self.slider.max = new_val
-        self.value = new_val
-        
-        self.slider.value = self._value
-        self.slider.update()
-
-
-    def slider_changed(self,_):
-        self.value = self.slider.value
-        self.input.value = self._value
-
-        self.input.update()
-
-
-    @property
-    def value(self):
-        """The value property."""
-        return self._value
-
-    @value.setter
-    def value(self, value):
-        print(type(value))
-
-        if  isinstance(value,int) or  isinstance(value,float):
-            pass
-        else:
-            raise ValueError("Can't use non numeric values")
-        if value < self.slider.min or value > self.slider.max:
-            raise ValueError("OUT of Range")
-
-        self._value = value
-        self.slider.update()
-        self.input.update()
-
-    def getui(self):
-        return self.ui
 
 
 
@@ -105,38 +36,7 @@ class ModelSettingsUI:
         self.target_model = model
         self.reset_func = reset_func
 
-        self.head_bar = easy_content_expander(
-            vexpand=False,
-            bgcolor="#445566",
-            content=Row(
-                alignment=MainAxisAlignment.SPACE_BETWEEN,
-                controls=[
-                    Column(
-                        alignment=MainAxisAlignment.START,
-                        horizontal_alignment=CrossAxisAlignment.START,
-                        controls=[
-                            Text(self.target_model.name,size=30),
-                            Text(f"Size: {self.target_model.model_size} "),
-                            Text(f"Source:   {self.target_model.source if self.target_model.source else 'Unknown' }"),
-                            Text(f"Publisher:   {self.target_model.author if self.target_model.author else 'Unknown' }"),
-                        ]
-                    ),
-                    Column(
-                        alignment=MainAxisAlignment.CENTER,
-                        horizontal_alignment=CrossAxisAlignment.CENTER,
-                        controls=[
 
-                            Icon(
-                                name=ft.icons.CHECK_CIRCLE if  self.target_model.is_configured else ft.icons.WARNING_SHARP,
-                                color=ft.colors.GREEN_400 if self.target_model.is_configured else ft.colors.YELLOW_400,
-                                size=80,
-                            ),
-                            Text("Ready" if self.target_model.is_configured else "Not Ready"),
-                        ]
-                    ),
-                ]
-            )
-        )
 
         self.actions = easy_content_expander(
             vexpand=False,
@@ -150,7 +50,7 @@ class ModelSettingsUI:
                         content=ElevatedButton(
                             "Cancel",
                             # icon=ft.icons.SAVE,
-                            on_click=self.reset_func
+                            on_click=self.reset_func,
                         ),
                     ),
                     Container(
@@ -167,15 +67,6 @@ class ModelSettingsUI:
             ),
         )
 
-        self.vocab_size = 2048
-        self.temp = SliderWithInput(label="Temperature", min=0, max=1, divisions=1000, value=0.5)
-        self.top_p = SliderWithInput(label="Top-p", min=0, max=1, divisions=1000, value=0.9)
-        self.top_k = SliderWithInput(label="Top-k", min=0, max=2048, divisions=2048, value=50)
-        self.repete_pen = SliderWithInput(label="Repete Penalty", min=0, max=2, divisions=100, value=1.0)
-        self.n_predict = SliderWithInput(label="N Predict", min=0, max=1000, divisions=1000, value=1)
-        self.repete_last_n = SliderWithInput(label="Repete last N", min=0, max=1000, divisions=1000, value=1)
-        self.seed = SliderWithInput(label="Seed", min=-1, max=100000, divisions=100001, value=-1)
-        self.batch_size = SliderWithInput(label="Batch Size", min=0, max=1000, divisions=1000, value=256)
 
 
 
@@ -183,35 +74,58 @@ class ModelSettingsUI:
         self.settings_screen =  Container(
             expand=80,
             padding=40,
-            content=Column(
-                expand=True,
-                alignment=MainAxisAlignment.START,
-                horizontal_alignment=CrossAxisAlignment.START,
-                spacing=10,
-                controls=[
-                    self.temp.getui(),
-                    self.top_p.getui(),
-                    self.top_k.getui(),
-                    self.repete_pen.getui(),
-                    self.n_predict.getui(),
-                    self.repete_last_n.getui(),
-                    self.seed.getui(),
-                    self.batch_size.getui(),
-                ],scroll=True,
+            content=Tabs(
+                selected_index=1, 
+                animation_duration=300,
+                tabs=[
+                    ft.Tab(
+                        text="Parameters",
+                        content=self.target_model.settings.get_ui(),
+                    ),
+                    ft.Tab(
+                        text="Prompting",
+                        content=Column(
+                            controls=[
+                                self.target_model.prompt.get_ui()
+                            ]
+
+
+
+                        ),
+                    ),
+                    ft.Tab(
+                        text="Benchmark",
+                        content=Text("Benchmark"),
+                    ),
+
+                    ft.Tab(
+                        text="Stats",
+                        content=Text("Stats"),
+                    ),
+
+                ],
+
             )
+
         )
 
 
     def get_ui(self):
+        try:
+            self.settings_screen.update()
+            self.actions.update()
+        except:
+            pass
+
         return Container(
             expand=80,
             content=Column(
                 expand=True,
-                alignment=MainAxisAlignment.CENTER,
-                horizontal_alignment=CrossAxisAlignment.CENTER,
+                alignment=MainAxisAlignment.START,
+                horizontal_alignment=CrossAxisAlignment.START,
                 spacing=0,
                 controls=[
-                    self.head_bar,
+                    self.target_model.ui_header(),
                     self.settings_screen,
                     self.actions,
                 ],
@@ -340,17 +254,9 @@ class ModelManagerUI:
         self.page.snack_bar.open = True
         self.page.update()
 
-    def delete_model(self,model:AIModel):
-        def delete_this(_):
-            model.delete()
-            self.refresh_model_list()
-            self.page.update()
-        return delete_this
-
 
     def model_settings(self,model:AIModel):
         def settings_this(_):
-            print("iamhere")
             self.open_model_settings(model)
         return settings_this
 
@@ -360,81 +266,10 @@ class ModelManagerUI:
     def generate_model_list(self):
         controller = self.model_list_view.controls
         for model in AIModel.objects.all():
-            list_unit = Container(
-                bgcolor="#232343",
-                content=Row(
-                    controls=[
-                        Container(
-                            expand=True,
-                            content=Row(
-                                controls=[
-                                    Container(
-                                        content=Icon(
-                                            name=ft.icons.CHECK_CIRCLE if  model.is_configured else ft.icons.WARNING_SHARP,
-                                            color=ft.colors.GREEN_400 if model.is_configured else ft.colors.YELLOW_400,
-                                        ),
-                                    ),
-                                    Container(
-                                        expand=True,
-                                        content=Text(model.name),
-                                    ),
-                                    Container(
-                                        expand=True,
-                                        alignment=ft.alignment.center,
-                                        content=Text(model.model_size),
-                                    ),
-                                    Container(
-                                        expand=True,
-                                        alignment=ft.alignment.center,
-                                        content=Text(model.model_format),
-                                    ),
-                                    
-
-                                ]
-                            )
-                        ),
-                        Container(
-                            # bgcolor=get_random_color(),
-                            content=Row(
-                                controls=[
-                                    IconButton(icon=ft.icons.EDIT,icon_color="blue"),
-                                    IconButton(icon=ft.icons.DELETE,icon_color=ft.colors.RED_900, on_click=self.delete_model(model)),
-                                    IconButton(icon=ft.icons.SETTINGS,icon_color=ft.colors.ORANGE_400,on_click=self.model_settings(model)),
-                                ]
-                            ),
-                            border_radius=20
-                        ),
-                    ]
-
-                ),
-                margin=0,
-                padding=20,
-            )
+            list_unit = model.ui_list_repr(lambda:[self.refresh_model_list(),self.page.update()],model_settings=self.model_settings)
             controller.append(list_unit)
 
 
-
-
-def get_random_color():
-    return "#" + "".join([choice("0123456789ABCDEF") for _ in range(6)])
-
-
-def easy_content_expander(content, vexpand=True, hexpand=True, bgcolor=None):
-    """Simple function to expand stuff"""
-    obj = Row(
-        expand=vexpand,
-        controls=[
-            Container(
-                bgcolor=bgcolor if bgcolor else get_random_color(),
-                expand=hexpand,
-                content=Column(controls=[content]),
-                padding=ft.padding.only(top=20, bottom=20, left=20, right=20),
-                margin=0,
-            )
-        ],
-    )
-
-    return obj
 
 
 def main(page: Page):

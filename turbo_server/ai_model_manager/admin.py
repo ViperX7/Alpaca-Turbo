@@ -1,8 +1,8 @@
 from django.contrib import admin
-from .models import AIModel, AIModelFormat, AIModelSetting
+from .models import AIModel, AIModelFormat, AIModelSetting, Prompt
 
 # Register your models here.
-data = [AIModelSetting]
+data = [AIModelSetting,Prompt]
 _ = [admin.site.register(mod) for mod in data]
 
 
