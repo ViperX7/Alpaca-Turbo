@@ -30,7 +30,7 @@ Alpaca-Turbo is a language model that can be run locally without much setup requ
 
 > Docker must be installed on your system
 
-1. Download the latest alpaca-turbo.zip from the release page. [here](https://github.com/ViperX7/Alpaca-Turbo/releases/)
+1. Download the [latest alpaca-turbo.zip from the release page](https://github.com/ViperX7/Alpaca-Turbo/releases/latest).
 2. Extract the contents of the zip file into a directory named alpaca-turbo.
 3. Copy your alpaca models to alpaca-turbo/models/ directory.
 4. Run the following command to set everything up:
@@ -39,9 +39,11 @@ Alpaca-Turbo is a language model that can be run locally without much setup requ
    ```
 5. Visit http://localhost:7887 to use the chat interface of the chatbot.
 
+**OR**
+
 #### 🪟 Windows/Mac M1/M2 (miniconda)
 
-#### For Windows users we have a oneclick standalone launcher [here](https://github.com/ViperX7/Alpaca-Turbo/releases/download/beta_v0.6/Alpaca-Turbo.exe)
+#### For Windows users we have a [oneclick standalone launcher - Alpaca-Turbo.exe](https://github.com/ViperX7/Alpaca-Turbo/releases/latest).
 
 1. Install miniconda 
  - [windows](https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe) 
@@ -50,7 +52,7 @@ Alpaca-Turbo is a language model that can be run locally without much setup requ
 > - Install for all users
 > - Make sure to add `c:\ProgramData\miniconda3\condabin` to your environment variables
 
-2. Download the latest alpaca-turbo.zip from the release page. [here](https://github.com/ViperX7/Alpaca-Turbo/releases/)
+2. Download the [latest alpaca-turbo.zip from the release page](https://github.com/ViperX7/Alpaca-Turbo/releases/latest).
 3. Extract Alpaca-Turbo.zip to Alpaca-Turbo
 > Make sure you have enough space for the models in the extracted location
 4. Copy your alpaca models to alpaca-turbo/models/ directory.
