@@ -19,6 +19,8 @@ def save_helper(obj: models.Model, objvar: str, value):
 class Prompt(models.Model):
     """Prompts for the AI model."""
 
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+
 
     name = models.TextField(default="New_Preset",blank=True, null=True)
     format = models.TextField(default="### Instruction:\n\n{instruction}\n\n### Response:\n\n{response}",blank=True, null=True)
@@ -85,6 +87,10 @@ class AIModelFormat(models.Model):
 
 
 class AIModelSetting(models.Model):
+
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+
+
     temperature = models.FloatField(default=0.7)
     top_p = models.FloatField(default=0.99)
     top_k = models.IntegerField(default=200)

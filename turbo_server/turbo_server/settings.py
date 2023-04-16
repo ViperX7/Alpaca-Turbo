@@ -34,6 +34,8 @@ INSTALLED_APPS = [
     "chatbot.apps.ChatbotConfig",
     "ai_model_manager.apps.AiModelManagerConfig",
 
+    "rest_framework",
+
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",

@@ -211,12 +211,16 @@ class ModelManagerUI:
 
         self.generate_model_list()
 
-        self.full_ui = Row(
+        self.full_ui = Container(
+            bgcolor="#065f65",
+            content=Row(
             spacing=0,
             controls=[
                 self.side_bar,
                 self.main_content,
             ]
+
+            )
         )
 
 
@@ -225,7 +229,7 @@ class ModelManagerUI:
 
         # reset ui to prev state
         def reset_function(_=None):
-            self.full_ui.controls = self.full_ui.controls[:-1]
+            self.full_ui.content.controls = self.full_ui.content.controls[:-1]
             self.main_content.visible = not self.main_content.visible
             self.page.update()
 
@@ -234,7 +238,7 @@ class ModelManagerUI:
         self.main_content.visible = not self.main_content.visible
         settings_screen  = ModelSettingsUI(model,reset_function)
         settings_screen_ui = settings_screen.get_ui()
-        self.full_ui.controls.append(settings_screen_ui)
+        self.full_ui.content.controls.append(settings_screen_ui)
 
 
         self.page.update()
