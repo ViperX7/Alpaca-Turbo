@@ -1,5 +1,6 @@
 from uuid import uuid4
 
+import flet as ft
 from ai_model_manager.models import AIModel
 from django.db import models
 
@@ -11,12 +12,12 @@ class Conversation(models.Model):
     title = models.TextField()
 
     def __getitem__(self, index):
+        messages = self.get_messages()
         if isinstance(index, slice):
-            messages = self.get_messages()
-            return messages[index.start : index.stop : index.step]
+            result = messages[index.start : index.stop : index.step]
         else:
-            messages = self.get_messages()
-            return messages[index]
+            result = messages[index]
+        return result
 
     def __setitem__(self, index, value):
         if isinstance(index, slice):
@@ -42,19 +43,11 @@ class Conversation(models.Model):
 
     @staticmethod
     def clear_blank():
-        """ remove all conversations with no messages"""
+        """remove all conversations with no messages"""
         objs = Conversation.objects.all()
         for obj in objs:
             if len(Message.objects.filter(conversation=obj)) == 0:
                 obj.delete()
-
-    @staticmethod
-    def remove_all_conv():
-        """Removes all conversations"""
-        objs = Conversation.objects.all()
-        total = len(objs)
-        objs.delete()
-        return total
 
     @staticmethod
     def remove_all_conv():
@@ -115,6 +108,58 @@ class Conversation(models.Model):
         if message.index == 0:
             self.title = message.user_request
             self.save()
+
+    @staticmethod
+    def ui_conversation_list(hide_last=False, select_chat_callback=lambda _: None):
+        """Returns a UI listing all conversations"""
+        final_column = ft.ListView(
+            expand=1,
+            spacing=0,
+            # padding=20,
+            auto_scroll=False,
+        )
+
+        for entry in Conversation.objects.all():
+            final_column.controls.append(
+                ft.Container(
+                    content=ft.ListTile(
+                        on_click=lambda _, entry=entry: select_chat_callback(entry),
+                        title=ft.Text(entry.title, color=ft.colors.WHITE70),
+                        subtitle=ft.Text(
+                            str(entry.id), color=ft.colors.WHITE60, visible=False
+                        ),
+                        dense=True,
+                        content_padding=ft.padding.only(15, 0, 15, 0),
+                        trailing=ft.IconButton(
+                            icon=ft.icons.DELETE,
+                            on_click=lambda _, entry=entry: [
+                                [final_column.controls.remove(unit) for unit in final_column.controls if unit.content.subtitle.value == str(entry.id)],
+                                entry.delete(),
+                                final_column.update(),
+                            ],
+                            # color=ft.colors.WHITE60,
+                            # size=20,
+                        ),
+                        leading=ft.Icon(
+                            name=ft.icons.CHAT,
+                            color=ft.colors.WHITE60,
+                            size=20,
+                        ),
+                    ),
+                    bgcolor="#223344",  # if idx % 2 else "#444444",
+                    padding=0,
+                    margin=0.5
+                    # width=1400,
+                    # expand=True,
+                ),
+            )
+        # reverse the order
+        final_column.controls = final_column.controls[::-1]
+        final_column.controls = (
+            final_column.controls[1:] if hide_last else final_column.controls
+        )
+
+        return final_column
 
 
 class Message(models.Model):
