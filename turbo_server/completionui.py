@@ -8,9 +8,6 @@
 
 https;//github.comViperX7/Alpaca-Turbo
 """
-
-
-
 from os import name
 from time import time
 
@@ -222,8 +219,8 @@ class CompletionUI:
                         visible=False,
                     ),
                     Row(
-                        alignment = MainAxisAlignment.CENTER,
-                        vertical_alignment = CrossAxisAlignment.CENTER,
+                        alignment=MainAxisAlignment.CENTER,
+                        vertical_alignment=CrossAxisAlignment.CENTER,
                         controls=[
                             ElevatedButton(
                                 content=Container(
@@ -235,17 +232,17 @@ class CompletionUI:
                                 color=app_color_scheme["chat_input_field_font"],
                                 on_click=self.trigger_completion,
                             ),
-                            ElevatedButton(
-                                content=Container(
-                                    content=Text("Continue Completion"),
-                                    padding=20,
-                                ),
-                                width=250,
-                                bgcolor=app_color_scheme["chat_input_field_bg"],
-                                color=app_color_scheme["chat_input_field_font"],
-                                on_click=self.trigger_completion,
-                            ),
-                        ]
+                            # ElevatedButton(
+                            #     content=Container(
+                            #         content=Text("Continue Completion"),
+                            #         padding=20,
+                            #     ),
+                            #     width=250,
+                            #     bgcolor=app_color_scheme["chat_input_field_bg"],
+                            #     color=app_color_scheme["chat_input_field_font"],
+                            #     on_click=self.trigger_completion,
+                            # ),
+                        ],
                     ),
                 ],
             ),
@@ -311,43 +308,6 @@ class CompletionUI:
         stop_button.visible = not stop_button.visible
         self.page.update()
 
-    # def trigger_completion(self, _):
-    #     """Update the interaction"""
-    #
-    #     self.toggle_lock()
-    #     self.ui_main_content.content = self.comp_screen
-    #     input_text_box, _ = self.comp_screen.content.controls
-    #
-    #     user_inp = input_text_box.value
-    #     if user_inp:
-    #         msg = self.assistant.conversation.add_message(
-    #             user_inp,
-    #             "",
-    #         )
-    #
-    #         buffer = ""
-    #         count = int(self.words2gen.value)
-    #
-    #         generator = self.assistant.completion(msg, count)
-    #
-    #         tstart = time()
-    #         msg.ai_response = ""
-    #         for char in generator:
-    #             buffer += char.replace("\n", "  \n")
-    #             sec = str(time() - tstart).split(".")[0]
-    #             word_count = len(buffer.split(" "))
-    #
-    #             msg.ai_response = buffer
-    #             msg.save()
-    #
-    #             input_text_box.value += char.replace("\n", "  \n")
-    #
-    #             self.page.update()
-    #
-    #     self.toggle_lock()
-    #         # conv.response = buffer
-    #         # self.chat_content.append(conv)
-
     def trigger_completion(self, _):
         """Update the interaction"""
 
@@ -359,22 +319,21 @@ class CompletionUI:
         if user_inp:
             prevmsg = self.assistant.conversation.get_all_text()
 
+            # print(f"state: {prevmsg == user_inp}")
+            # print(len(prevmsg) <= len(user_inp))
+            # print(prevmsg == user_inp[:len(user_inp)])
 
-            print(f"state: {prevmsg == user_inp}")
-
-
-
-            if len(prevmsg) <= len(user_inp) and prevmsg == user_inp[:len(user_inp)]:
+            if len(prevmsg) <= len(user_inp) and prevmsg in user_inp[: len(user_inp)]:
+                # print("hit")
                 user_inp = user_inp.replace(prevmsg, "")
 
-            print(">>>")
-            print(user_inp.encode())
-            print(">>>")
+            # print(">>>")
+            # print(prevmsg.encode())
+            # print(">>>")
+            # print(user_inp.encode())
+            # print(">>>")
 
-            msg = self.assistant.conversation.add_message(
-                user_inp,
-                "",
-            )
+            msg = self.assistant.conversation.add_message(user_inp, "")
 
             buffer = ""
             count = int(self.words2gen.value)
@@ -397,10 +356,8 @@ class CompletionUI:
 
         self.toggle_lock()
 
-            # conv.response = buffer
-            # self.chat_content.append(conv)
-
-
+        # conv.response = buffer
+        # self.chat_content.append(conv)
 
     def conversation2chat(self, uuid):
         self.chat_content = []

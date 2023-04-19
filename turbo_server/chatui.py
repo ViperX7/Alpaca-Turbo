@@ -250,7 +250,7 @@ class ChatUI:
 
     def chat_submit(self, _):
         """Update the interaction"""
-        if not self.chat_content:
+        if not self.assistant.is_loaded:
             screen = self.model_selection_screen.content.controls
             screen.append(
                 Row(
@@ -279,6 +279,7 @@ class ChatUI:
 
         user_inp = input_text_box.value
         if user_inp:
+            self.assistant.conversation.save()
             msg = self.assistant.conversation.add_message(
                 user_inp,
                 "Thinking...",

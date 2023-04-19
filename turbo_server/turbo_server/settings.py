@@ -15,6 +15,7 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+ASGI_APPLICATION = "turbo_server.asgi.application"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -33,8 +34,13 @@ ALLOWED_HOSTS = ["*"]
 INSTALLED_APPS = [
     "chatbot.apps.ChatbotConfig",
     "ai_model_manager.apps.AiModelManagerConfig",
+    "api_service.apps.ApiServiceConfig",
 
     "rest_framework",
+    "channels",
+    'daphne',
+
+
 
     "django.contrib.admin",
     "django.contrib.auth",
