@@ -15,5 +15,6 @@ downloader.py
 __pycache__
 ./Pipfile.lock
 ./turbo_server/pid
-./turbo_server/db.sqlite3
+db.sqlite3
 ./turbo_server/turbo.log
+migrations
