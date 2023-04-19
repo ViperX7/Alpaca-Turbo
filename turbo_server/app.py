@@ -1,6 +1,7 @@
 import flet as ft
 from alpaca_turbo import AIModel, Assistant
 from chatui import ChatUI
+from completionui import CompletionUI
 from flet import (ClipBehavior, Column, Container, CrossAxisAlignment, Image,
                   ListTile, MainAxisAlignment, Markdown, OutlinedButton, Page,
                   Row, Tab, Tabs, Text, alignment, border, colors)
@@ -40,7 +41,7 @@ def main(page: Page):
     page.theme_mode = ft.ThemeMode.DARK
     # page.window_height = 1000
     # page.window_width = 1400
-    page.bgcolor = "black"
+    page.bgcolor = "#112233"
     page.padding = 0
     print("---")
     print(page.window_height)
@@ -49,11 +50,13 @@ def main(page: Page):
 
     settings = ModelManagerUI(page)
     chatui = ChatUI(page)
+    completionui = CompletionUI(page)
+
 
     ui_units = {
         "Chat": chatui.full_ui,
+        "Completion": completionui.full_ui,
         "Control Center": settings.full_ui,
-        "three": Text("three"),
         "four": Text("Four"),
     }
 

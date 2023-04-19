@@ -150,9 +150,13 @@ class SliderWithInput:
 
 
 
-
+cc = 0
 def get_random_color():
-    return "#" + "".join([random.choice("0123456789ABCDEF") for _ in range(6)])
+    print(cc)
+    color = "#" + "".join([random.choice("0123456789ABCDEF") for _ in range(6)])
+    print(color)
+    
+    return color
 
 
 def easy_content_expander(content, vexpand=True, hexpand=True, bgcolor=None):

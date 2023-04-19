@@ -22,16 +22,17 @@ class Prompt(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
 
 
-    name = models.TextField(default="New_Preset",blank=True, null=True)
+    name = models.CharField(max_length=255,default="New_Preset",blank=True, null=True)
     format = models.TextField(default="### Instruction:\n\n{instruction}\n\n### Response:\n\n{response}",blank=True, null=True)
     preprompt = models.TextField(default=" Below is an instruction that describes a task. Write a response that appropriately completes the request.",blank=True, null=True)
     antiprompt = models.TextField(default="### Human:",blank=True, null=True)
+    is_preset = models.BooleanField(default=False)
     # use_bos = models.BooleanField(default=False)
+    def __str__(self):
+        return self.name
 
 
     def get_ui(self):
-        all_prompts = Prompt.objects.all()
-
 
         preprompt = ft.Container(
             margin = ft.margin.only(bottom=50,top=10),
@@ -50,27 +51,50 @@ class Prompt(models.Model):
             content= ft.TextField(value=self.antiprompt,bgcolor="#8855aa",label="Antiprompt",on_change=lambda x : save_helper(self,"antiprompt",x.control.value))
         )
 
+        presets =  ft.Container(
+            margin = ft.margin.only(bottom=50,top=10),
+            padding=0,
+            content= ft.Dropdown(
+                label="Load from Presets",
+                options=[
+                    ft.dropdown.Option(opt.id,opt.name)  for opt in Prompt.objects.filter(is_preset=True)
+                ],
+                on_change=lambda x: [
+                    setattr(preprompt.content,"value",Prompt.objects.filter(id=x.control.value).first().preprompt),
+                    setattr(fmt.content,"value",Prompt.objects.filter(id=x.control.value).first().format),
+                    setattr(antiprompt.content,"value",Prompt.objects.filter(id=x.control.value).first().antiprompt),
+                    save_helper(self,"preprompt",preprompt.content.value),
+                    save_helper(self,"format",fmt.content.value),
+                    save_helper(self,"antiprompt",antiprompt.content.value),
+                    preprompt.update(),
+                    fmt.update(),
+                    antiprompt.update(),
+
+                ],
+            )
+        )
+
 
 
 
         prompting_group = ft.Container(
-
-            margin = 0,
+            margin=ft.margin.only(top=10),
             padding=0,
             content= ft.Column(
+                expand=True,
                 scroll=True,
-                alignment=ft.MainAxisAlignment.SPACE_EVENLY,
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                alignment=ft.MainAxisAlignment.START,
+                horizontal_alignment=ft.CrossAxisAlignment.START,
                 spacing=10,
-
                 controls=[
-                preprompt,
-                fmt,
-                antiprompt,
-                ]
+                    presets,
+                    preprompt,
+                    fmt,
+                    antiprompt,
+                ],
+            ),
+        )
 
-        )
-        )
 
         return prompting_group
 
@@ -104,7 +128,6 @@ class AIModelSetting(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def get_ui(self):
-        print("JJJJJJJJJJJJJJJJ")
         temp = SliderWithInput(
             label="Temperature",
             min=0,
@@ -182,6 +205,7 @@ class AIModelSetting(models.Model):
             padding=0,
             content=ft.Column(
                 expand=True,
+                scroll=True,
                 alignment=ft.MainAxisAlignment.START,
                 horizontal_alignment=ft.CrossAxisAlignment.START,
                 spacing=10,
@@ -195,7 +219,6 @@ class AIModelSetting(models.Model):
                     seed.getui(),
                     batch_size.getui(),
                 ],
-                scroll=True,
             ),
         )
 
@@ -279,7 +302,8 @@ class AIModel(models.Model):
         """
         head_bar = easy_content_expander(
             vexpand=False,
-            bgcolor="#445566",
+            # bgcolor="#445566",
+            bgcolor="#20354a",
             content=ft.Row(
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                 controls=[
@@ -289,6 +313,7 @@ class AIModel(models.Model):
                         controls=[
                             ft.TextField(
                                 # expand=True,
+                                width=700,
                                 value=self.name,
                                 content_padding=0,
                                 text_size=30,

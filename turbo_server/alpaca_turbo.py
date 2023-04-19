@@ -253,6 +253,23 @@ class Assistant:
             prompt.save()
             yield char
 
+    def completion(self, prompt: Message, count=-1):
+        """Adds history support"""
+        final_prompt_2_send = [prompt.user_request]
+
+        final_prompt_2_send = "".join(final_prompt_2_send)
+        self.send_prompts(final_prompt_2_send)
+
+        sp_count = 0
+        for char in self.stream_generation():
+            sp_count += 1 if " " in char else 0
+            if sp_count >= count:
+                self.stop_generation()  # this sometimes misses a word or two
+                # return char
+            prompt.ai_response += char
+            prompt.save()
+            yield char
+
     def send_prompts(self, txtblob):
         """send the prompts with bos token"""
         eprint(txtblob)
@@ -387,21 +404,19 @@ class Assistant:
             msg.preprompt = None
 
         msg.preprompt = msg.preprompt if msg.preprompt is not None else None
-        msg.preprompt = self.model.prompt.preprompt if self.is_first_request else msg.preprompt
+        msg.preprompt = (
+            self.model.prompt.preprompt if self.is_first_request else msg.preprompt
+        )
 
         self.is_first_request = False
         msg.format = self.model.prompt.format if msg.format is None else msg.format
         return msg
-
-
-
 
     def send_conv(self, preprompt, fmt, prompt):
         """function to simplify interface"""
 
         msg = self.conversation.add_message(prompt, preprompt=preprompt, format=fmt)
         msg = self.sane_check_msg(msg)
-
 
         resp = self.chatbot(msg)
         return resp

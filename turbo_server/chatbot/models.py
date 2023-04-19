@@ -38,6 +38,13 @@ class Conversation(models.Model):
     def __str__(self) -> str:
         return self.title
 
+    def get_all_text(self, sep=""):
+        msgs = self.get_messages()
+        txtblob = ""
+        for msg in msgs:
+            txtblob += sep + msg.user_request + sep + msg.ai_response
+        return txtblob
+
     def get_messages(self):
         return Message.objects.filter(conversation=self).order_by("index")
 
