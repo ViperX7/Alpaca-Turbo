@@ -24,7 +24,11 @@ from chatbot.models import Conversation, Message
 
 
 class Assistant:
-    def __init__(self, aimodel: AIModel):
+    def __init__(self, aimodel: AIModel|None = None):
+
+        if aimodel is None:
+            raise ValueError("No AIModel provided")
+
         self.DEBUG = "-d" in sys.argv
 
         self.model = aimodel
@@ -107,14 +111,6 @@ class Assistant:
         self.is_loaded = ""
 
         return "killed the bot"
-
-    def list_available_models(self, directory_path="models", extension="bin"):
-        """Returns a list of file names with the given extension  given dir"""
-        file_list = []
-        for file in os.listdir(directory_path):
-            if file.endswith(extension):
-                file_list.append(os.path.join(directory_path, file))
-        return file_list
 
     @staticmethod
     def get_bin_path():
