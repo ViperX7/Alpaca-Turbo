@@ -1,3 +1,4 @@
+from os import name
 from time import time
 
 import flet as ft
@@ -17,14 +18,6 @@ app_color_scheme = {
     "chat_input_field_font": "#ffffff",
     "chat_input_field_placeholder": "#40414e",
 }
-
-CURRENT_CHAT_CONTENT = [
-    "# sdaf\n\ndsaf",
-    "## dasfasf",
-    "asdfsdfa",
-    "asdfsdfa",
-    "asdfsdfa",
-]
 
 
 def choose_model(index=None):
@@ -47,29 +40,14 @@ def choose_model(index=None):
     return models[index] if index in range(0, len(models)) else None
 
 
-assistant = Assistant(choose_model(1))
-assistant.load_model()
-
-
-def make_on_click_fn_load_chat(entry_id, session):
-    def on_click_fn(_):
-        data = assistant.load_chat(entry_id)
-        res = []
-        for msg in data:
-            res.append(msg.user_request)
-            res.append(msg.ai_response)
-        session.chat_content = res
-        return res
-
-    return on_click_fn
-
-
 class ChatUI:
     def __init__(self, page) -> None:
         self.chat_title = None
         self.chat_content = []
         self.page: ft.Page = page
         ### delete chat_content date title
+
+        self.assistant = Assistant(AIModel.objects.first())
 
         self.lview = ft.ListView(
             expand=1,
@@ -85,8 +63,9 @@ class ChatUI:
             controls=[
                 Container(
                     expand=True,
-                    content=Conversation.ui_conversation_list(hide_last=True,
-                        select_chat_callback=self.load_chat_from_conversation
+                    content=Conversation.ui_conversation_list(
+                        hide_last=True,
+                        select_chat_callback=self.load_chat_from_conversation,
                     ),
                     alignment=ft.alignment.center,
                     # height=self.page.window_height-160,
@@ -100,6 +79,19 @@ class ChatUI:
             ],
         )
 
+        model_options = [
+            ft.dropdown.Option(model.id, model.name) for model in AIModel.objects.all()
+        ]
+
+        def loading_progress(state):
+            return Row(
+                alignment=MainAxisAlignment.CENTER,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                controls=[ft.ProgressRing(), Text("Loading model please wait ... ")]
+                if state == "loading"
+                else [Icon(ft.icons.CHECK, color="green"), Text("Model loaded")],
+            )
+
         self.model_selection_screen = Container(
             bgcolor="#112233",
             expand=True,
@@ -110,14 +102,45 @@ class ChatUI:
                     Container(
                         alignment=ft.alignment.center,
                         # bgcolor="blue",
-                        content=ft.Dropdown(
-                            width=500,
-                            label="Model",
-                            hint_text="Select model",
-                            options=[
-                                ft.dropdown.Option("Vicuna"),
-                                ft.dropdown.Option("native enhanced"),
-                                ft.dropdown.Option("koala"),
+                        content=Row(
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                            controls=[
+                                ft.Dropdown(
+                                    width=500,
+                                    # label="Model",
+                                    # hint_text="Select model",
+                                    options=model_options,
+                                    value=model_options[0].key,
+                                    on_change=lambda x: [
+                                        self.model_selection_screen.content.controls.pop()
+                                        if len(
+                                            self.model_selection_screen.content.controls
+                                        )
+                                        > 1
+                                        else None,
+                                        setattr(
+                                            self.assistant,
+                                            "model",
+                                            AIModel.objects.filter(
+                                                id=x.control.value
+                                            ).first(),
+                                        ),
+                                        self.model_selection_screen.content.controls.append(
+                                            loading_progress("loading")
+                                        ),
+                                        self.page.update(),
+                                        self.assistant.load_model(),
+                                        self.model_selection_screen.content.controls.pop(),
+                                        self.model_selection_screen.content.controls.append(
+                                            loading_progress("loaded")
+                                        ),
+                                        self.page.update(),
+                                    ],
+                                ),
+                                IconButton(
+                                    icon=ft.icons.SETTINGS,
+                                ),
                             ],
                         ),
                     ),
@@ -126,7 +149,7 @@ class ChatUI:
         )
 
         self.ui_main_content = Container(
-            content=self.md_chat_generator(self.chat_content),
+            content=self.model_selection_screen,
             bgcolor="#112233",
             expand=True,
             # height=self.page.window_height-160,
@@ -134,7 +157,7 @@ class ChatUI:
         )
 
         self.ui_input_area = Container(
-            alignment=alignment.bottom_center,
+            alignment=ft.alignment.bottom_center,
             padding=10,
             bgcolor="#293040",
             height=160,
@@ -146,7 +169,7 @@ class ChatUI:
                     OutlinedButton(
                         text="Stop Generation",
                         icon=ft.icons.STOP,
-                        on_click=lambda _: assistant.stop_generation(),
+                        on_click=lambda _: self.assistant.stop_generation(),
                         visible=False,
                     ),
                     TextField(
@@ -155,7 +178,7 @@ class ChatUI:
                         bgcolor=app_color_scheme["chat_input_field_bg"],
                         border_color=ft.colors.TRANSPARENT,
                         color=app_color_scheme["chat_input_field_font"],
-                        border=border.all(0),
+                        border=ft.border.all(0),
                         shift_enter=True,
                         hint_text="Enter To Send and shift enter for new line",
                         on_submit=self.chat_submit,
@@ -194,69 +217,29 @@ class ChatUI:
         self.page.floating_action_button.disabled = True
         self.page.update()
 
-        assistant.unload_model()
-        assistant.clear_chat()
-        assistant.new_chat()
-        assistant.load_model()
+        # self.assistant = Assistant(self.model_selection_screen.content.controls[0].content.controls[0].content.value)
+        # self.assistant.model = (
+        #     self.model_selection_screen.content.controls[0].content.controls[0].value
+        # )
+
+        self.assistant.unload_model()
+        self.assistant.clear_chat()
+        self.assistant.new_chat()
+
+        self.ui_main_content.content = self.model_selection_screen
+        screen = self.model_selection_screen.content.controls
+        _ = screen.pop() if len(screen) > 1  else None
+        self.page.update()
+
         self.chat_content = []
         self.lview.controls = []
-        self.ui_main_content.content = self.md_chat_generator(self.chat_content)
-        self.ui_sidebar.controls[0].content = Conversation.ui_conversation_list(hide_last=True,select_chat_callback=self.load_chat_from_conversation)
+        self.ui_sidebar.controls[0].content = Conversation.ui_conversation_list(
+            hide_last=True, select_chat_callback=self.load_chat_from_conversation
+        )
 
         self.page.floating_action_button.disabled = False
 
         self.page.update()
-
-    def chat_unit(self, text, idx, timetext=""):
-        unit = Container(
-            content=Row(
-                # expand=True,
-                alignment=MainAxisAlignment.CENTER,
-                controls=[
-                    Container(
-                        content=Image(src="./assets/alpaca.png")
-                        if idx % 2
-                        else Image(src="./assets/alpaca2.png"),
-                        width=50,
-                        height=50,
-                    ),
-                    Container(
-                        expand=True,
-                        margin=ft.margin.symmetric(horizontal=20),
-                        content=Markdown(
-                            extension_set="gitHubFlavored",
-                            code_theme="atom-one-dark",
-                            code_style=ft.TextStyle(font_family="Roboto Mono"),
-                            # on_tap_link=lambda e: page.launch_url(e.data),
-                            value=text,
-                            selectable=True,
-                        )
-                        if isinstance(text, str)
-                        else text,
-                    ),
-                    Container(
-                        width=50,
-                        content=Column(
-                            alignment=MainAxisAlignment.CENTER,
-                            horizontal_alignment=CrossAxisAlignment.CENTER,
-                            controls=[
-                                Icon(
-                                    name=ft.icons.ACCESS_ALARMS,
-                                    color=ft.colors.WHITE38,
-                                ),
-                                Text(timetext),
-                            ],
-                        ),
-                    ),
-                ],
-            ),
-            bgcolor="#334455" if idx % 2 else "#334466",
-            padding=ft.padding.only(left=50, right=50, top=10, bottom=10),
-            margin=0
-            # width=1400,
-            # expand=True,
-        )
-        return unit
 
     def toggle_lock(self):
         stop_button, input_text_box = self.ui_input_area.content.controls
@@ -267,33 +250,73 @@ class ChatUI:
 
     def chat_submit(self, _):
         """Update the interaction"""
+        if not self.chat_content:
+            screen = self.model_selection_screen.content.controls
+            screen.append(
+                Row(
+                    alignment=MainAxisAlignment.CENTER,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    controls=[
+                        ft.ProgressRing(),
+                        Text("Loading model please wait ... "),
+                    ],
+                )
+            )
+            self.model_selection_screen.update()
+            print("***")
+            print(screen[0].content.controls[0].value)
+            print(type(screen[0].content.controls[0].value))
+            print("***")
+
+            self.assistant.model = AIModel.objects.filter(
+                id=screen[0].content.controls[0].value
+            ).first()
+            self.assistant.load_model()
+            screen.pop()
+
+        self.ui_main_content.content = self.md_chat_generator(self.chat_content)
         stop_button, input_text_box = self.ui_input_area.content.controls
 
         user_inp = input_text_box.value
         if user_inp:
-            # update the input chat log with user input
-            self.chat_content.append(input_text_box.value)
-            self.ui_main_content.content.controls.append(self.chat_unit(user_inp, 1))
-            input_text_box.value = ""  # empty the input boc
+            msg = self.assistant.conversation.add_message(
+                user_inp,
+                "Thinking...",
+                self.assistant.model.prompt.preprompt,
+                self.assistant.model.prompt.format,
+            )
+            msg = self.assistant.sane_check_msg(msg)
+            self.chat_content.append(msg)
 
-            # switch from interact mode to generation mode
+            input_text_box.value = ""  # empty the input boc
             self.toggle_lock()
 
-            buffer = ""
-            idx = len(self.lview.controls)
-            self.lview.controls.append(self.chat_unit("Thinking...", idx + 1))
-            self.page.update()
+            user_msg, ai_msg = msg.get_ui()
+            _ = [self.lview.controls.append(ui_ele) for ui_ele in [user_msg, ai_msg]]
 
-            generator = assistant.send_conv("", assistant.model.prompt.format, user_inp)
+            self.lview.update()
+
+            buffer = ""
+
+            generator = self.assistant.chatbot(msg)
 
             tstart = time()
+            msg.ai_response = ""
             for char in generator:
                 buffer += char.replace("\n", "  \n")
                 sec = str(time() - tstart).split(".")[0]
-                wc = len(buffer.split(" "))
-                self.lview.controls[idx] = self.chat_unit(
-                    buffer, idx + 1, f"{wc} w / {sec}s"
-                )
+                word_count = len(buffer.split(" "))
+
+                msg.ai_response = buffer
+                msg.save()
+
+                _, ai_msg = msg.get_ui()
+                ai_avatar, ai_text, ai_info = ai_msg.content.controls
+                ai_info.content.controls[1].value = f"{word_count} w / {sec}s"
+
+                self.lview.controls[-1] = ai_msg
+
+
                 self.page.update()
 
             # conv.response = buffer
@@ -303,7 +326,7 @@ class ChatUI:
 
     def conversation2chat(self, uuid):
         self.chat_content = []
-        conv = assistant.load_chat(uuid)
+        conv = self.assistant.load_chat(uuid)
         print(conv)
         print("-----")
         eprint(conv)
@@ -311,19 +334,23 @@ class ChatUI:
 
     def md_chat_generator(self, data):
         final_column = self.lview
+        final_column.controls = []
 
-        for idx, entry in enumerate(data):
-            final_column.controls.append(self.chat_unit(entry, idx))
+        for entry in data:
+            user_in, ai_out = entry.get_ui()
+            final_column.controls.append(user_in)
+            final_column.controls.append(ai_out)
 
         return final_column
 
     def load_chat_from_conversation(self, entry: Conversation):
         entry_id = str(entry.id)
-        data: list[Message] = assistant.load_chat(entry_id)
+        data: list[Message] = self.assistant.load_chat(entry_id)
         res = []
+
         for msg in data:
-            res.append(msg.user_request)
-            res.append(msg.ai_response)
+            res.append(msg)
+
         self.chat_content = res
         self.lview.controls = []
         self.ui_main_content.content = self.md_chat_generator(self.chat_content)
@@ -332,6 +359,7 @@ class ChatUI:
         )
         self.page.update()
         return res
+
 
 def main(page: Page):
     page.horizontal_alignment = "center"

@@ -88,7 +88,7 @@ def main(page: Page):
 
 
 _ = (
-    ft.app(target=main, assets_dir="assets", view=ft.WEB_BROWSER)
+    ft.app(target=main, assets_dir="assets")
     if __name__ == "__main__"
     else None
 )

@@ -378,23 +378,30 @@ class Assistant:
 
         # return buffer
 
+    def sane_check_msg(self, msg):
+        if self.old_preprompt is None:
+            self.old_preprompt = msg.preprompt
+        elif self.old_preprompt is not None and self.old_preprompt != msg.preprompt:
+            self.old_preprompt = msg.preprompt
+        elif self.old_preprompt == msg.preprompt:
+            msg.preprompt = None
+
+        msg.preprompt = msg.preprompt if msg.preprompt is not None else None
+        msg.preprompt = self.model.prompt.preprompt if self.is_first_request else msg.preprompt
+
+        self.is_first_request = False
+        msg.format = self.model.prompt.format if msg.format is None else msg.format
+        return msg
+
+
+
+
     def send_conv(self, preprompt, fmt, prompt):
         """function to simplify interface"""
 
-        if self.old_preprompt is None:
-            self.old_preprompt = preprompt
-        elif self.old_preprompt is not None and self.old_preprompt != preprompt:
-            self.old_preprompt = preprompt
-        elif self.old_preprompt == preprompt:
-            preprompt = None
-
-        preprompt = preprompt if preprompt is not None else None
-        preprompt = self.model.prompt.preprompt if self.is_first_request else preprompt
-
-        self.is_first_request = False
-        fmt = self.model.prompt.format if fmt is None else fmt
-
         msg = self.conversation.add_message(prompt, preprompt=preprompt, format=fmt)
+        msg = self.sane_check_msg(msg)
+
 
         resp = self.chatbot(msg)
         return resp

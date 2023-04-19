@@ -133,7 +133,11 @@ class Conversation(models.Model):
                         trailing=ft.IconButton(
                             icon=ft.icons.DELETE,
                             on_click=lambda _, entry=entry: [
-                                [final_column.controls.remove(unit) for unit in final_column.controls if unit.content.subtitle.value == str(entry.id)],
+                                [
+                                    final_column.controls.remove(unit)
+                                    for unit in final_column.controls
+                                    if unit.content.subtitle.value == str(entry.id)
+                                ],
                                 entry.delete(),
                                 final_column.update(),
                             ],
@@ -167,6 +171,7 @@ class Message(models.Model):
 
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
     index = models.PositiveIntegerField()
+    hindex = models.PositiveIntegerField(default=1)
     user_request = models.TextField()
     ai_response = models.TextField()
     preprompt = models.TextField(max_length=512, blank=True, null=True)
@@ -186,3 +191,58 @@ class Message(models.Model):
         )
         msg.append(data)
         return msg
+
+    def get_ui(self, timetext=""):
+        icons = lambda x: ft.Container(
+            content=ft.Image(src="./assets/alpaca.png")
+            if x
+            else ft.Image(src="./assets/alpaca2.png"),
+            width=50,
+            height=50,
+        )
+
+        txtdata = lambda text: ft.Container(
+            expand=True,
+            margin=ft.margin.symmetric(horizontal=20),
+            content=ft.Markdown(
+                extension_set="gitHubFlavored",
+                code_theme="atom-one-dark",
+                # code_style=ft.TextStyle(font_family="Roboto Mono"),
+                # on_tap_link=lambda e: page.launch_url(e.data),
+                value=text,
+                selectable=True,
+            )
+            if isinstance(text, str)
+            else text,
+        )
+
+        action_bar = lambda timetext: ft.Container(
+            width=50,
+            content=ft.Column(
+                alignment=ft.MainAxisAlignment.CENTER,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                controls=[
+                    ft.Icon(
+                        name=ft.icons.ACCESS_ALARMS,
+                        color=ft.colors.WHITE38,
+                    ),
+                    ft.Text(timetext),
+                ],
+            ),
+        )
+
+        content_holder = lambda controls, bgcolor: ft.Container(
+            bgcolor=bgcolor,
+            padding=ft.padding.only(left=50, right=50, top=10, bottom=10),
+            margin=0,
+            content=ft.Row(alignment=ft.MainAxisAlignment.CENTER, controls=controls),
+        )
+
+        user_in = content_holder(
+            [icons(0), txtdata(self.user_request), action_bar("")], "#334455"
+        )
+        ai_out = content_holder(
+            [icons(1), txtdata(self.ai_response), action_bar(timetext)], "#334466"
+        )
+
+        return user_in, ai_out
