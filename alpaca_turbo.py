@@ -27,7 +27,8 @@ class Assistant:
     def __init__(self, aimodel: AIModel|None = None):
 
         if aimodel is None:
-            raise ValueError("No AIModel provided")
+            print("No model specified using the first one from database")
+            aimodel = AIModel.objects.first()
 
         self.DEBUG = "-d" in sys.argv
 
@@ -229,25 +230,25 @@ class Assistant:
 
         return f"failed to stop current status {self.current_state}"
 
-    def chatbot(self, prompt: Message):
+    def chatbot(self, message: Message):
         """Adds history support"""
         # self.conversation.append(prompt)
         # build history chahe
         final_prompt_2_send = []
 
-        data2use = self.conversation if self.enable_history else [prompt]
+        data2use = self.conversation if self.enable_history else [message]
         for convo in data2use:
             for sequence in convo.get_prompt():
                 final_prompt_2_send.append(sequence)
 
         final_prompt_2_send = "".join(final_prompt_2_send)
-        if prompt.preprompt:
-            final_prompt_2_send = [prompt.preprompt, final_prompt_2_send]
+        if message.preprompt:
+            final_prompt_2_send = [message.preprompt, final_prompt_2_send]
         self.send_prompts(final_prompt_2_send)
 
         for char in self.stream_generation():
-            prompt.ai_response += char
-            prompt.save()
+            message.ai_response += char
+            message.save()
             yield char
 
     def completion(self, prompt: Message, count=-1):
