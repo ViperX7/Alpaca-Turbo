@@ -39,10 +39,11 @@ class Conversation(models.Model):
         return self.title
 
     def get_all_text(self, sep=""):
-        msgs = self.get_messages()
         txtblob = ""
-        for msg in msgs:
-            txtblob += sep + msg.user_request + sep + msg.ai_response
+        last_msg = self[self.lastidx-1] if len(Message.objects.filter(conversation=self)) > 0 else None
+        if last_msg:
+            txtblob += sep + last_msg.preprompt + sep + last_msg.ai_response
+
         return txtblob
 
     def get_messages(self):

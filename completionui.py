@@ -179,7 +179,6 @@ class CompletionUI:
             # width=self.page.window_width*0.8,
         )
 
-        trigger_generation = lambda _: self.assistant.completion()
         stop_generation = lambda _: self.assistant.stop_generation()
 
         self.ui_input_area = Container(
@@ -291,8 +290,12 @@ class CompletionUI:
     def trigger_completion(self, _):
         """Update the interaction"""
 
+        _ = "" if self.assistant.is_loaded else self.assistant.load_model()
+
         self.toggle_lock()
         self.ui_main_content.content = self.comp_screen
+        self.comp_screen.content.controls[0].label = self.assistant.model.name
+
         input_text_box, _ = self.comp_screen.content.controls
 
         user_inp = input_text_box.value
@@ -307,13 +310,15 @@ class CompletionUI:
                 # print("hit")
                 user_inp = user_inp.replace(prevmsg, "")
 
-            # print(">>>")
-            # print(prevmsg.encode())
-            # print(">>>")
-            # print(user_inp.encode())
-            # print(">>>")
+            print(">>>")
+            print(prevmsg.encode())
+            print(">>>")
+            print(user_inp.encode())
+            print(">>>")
 
-            msg = self.assistant.conversation.add_message(user_inp, "", input_text_box.value)
+            msg = self.assistant.conversation.add_message(
+                user_inp, "", input_text_box.value
+            )
 
             buffer = ""
             count = int(self.words2gen.value)
@@ -339,38 +344,25 @@ class CompletionUI:
         # conv.response = buffer
         # self.chat_content.append(conv)
 
-    def conversation2chat(self, uuid):
-        self.chat_content = []
-        conv = self.assistant.load_chat(uuid)
-        print(conv)
-        print("-----")
-        eprint(conv)
-        print("-----")
-
-    def md_chat_generator(self, data):
-        final_column = self.lview
-        final_column.controls = []
-
-        for entry in data:
-            user_in, ai_out = entry.get_ui()
-            final_column.controls.append(user_in)
-            final_column.controls.append(ai_out)
-
-        return final_column
-
     def load_chat_from_conversation(self, entry: Conversation):
         entry_id = str(entry.id)
         data: list[Message] = self.assistant.load_chat(entry_id)
-        txt = data[-1] if len(data) > 0: else None
-        tst2show = txt.preprompt + txt.ai_response
+        txt = data[-1] if len(data) > 0 else None
+        if txt != None:
+            txt2show = str(txt.preprompt if txt.preprompt else "") + str(
+                txt.ai_response if txt.ai_response else ""
+            )
+        else:
+            txt2show = ""
+
         res = []
 
         for msg in data:
             res.append(msg)
 
         self.chat_content = res
-        self.lview.controls = []
-        self.ui_main_content.content = self.md_chat_generator(self.chat_content)
+        self.ui_main_content.content = self.comp_screen
+        self.comp_screen.content.controls[0].value = txt2show
         self.ui_sidebar.controls[0].content = Conversation.ui_conversation_list(
             hide_last=False, select_chat_callback=self.load_chat_from_conversation
         )

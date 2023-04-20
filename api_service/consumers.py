@@ -29,9 +29,9 @@ class ChatConsumer(WebsocketConsumer):
     def receive(self, text_data):
         print(text_data)
         text_data = json.loads(text_data)
-        preprompt = ""
-        fmt = api_assistant.ASSISTANT.model.prompt.format
         inp = text_data["message"]
+        preprompt = text_data["preprompt"] if "preprompt" in text_data else api_assistant.ASSISTANT.model.prompt.preprompt
+        fmt = text_data["format"] if "format" in text_data else api_assistant.ASSISTANT.model.prompt.format
         generator = api_assistant.ASSISTANT.send_conv(preprompt, fmt, inp)
         for res in generator:
             self.send(text_data=json.dumps({"message": res}))
