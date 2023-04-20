@@ -30,26 +30,6 @@ app_color_scheme = {
 }
 
 
-def choose_model(index=None):
-    """select model from available models or return None
-
-    Returns:
-        [TODO:return]
-    """
-    models = AIModel.objects.all()
-    if len(models) == 0:
-        return None
-    print("Available models:")
-    for idx, model in enumerate(models):
-        print(f"{idx+1}. {model.name}")
-
-    index = int(input("Choose model: ")) - 1 if index is None else index
-    if index < 0 or index >= len(models):
-        return None
-
-    return models[index] if index in range(0, len(models)) else None
-
-
 class CompletionUI:
     def __init__(self, page) -> None:
         self.chat_title = None
@@ -333,7 +313,7 @@ class CompletionUI:
             # print(user_inp.encode())
             # print(">>>")
 
-            msg = self.assistant.conversation.add_message(user_inp, "")
+            msg = self.assistant.conversation.add_message(user_inp, "", input_text_box.value)
 
             buffer = ""
             count = int(self.words2gen.value)
@@ -381,6 +361,8 @@ class CompletionUI:
     def load_chat_from_conversation(self, entry: Conversation):
         entry_id = str(entry.id)
         data: list[Message] = self.assistant.load_chat(entry_id)
+        txt = data[-1] if len(data) > 0: else None
+        tst2show = txt.preprompt + txt.ai_response
         res = []
 
         for msg in data:

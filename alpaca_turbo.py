@@ -250,7 +250,7 @@ class Assistant:
             yield char
 
     def completion(self, prompt: Message, count=-1):
-        """Adds history support"""
+        """ add completion support"""
         final_prompt_2_send = [prompt.user_request]
 
         final_prompt_2_send = "".join(final_prompt_2_send)
