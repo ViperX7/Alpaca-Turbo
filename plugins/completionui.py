@@ -18,6 +18,7 @@ from flet import (ClipBehavior, Column, Container, CrossAxisAlignment, Image,
                   ListTile, MainAxisAlignment, Markdown, OutlinedButton, Page,
                   Row, Text, alignment, border, colors)
 from rich import print as eprint
+from utils.model_selector import model_selector
 from utils.ui_elements import SliderWithInput, get_random_color
 
 app_color_scheme = {
@@ -60,80 +61,8 @@ class CompletionUI:
             ],
         )
 
-        model_options = [
-            ft.dropdown.Option(model.id, model.name) for model in AIModel.objects.all()
-        ]
+        self.model_selection_screen = model_selector(self.assistant)
 
-        def loading_progress(state):
-            return Row(
-                alignment=MainAxisAlignment.CENTER,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                controls=[ft.ProgressRing(), Text("Loading model please wait ... ")]
-                if state == "loading"
-                else [Icon(ft.icons.CHECK, color="green"), Text("Model loaded")],
-            )
-
-        self.model_selection_screen = Container(
-            bgcolor="#112233",
-            expand=True,
-            content=Column(
-                alignment=MainAxisAlignment.CENTER,
-                horizontal_alignment=CrossAxisAlignment.CENTER,
-                controls=[
-                    Container(
-                        alignment=ft.alignment.center,
-                        # bgcolor="blue",
-                        content=Row(
-                            alignment=ft.MainAxisAlignment.CENTER,
-                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                            controls=[
-                                ft.Dropdown(
-                                    width=500,
-                                    # label="Model",
-                                    # hint_text="Select model",
-                                    options=model_options,
-                                    value=model_options[0].key,
-                                    on_change=lambda x: [
-                                        self.model_selection_screen.content.controls.pop()
-                                        if len(
-                                            self.model_selection_screen.content.controls
-                                        )
-                                        > 1
-                                        else None,
-                                        setattr(
-                                            self.assistant,
-                                            "model",
-                                            AIModel.objects.filter(
-                                                id=x.control.value
-                                            ).first(),
-                                        ),
-                                        self.model_selection_screen.content.controls.append(
-                                            loading_progress("loading")
-                                        ),
-                                        self.page.update(),
-                                        self.assistant.load_model(),
-                                        self.model_selection_screen.content.controls.pop(),
-                                        self.model_selection_screen.content.controls.append(
-                                            loading_progress("loaded")
-                                        ),
-                                        self.page.update(),
-                                        setattr(
-                                            self.ui_main_content,
-                                            "content",
-                                            self.comp_screen,
-                                        ),
-                                        self.page.update(),
-                                    ],
-                                ),
-                                IconButton(
-                                    icon=ft.icons.SETTINGS,
-                                ),
-                            ],
-                        ),
-                    ),
-                ],
-            ),
-        )
 
         self.words2gen = SliderWithInput(
             "Max words to generate",
@@ -142,6 +71,7 @@ class CompletionUI:
             divisions=99,
             value=20,
         )
+
         self.comp_screen = Container(
             margin=ft.margin.all(40),
             content=Column(
