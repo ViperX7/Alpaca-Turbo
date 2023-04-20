@@ -31,4 +31,5 @@ urlpatterns = [
     path("chatbot/remove_chat/<str:uuid>", api_assistant.remove_chat, name="remove_chat"),
     path("chatbot/clear_chat/<str:uuid>", api_assistant.clear_chat, name="clear_chat"),
     path("chatbot/safe_kill/", api_assistant.safe_kill, name="safe_kill"),
+    path("chatbot/status/", api_assistant.status,name="status"),
 ]

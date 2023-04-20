@@ -177,3 +177,26 @@ def easy_content_expander(content, vexpand=True, hexpand=True, bgcolor=None):
     return obj
 
 
+def put_center(content):
+    ui = Container(
+        margin=0,
+        padding=0,
+        bgcolor=get_random_color(),
+        alignment=ft.alignment.center,
+        content=Row(
+            expand=True,
+            alignment=MainAxisAlignment.CENTER,
+            vertical_alignment=CrossAxisAlignment.CENTER,
+            controls=[
+                Container(
+                    expand=True,
+                    alignment=ft.alignment.center,
+                    bgcolor=get_random_color(),
+                    clip_behavior=ClipBehavior.HARD_EDGE,
+                    content=content,
+                )
+            ],
+        ),
+    )
+
+    return ui

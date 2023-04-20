@@ -33,6 +33,7 @@ class Assistant:
 
         self.model = aimodel
         self.conversation: Conversation = Conversation()
+        self.conversation.save()
 
         # Configurables
         self.threads = 4
@@ -347,9 +348,6 @@ class Assistant:
                 antiprompt_detected = b""
 
             if self.model.prompt.antiprompt.encode("utf-8") in buffer:
-                buffer = buffer.replace(
-                    self.model.prompt.antiprompt.encode("utf-8"), b""
-                )
                 buffer = buffer[:-1] if buffer[-1] == 10 else buffer
                 char_old = char_old.replace(
                     self.model.prompt.antiprompt.encode("utf-8"), b""

@@ -57,3 +57,10 @@ def clear_chat(request, uuid):
 def safe_kill(request):
     res = ASSISTANT.safe_kill()
     return JsonResponse(res, safe=False)
+
+def status(request):
+    res = {}
+    res['status'] = ASSISTANT.current_state
+    res['is_loaded'] = ASSISTANT.is_loaded
+    res['threads'] = ASSISTANT.threads
+    return JsonResponse(res, safe=False)

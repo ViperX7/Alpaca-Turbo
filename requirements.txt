@@ -1,0 +1,10 @@
+django
+djangorestframework
+rich
+flet
+colorama
+psutil
+requests
+daphne
+channels
+pexpect

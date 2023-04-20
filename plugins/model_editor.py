@@ -39,6 +39,7 @@ def save_helper(obj, objvar: str, value):
 
 
 class ModelSettingsUI:
+    name = "Settings"
     def __init__(self, model, reset_func):
         self.target_model = model
         self.reset_func = reset_func
@@ -132,6 +133,7 @@ class ModelSettingsUI:
 
 class ModelManagerUI:
     """UI to | Install | Configure | List | models"""
+    name = "Settings"
 
     def __init__(self, page) -> None:
         self.page: ft.Page = page
