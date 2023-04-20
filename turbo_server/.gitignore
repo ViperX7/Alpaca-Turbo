@@ -1,0 +1,4 @@
+*/migrations/*
+db.sqlite3
+bin
+assets

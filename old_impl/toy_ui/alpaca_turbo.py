@@ -1,8 +1,8 @@
 #!/bin/python3
 """
-     ▄▄▄· ▄▄▌   ▄▄▄· ▄▄▄·  ▄▄·  ▄▄▄·     ▄▄▄▄▄▄• ▄▌▄▄▄  ▄▄▄▄·
-    ▐█ ▀█ ██•  ▐█ ▄█▐█ ▀█ ▐█ ▌▪▐█ ▀█     •██  █▪██▌▀▄ █·▐█ ▀█▪▪
-    ▄█▀▀█ ██▪   ██▀·▄█▀▀█ ██ ▄▄▄█▀▀█      ▐█.▪█▌▐█▌▐▀▀▄ ▐█▀▀█▄ ▄█▀▄
+     ▄▄▄· ▄▄▌   ▄▄▄· ▄▄▄·  ▄▄·  ▄▄▄·     ▄▄▄▄▄▄• ▄▌▄▄▄  ▄▄▄▄·       
+    ▐█ ▀█ ██•  ▐█ ▄█▐█ ▀█ ▐█ ▌▪▐█ ▀█     •██  █▪██▌▀▄ █·▐█ ▀█▪▪     
+    ▄█▀▀█ ██▪   ██▀·▄█▀▀█ ██ ▄▄▄█▀▀█      ▐█.▪█▌▐█▌▐▀▀▄ ▐█▀▀█▄ ▄█▀▄ 
     ▐█ ▪▐▌▐█▌▐▌▐█▪·•▐█ ▪▐▌▐███▌▐█ ▪▐▌     ▐█▌·▐█▄█▌▐█•█▌██▄▪▐█▐█▌.▐▌
      ▀  ▀ .▀▀▀ .▀    ▀  ▀ ·▀▀▀  ▀  ▀      ▀▀▀  ▀▀▀ .▀  ▀·▀▀▀▀  ▀█▄▀▪
 
@@ -12,86 +12,96 @@ import os
 import platform
 import sys
 
-import django
+from helpers.dtype import Conversation, load_all_conversations
+from helpers.interaction import Process
 from rich import print as eprint
-from utils.interaction import Process
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "turbo_server.settings")
-django.setup()
-
-from ai_model_manager.models import AIModel
-from chatbot.models import Conversation, Message
 
 
 class Assistant:
-    def __init__(self, aimodel: AIModel|None = None):
-
-        if aimodel is None:
-            raise ValueError("No AIModel provided")
-
+    def __init__(self):
         self.DEBUG = "-d" in sys.argv
 
-        self.model = aimodel
-        self.conversation: Conversation = Conversation()
-
-        # Configurables
         self.threads = 4
+        self.top_k = 200
+        self.top_p = 0.99
+        self.temp = 0.7
+        self.repeat_penalty = 1
+        self.batch_size = 256
+
+        self.seed = 888777
+        self.n_predict = 1000
+        self.repeat_last_n = 512
         self.use_bos = True
+        self.antiprompt = "### Human:"
+        self.models_directory = "models"
+
+        # self.history_size = 1500
+
+        # self.pre_prompt = " Below are instructions to a smart bot named devil, provide response inteligently to instructions.\n\n"
+        # self.pre_prompt = " Below are instructions provide best possible response and take into account entire history.\n\n"
+        self.pre_prompt = " Below is an instruction that describes a task. Write a response that appropriately completes the request."
+        self.format = "### Instruction:\n\n{instruction}\n\n### Response:\n\n{response}"
+        # self.pre_prompt = "you are a highly intelligent chatbot named devil and you remember all conversation history."
         self.enable_history = False
+        self.history: list[Conversation] = []
 
-        self.new_chat()
+        self.end_marker = b"RSTsr"
 
-        # Internal state store
+        self.model_idx = 0
         self.is_loaded = ""
+
         self.current_state = "Initialised"
         self.old_preprompt = None
         self.is_first_request = True
 
-        # fixed values
-        self.end_marker = b"RSTsr"
-
-    def new_chat(self):
-        "save current conv and set proper title and start new conv"
-        try:
-            self.conversation.title = self.conversation[0].ai_response
-            self.conversation.save()
-        except (IndexError, TypeError):
-            pass
-
-        Conversation.clear_blank()
-        self.conversation = Conversation()
-        self.conversation.title = "New Chat"
-        self.conversation.save()
-
-    def remove_all_chat(self):
-        r_count = Conversation.remove_all_conv()
-        return f"{r_count} files removed"
-
     def load_chat(self, id):
         """load chat"""
-        data = {"can't load generation going on"}
+        result = {"can't load generation going on"}
         if self.current_state != "generating":
-            data = Conversation.objects.filter(id=id).first()
-            data = list(data)
-        return data
+            data = load_all_conversations()
+            print(data)
+        return data[id]
+
+    def remove_all_chat(self):
+        """hello world"""
+
+        # specify the path of the folder
+        folder_path = "conversations"
+
+        # loop through all files in the folder
+        r_count = 0
+        for file_name in os.listdir(folder_path):
+            # join the folder path and file name
+            file_path = os.path.join(folder_path, file_name)
+            # check if the file exists
+            if os.path.isfile(file_path):
+                # delete the file
+                os.remove(file_path)
+                r_count += 1
+        print(f"{r_count} deleted successfully")
+        return f"{r_count} files removed"
+
+    def save_chat(self):
+        """load chat"""
+        result = "can't save generation going on"
+        if self.current_state != "generating":
+            if self.history:
+                Conversation.save(self.history)
+                result = "success"
+            else:
+                result = "no conversation to save"
+        return result
 
     def get_conv_logs(self):
         """conversation logs"""
-        data = Conversation.get_all_conversations()
+        data = load_all_conversations()
         return data
-
-    def remove_chat(self, uuid):
-        """-"""
-        uuid = str(uuid)
-        print(uuid)
-        if uuid != str(self.conversation.id):
-            Conversation.objects.filter(id=uuid).delete()
 
     def clear_chat(self):
         """clear current history context"""
         result = "can't save generation going on"
         if self.current_state != "generating":
-            self.conversation = Conversation()
+            self.history = []
             result = "success"
             self.is_first_request = True
             self.use_bos = True
@@ -105,12 +115,20 @@ class Assistant:
         self.process.killx()
         self.is_first_request = True
         self.current_state = "Initialised"
-        if self.conversation:
-            Conversation.save(self.conversation)
-        self.conversation = Conversation()
+        if self.history:
+            Conversation.save(self.history)
+        self.history = []
         self.is_loaded = ""
 
         return "killed the bot"
+
+    def list_available_models(self, directory_path="models", extension="bin"):
+        """Returns a list of file names with the given extension  given dir"""
+        file_list = []
+        for file in os.listdir(directory_path):
+            if file.endswith(extension):
+                file_list.append(os.path.join(directory_path, file))
+        return file_list
 
     @staticmethod
     def get_bin_path():
@@ -147,26 +165,26 @@ class Assistant:
             # "--color",
             "-i",
             "--seed",
-            f"{self.model.settings.seed}",
+            f"{self.seed}",
             "-ins",
             "-t",
             f"{self.threads}",
             "-b",
-            f"{self.model.settings.batch_size}",
+            f"{self.batch_size}",
             "--top_k",
-            f"{self.model.settings.top_k}",
+            f"{self.top_k}",
             "--top_p",
-            f"{self.model.settings.top_p}",
+            f"{self.top_p}",
             "--repeat_last_n",
-            f"{self.model.settings.repeat_last_n}",
+            f"{self.repeat_last_n}",
             "--repeat_penalty",
-            f"{self.model.settings.repetition_penalty}",
+            f"{self.repeat_penalty}",
             "--temp",
-            f"{self.model.settings.temperature}",
+            f"{self.temp}",
             "--n_predict",
-            f"{self.model.settings.n_predict}",
+            f"{self.n_predict}",
             "-m",
-            f"{self.model.path}",
+            f"{self.list_available_models(self.models_directory)[self.model_idx]}",
             # "--interactive-start",
             "--interactive-first",
         ]
@@ -175,7 +193,9 @@ class Assistant:
     def load_model(self):
         """load binary in memory"""
         if self.is_loaded:
-            return f"model already loaded {self.model.path}"
+            return (
+                f"model already loaded {self.list_available_models(self.models_directory)[self.model_idx]}"
+            )
         try:
             self.process = Process(self.command, timeout=10000)
             for _ in range(6):
@@ -195,13 +215,13 @@ class Assistant:
             self.process.recvuntil(self.end_marker)
             self.current_state = "prompt"
 
-            self.is_loaded = self.model.path
+            self.is_loaded = self.list_available_models(self.models_directory)[self.model_idx]
         except Exception as e:
             print(e)
             self.is_loaded = ""
-            return f"Failed loading {self.model.path}"
+            return f"Failed loading {self.list_available_models(self.models_directory)[self.model_idx]}"
 
-        return f"loaded successfully {self.model.path}"
+        return f"loaded successfully {self.list_available_models(self.models_directory)[self.model_idx]}"
 
     def unload_model(self):
         if self.is_loaded:
@@ -228,42 +248,22 @@ class Assistant:
 
         return f"failed to stop current status {self.current_state}"
 
-    def chatbot(self, prompt: Message):
+    def chatbot(self, prompt: Conversation):
         """Adds history support"""
-        # self.conversation.append(prompt)
+        self.history.append(prompt)
         # build history chahe
         final_prompt_2_send = []
-
-        data2use = self.conversation if self.enable_history else [prompt]
+        data2use = self.history if self.enable_history else [self.history[-1]]
         for convo in data2use:
             for sequence in convo.get_prompt():
                 final_prompt_2_send.append(sequence)
-
         final_prompt_2_send = "".join(final_prompt_2_send)
         if prompt.preprompt:
             final_prompt_2_send = [prompt.preprompt, final_prompt_2_send]
         self.send_prompts(final_prompt_2_send)
 
         for char in self.stream_generation():
-            prompt.ai_response += char
-            prompt.save()
-            yield char
-
-    def completion(self, prompt: Message, count=-1):
-        """Adds history support"""
-        final_prompt_2_send = [prompt.user_request]
-
-        final_prompt_2_send = "".join(final_prompt_2_send)
-        self.send_prompts(final_prompt_2_send)
-
-        sp_count = 0
-        for char in self.stream_generation():
-            sp_count += 1 if " " in char else 0
-            if sp_count >= count:
-                self.stop_generation()  # this sometimes misses a word or two
-                # return char
-            prompt.ai_response += char
-            prompt.save()
+            self.history[-1].response += char
             yield char
 
     def send_prompts(self, txtblob):
@@ -279,17 +279,17 @@ class Assistant:
             self.process.recvuntil("n_threads> ")
             self.process.sendline(str(self.threads))
             self.process.recvuntil("top_k> ")
-            self.process.sendline(str(self.model.settings.top_k))
+            self.process.sendline(str(self.top_k))
             self.process.recvuntil("top_p> ")
-            self.process.sendline(str(self.model.settings.top_p))
+            self.process.sendline(str(self.top_p))
             self.process.recvuntil("temperature> ")
-            self.process.sendline(str(self.model.settings.temperature))
+            self.process.sendline(str(self.temp))
             self.process.recvuntil("repeat_penalty> ")
-            self.process.sendline(str(self.model.settings.repetition_penalty))
+            self.process.sendline(str(self.repeat_penalty))
             self.process.recvuntil("n_batch> ")
-            self.process.sendline(str(self.model.settings.batch_size))
+            self.process.sendline(str(self.batch_size))
             self.process.recvuntil("antiprompt> ")
-            self.process.sendline(str(self.model.prompt.antiprompt))
+            self.process.sendline(str(self.antiprompt))
 
             for txt in txtblob:
                 lines = txt.split("\n")
@@ -330,30 +330,25 @@ class Assistant:
                     continue
                 marker_detected = b""
             elif (
-                char == self.model.prompt.antiprompt[0].encode("utf-8")
+                char == self.antiprompt[0].encode("utf-8")
                 or len(antiprompt_detected) > 0
             ):
-                print("Antiprompt buffering started")
                 antiprompt_detected += char
                 char_old += char
                 # print("==========")
                 # print(antiprompt_detected)
                 # print(self.end_antiprompt[:len(antiprompt_detected)])
-                if antiprompt_detected in self.model.prompt.antiprompt[
+                if antiprompt_detected in self.antiprompt[
                     : len(antiprompt_detected)
                 ].encode("utf-8"):
                     # print("cont")
                     continue
                 antiprompt_detected = b""
 
-            if self.model.prompt.antiprompt.encode("utf-8") in buffer:
-                buffer = buffer.replace(
-                    self.model.prompt.antiprompt.encode("utf-8"), b""
-                )
+            if self.antiprompt.encode("utf-8") in buffer:
+                buffer = buffer.replace(self.antiprompt.encode("utf-8"), b"")
                 buffer = buffer[:-1] if buffer[-1] == 10 else buffer
-                char_old = char_old.replace(
-                    self.model.prompt.antiprompt.encode("utf-8"), b""
-                )
+                char_old = char_old.replace(self.antiprompt.encode("utf-8"), b"")
                 char_old = char_old[:-1] if char_old[-1] == 10 else char_old
 
             if self.end_marker in buffer:
@@ -391,41 +386,34 @@ class Assistant:
 
         # return buffer
 
-    def sane_check_msg(self, msg):
-        if self.old_preprompt is None:
-            self.old_preprompt = msg.preprompt
-        elif self.old_preprompt is not None and self.old_preprompt != msg.preprompt:
-            self.old_preprompt = msg.preprompt
-        elif self.old_preprompt == msg.preprompt:
-            msg.preprompt = None
-
-        msg.preprompt = msg.preprompt if msg.preprompt is not None else None
-        msg.preprompt = (
-            self.model.prompt.preprompt if self.is_first_request else msg.preprompt
-        )
-
-        self.is_first_request = False
-        msg.format = self.model.prompt.format if msg.format is None else msg.format
-        return msg
-
     def send_conv(self, preprompt, fmt, prompt):
         """function to simplify interface"""
 
-        msg = self.conversation.add_message(prompt, preprompt=preprompt, format=fmt)
-        msg = self.sane_check_msg(msg)
+        if self.old_preprompt is None:
+            self.old_preprompt = preprompt
+        elif self.old_preprompt is not None and self.old_preprompt != preprompt:
+            self.old_preprompt = preprompt
+        elif self.old_preprompt == preprompt:
+            preprompt = None
 
-        resp = self.chatbot(msg)
+        preprompt = preprompt if preprompt is not None else None
+        preprompt = self.pre_prompt if self.is_first_request else preprompt
+
+        self.is_first_request = False
+        fmt = self.format if fmt is None else fmt
+        conv = Conversation(preprompt, fmt, prompt)
+        resp = self.chatbot(conv)
         return resp
 
     @staticmethod
     def repl():
         """Repl for my chat bot"""
-        assistant = Assistant(AIModel.objects.all()[1])
+        assistant = Assistant()
         assistant.load_model()
         assistant.enable_history = False
-        fmt = assistant.model.prompt.format
+        fmt = assistant.format
         # assistant.pre_prompt = ""
-        preprompt = assistant.model.prompt.preprompt
+        preprompt = assistant.pre_prompt
         while True:
             # print("=====")
             prompt = input(">>>>>> ")
