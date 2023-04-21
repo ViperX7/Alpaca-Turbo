@@ -61,9 +61,6 @@ class CompletionUI:
             ],
         )
 
-        self.model_selection_screen = model_selector(self.assistant)
-
-
         self.words2gen = SliderWithInput(
             "Max words to generate",
             min=1,
@@ -92,6 +89,8 @@ class CompletionUI:
             ),
         )
 
+        self.model_selection_screen = model_selector(self.assistant)
+
         self.ui_main_content = Container(
             content=self.model_selection_screen,
             bgcolor="#112233",
@@ -99,6 +98,17 @@ class CompletionUI:
         )
 
         stop_generation = lambda _: self.assistant.stop_generation()
+
+        self.next_screen = lambda _: [
+            setattr(self.ui_main_content, "content", self.comp_screen),
+            setattr(
+                self.ui_input_area.content.controls[1].controls[0], "visible", False
+            ),
+            setattr(
+                self.ui_input_area.content.controls[1].controls[1], "visible", True
+            ),
+            self.page.update(),
+        ]
 
         self.ui_input_area = Container(
             alignment=ft.alignment.bottom_center,
@@ -122,12 +132,23 @@ class CompletionUI:
                         controls=[
                             ElevatedButton(
                                 content=Container(
+                                    content=Text("Next"),
+                                    padding=20,
+                                ),
+                                width=250,
+                                bgcolor=app_color_scheme["chat_input_field_bg"],
+                                color=app_color_scheme["chat_input_field_font"],
+                                on_click=self.next_screen,
+                            ),
+                            ElevatedButton(
+                                content=Container(
                                     content=Text("Trigger Completion"),
                                     padding=20,
                                 ),
                                 width=250,
                                 bgcolor=app_color_scheme["chat_input_field_bg"],
                                 color=app_color_scheme["chat_input_field_font"],
+                                visible=False,
                                 on_click=self.trigger_completion,
                             ),
                         ],
@@ -162,6 +183,8 @@ class CompletionUI:
             )
         )
 
+        self.page.update()
+
     def new_chat(self, _):
         self.page.floating_action_button.disabled = True
         self.page.update()
@@ -175,6 +198,9 @@ class CompletionUI:
         _ = screen.pop() if len(screen) > 1 else None
         self.page.update()
 
+        setattr(self.ui_input_area.content.controls[1].controls[0], "visible", True),
+        setattr(self.ui_input_area.content.controls[1].controls[1], "visible", False)
+
         self.ui_sidebar.controls[0].content = Conversation.ui_conversation_list(
             hide_last=True, select_chat_callback=self.load_chat_from_conversation
         )
@@ -185,6 +211,9 @@ class CompletionUI:
 
     def toggle_lock(self):
         stop_button = self.ui_input_area.content.controls[0]
+
+        trigger_button = self.ui_input_area.content.controls[1].controls[1]
+        trigger_button.disabled = not trigger_button.disabled
 
         stop_button.visible = not stop_button.visible
         self.page.update()

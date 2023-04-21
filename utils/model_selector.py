@@ -13,8 +13,8 @@ def loading_progress(state):
     )
 
 
-def model_selector(assistant: Assistant):
-    """ Model loading UI"""
+def model_selector(assistant: Assistant, callback=lambda: None):
+    """Model loading UI"""
     model_options = [
         ft.dropdown.Option(model.id, model.name) for model in AIModel.objects.all()
     ]
@@ -59,6 +59,7 @@ def model_selector(assistant: Assistant):
                                     model_selection_screen.content.controls.append(
                                         loading_progress("loaded")
                                     ),
+                                    callback(),
                                     model_selection_screen.update(),
                                 ],
                             ),
