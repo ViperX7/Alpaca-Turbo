@@ -11,6 +11,7 @@ https;//github.comViperX7/Alpaca-Turbo
 import os
 import platform
 import sys
+import time
 
 import django
 from rich import print as eprint
@@ -24,8 +25,7 @@ from chatbot.models import Conversation, Message
 
 
 class Assistant:
-    def __init__(self, aimodel: AIModel|None = None):
-
+    def __init__(self, aimodel: AIModel | None = None):
         if aimodel is None:
             print("No model specified using the first one from database")
             aimodel = AIModel.objects.first()
@@ -210,14 +210,6 @@ class Assistant:
             self.safe_kill()
             self.is_loaded = False
 
-    def action(self, command):
-        """returns whether a request can be colmpleted or not"""
-
-        if command == "generate":
-            is_possible = self.current_state == "prompt"
-        if command == "stop":
-            is_possible = self.current_state == "generating"
-        return is_possible
 
     def stop_generation(self):
         """Interrupts generation"""
@@ -225,13 +217,14 @@ class Assistant:
             self.current_state = "stoping_generation"
             # self.process.send("\003")
             self.process.interrupt()
+            time.sleep(1)
             self.current_state = "prompt"
             return "Stopped"
 
         return f"failed to stop current status {self.current_state}"
 
     def chatbot(self, message: Message):
-        """Adds history support"""
+        """chatbot"""
         # self.conversation.append(prompt)
         # build history chahe
         final_prompt_2_send = []
@@ -251,29 +244,30 @@ class Assistant:
             message.save()
             yield char
 
-    def completion(self, prompt: Message, count=-1):
-        """ add completion support"""
-        final_prompt_2_send = [prompt.user_request]
+    def completion(self, message: Message, count=-1):
+        """add completion support"""
+        final_prompt_2_send = [message.user_request]
 
         final_prompt_2_send = "".join(final_prompt_2_send)
         self.send_prompts(final_prompt_2_send)
 
         sp_count = 0
+        interrupted = False
         for char in self.stream_generation():
             sp_count += 1 if " " in char else 0
-            if sp_count >= count:
-                self.stop_generation()  # this sometimes misses a word or two
-                # return char
-            prompt.ai_response += char
-            prompt.save()
-            yield char
+            if sp_count >= count and not interrupted:
+                self.process.interrupt()  # this sometimes misses a word or two
+                interrupted = True
+            message.ai_response += char
+            message.save()
+            yield char.replace("\n","") if interrupted else char
 
     def send_prompts(self, txtblob):
         """send the prompts with bos token"""
         eprint(txtblob)
         txtblob = txtblob if isinstance(txtblob, list) else [txtblob]
         _ = eprint(txtblob) if self.DEBUG else None
-        if self.action("generate"):
+        if self.current_state == "prompt":
             bos = len(txtblob)
             self.process.recvuntil("n_inps>  ")
             self.process.sendline(str(bos))
@@ -305,6 +299,7 @@ class Assistant:
             self.current_state = "generating"
         else:
             print("CRITICAL")
+            print("Either already generating or int yet ready")
 
     def stream_generation(self):
         """returns a generator that returns the generation"""
