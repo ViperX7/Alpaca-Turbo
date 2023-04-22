@@ -177,11 +177,12 @@ def easy_content_expander(content, vexpand=True, hexpand=True, bgcolor=None):
     return obj
 
 
-def put_center(content):
+def put_center(content,bgcolor=None):
+    bgcolor = bgcolor if bgcolor else get_random_color()
     ui = Container(
         margin=0,
         padding=0,
-        bgcolor=get_random_color(),
+        bgcolor=bgcolor,
         alignment=ft.alignment.center,
         content=Row(
             expand=True,
@@ -191,7 +192,7 @@ def put_center(content):
                 Container(
                     expand=True,
                     alignment=ft.alignment.center,
-                    bgcolor=get_random_color(),
+                    bgcolor=bgcolor,
                     clip_behavior=ClipBehavior.HARD_EDGE,
                     content=content,
                 )
