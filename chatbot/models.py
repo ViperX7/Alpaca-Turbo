@@ -199,9 +199,6 @@ class Message(models.Model):
             conversation=self.conversation, index=self.index
         ).order_by("-hindex")
         max_index = all_objs.first().hindex
-        print(max_index)
-        print(all_objs)
-        print([obj.hindex for obj in all_objs])
         self.is_main = False
         self.save()
         # ori_pk = self.pk
@@ -221,7 +218,10 @@ class Message(models.Model):
         self.save()
 
     def conv_left(self, _=None):
-        prev_message = Message.objects.filter(index=self.index, hindex=self.hindex - 1)
+        prev_message = Message.objects.filter(
+            conversation=self.conversation, index=self.index, hindex=self.hindex -1
+        )
+
         ori_index = self.hindex
 
         if self.hindex > 0 and prev_message:
@@ -241,8 +241,10 @@ class Message(models.Model):
         else:
             print("Nothing left")
 
-    def conv_right(self, _=None):
-        next_message = Message.objects.filter(index=self.index, hindex=self.hindex + 1)
+    def conv_right(self, new_callback=None):
+        next_message = Message.objects.filter(
+            conversation=self.conversation, index=self.index, hindex=self.hindex + 1
+        )
         ori_index = self.hindex
 
         if next_message:
@@ -264,6 +266,7 @@ class Message(models.Model):
             print("Nothing right")
             print("Creating new")
             self.create_alt()
+            new_callback(msg=self) if new_callback else None
             print(f"old index: {ori_index}: new index: {self.hindex}")
 
     def __str__(self) -> str:
@@ -278,7 +281,7 @@ class Message(models.Model):
         msg.append(data)
         return msg
 
-    def get_ui(self, timetext=""):
+    def get_ui(self, timetext="", chat_submit=None):
         icons = lambda x: ft.Container(
             content=ft.Image(src="./assets/alpaca.png")
             if x
@@ -329,12 +332,13 @@ class Message(models.Model):
                                     setattr(
                                         cont[1].content, "value", getattr(self, member)
                                     ),
-                                    eprint(cont[1].content),
-                                    eprint(type(cont[1].content)),
+                                    # eprint(cont[1].content),
+                                    # eprint(type(cont[1].content)),
+                                    cont[1].content.update(),
                                 ]
                                 for member, cont in extras.items()
                             ],
-                            [cont[1].content.update() for _, cont in extras.items()],
+                            # [cont[1].content.update() for _, cont in extras.items()],
                         ],
                     )
                 ]
@@ -347,11 +351,12 @@ class Message(models.Model):
                     ft.IconButton(
                         icon=ft.icons.ARROW_RIGHT,
                         on_click=lambda _: [
-                            self.conv_right(),
+                            self.conv_right(chat_submit),
                             [
                                 setattr(cont[1].content, "value", getattr(self, member))
                                 for member, cont in extras.items()
                             ],
+                            # [print(cont[1].content) for _, cont in extras.items()],
                             [cont[1].content.update() for _, cont in extras.items()],
                         ],
                     )

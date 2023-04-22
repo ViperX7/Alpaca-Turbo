@@ -118,7 +118,7 @@ class ChatUI:
                         border=ft.border.all(0),
                         shift_enter=True,
                         hint_text="Enter To Send and shift enter for new line",
-                        on_submit=self.chat_submit,
+                        on_submit=lambda _ : self.chat_submit(),
                     ),
                 ],
             ),
@@ -192,57 +192,94 @@ class ChatUI:
         input_text_box.disabled = not input_text_box.disabled
         self.page.update()
 
-    def chat_submit(self, _):
-        """Update the interaction"""
-        if not self.assistant.is_loaded:
-            screen = self.model_selection_screen.content.controls
-            screen.append(
-                Row(
-                    alignment=MainAxisAlignment.CENTER,
-                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                    controls=[
-                        ft.ProgressRing(),
-                        Text("Loading model please wait ... "),
-                    ],
-                )
+    def load_with_ui(self):
+        screen = self.model_selection_screen.content.controls
+        screen.append(
+            Row(
+                alignment=MainAxisAlignment.CENTER,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                controls=[
+                    ft.ProgressRing(),
+                    Text("Loading model please wait ... "),
+                ],
             )
-            self.model_selection_screen.update()
-            print("***")
-            print(screen[0].content.controls[0].value)
-            print(type(screen[0].content.controls[0].value))
-            print("***")
+        )
+        self.model_selection_screen.update()
+        print("***")
+        print(screen[0].content.controls[0].value)
+        print(type(screen[0].content.controls[0].value))
+        print("***")
 
-            self.assistant.model = AIModel.objects.filter(
-                id=screen[0].content.controls[0].value
-            ).first()
-            self.assistant.load_model()
-            screen.pop()
+        self.assistant.model = AIModel.objects.filter(
+            id=screen[0].content.controls[0].value
+        ).first()
+        self.assistant.load_model()
+        screen.pop()
 
+    def get_ui_idx_from_message(self,main_message:Message):
+        all_messages = main_message.conversation.get_messages()
+        # eprint(all_messages)
+        all_messages=all_messages[:main_message.index]
+        # eprint(all_messages)
+        # eprint(main_message.index)
+        idx = -1
+        for i,m in enumerate(all_messages):
+            idx +=1 if m.preprompt else 0
+            idx +=1 if m.user_request else 0
+            idx +=1
+        return idx
+
+
+    def chat_submit(self, msg=None):
+        """Update the interaction"""
+
+
+        ori_msg = bool(msg)
+
+
+        # Load model if not already loaded
+        if not self.assistant.is_loaded:
+            self.load_with_ui()
+
+        # match the state of self.chat content with ui main content
         self.ui_main_content.content = self.md_chat_generator(self.chat_content)
         stop_button, input_text_box = self.ui_input_area.content.controls
 
-        user_inp = input_text_box.value
-        if user_inp:
+        user_inp = input_text_box.value  # If user sends something
+        if user_inp or msg:
             self.assistant.conversation.save()
-            msg = self.assistant.conversation.add_message(
-                user_inp,
-                "Thinking...",
-                self.assistant.model.prompt.preprompt,
-                self.assistant.model.prompt.format,
-            )
-            msg = self.assistant.sane_check_msg(msg)
-            self.chat_content.append(msg)
 
-            input_text_box.value = ""  # empty the input boc
+            if msg is  None:
+                # Add new message to the end of the list and reset input field
+                msg = self.assistant.conversation.add_message(
+                    user_inp,
+                    "Thinking...",
+                    self.assistant.model.prompt.preprompt,
+                    self.assistant.model.prompt.format,
+                )
+                msg = self.assistant.sane_check_msg(msg) # this clears duplicate preprompts
+                self.chat_content.append(msg)
+                input_text_box.value = ""  # empty the input boc
+            else:
+                print("we are here")
+
+
+
+
             self.toggle_lock()
 
-            preprompt, user_msg, ai_msg = msg.get_ui()
-            _ = [self.lview.controls.append(ui_ele) for ui_ele in [preprompt, user_msg, ai_msg] if ui_ele]
+            preprompt, user_msg, ai_msg = msg.get_ui(chat_submit=self.chat_submit)
+
+            if not ori_msg:
+                _ = [self.lview.controls.append(ui_ele) for ui_ele in [preprompt, user_msg, ai_msg] if ui_ele]
+
 
             self.lview.update()
 
             buffer = ""
 
+            print("Trying to generate")
+            # Start generation with the msg
             generator = self.assistant.chatbot(msg)
 
             tstart = time()
@@ -255,11 +292,17 @@ class ChatUI:
                 msg.ai_response = buffer
                 msg.save()
 
-                _, _, ai_msg = msg.get_ui()
+                preprompt, user_msg, ai_msg = msg.get_ui(chat_submit=self.chat_submit)
                 left_arrow,ai_avatar, ai_text, ai_info ,right_arrow= ai_msg.content.controls
                 ai_info.content.controls[1].value = f"{word_count} w / {sec}s"
 
-                self.lview.controls[-1] = ai_msg
+                tindex = self.get_ui_idx_from_message(msg)
+                eprint(tindex)
+
+                if preprompt:
+                    self.lview.controls[tindex-2] = preprompt
+                self.lview.controls[tindex-1] = user_msg
+                self.lview.controls[tindex] = ai_msg
 
                 self.page.update()
 
@@ -285,7 +328,7 @@ class ChatUI:
         for entry in data:
             print(entry)
             print(type(entry))
-            _ = [final_column.controls.append(ui_ele) for ui_ele in entry.get_ui() if ui_ele]
+            _ = [final_column.controls.append(ui_ele) for ui_ele in entry.get_ui(chat_submit=self.chat_submit) if ui_ele]
 
         return final_column
 
