@@ -71,10 +71,10 @@ class Assistant:
 
     def load_chat(self, id):
         """load chat"""
-        data = {"can't load generation going on"}
-        if self.current_state != "generating":
-            data = Conversation.objects.filter(id=id).first()
-            data = list(data)
+        # data = {"can't load generation going on"}
+        # if self.current_state != "generating":
+        data = Conversation.objects.filter(id=id).first()
+        data = list(data)
         return data
 
     def get_conv_logs(self):
