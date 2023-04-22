@@ -39,6 +39,11 @@ class CompletionUI:
 
         self.assistant = Assistant(AIModel.objects.first())
 
+        self.full_ui()
+
+        self.page.update()
+
+    def full_ui(self):
         self.ui_sidebar = Column(
             alignment=MainAxisAlignment.SPACE_BETWEEN,
             horizontal_alignment=CrossAxisAlignment.CENTER,
@@ -69,21 +74,23 @@ class CompletionUI:
             value=20,
         )
 
+        self.completion_field = TextField(
+            bgcolor=ft.colors.BLUE_900,
+            color=ft.colors.WHITE,
+            expand=True,
+            multiline=True,
+            min_lines=50,
+            label="Text completion",
+            value="The planet on which we live i",
+        )
+
         self.comp_screen = Container(
             margin=ft.margin.all(40),
             content=Column(
                 alignment=MainAxisAlignment.CENTER,
                 horizontal_alignment=CrossAxisAlignment.CENTER,
                 controls=[
-                    TextField(
-                        bgcolor=ft.colors.BLUE_900,
-                        color=ft.colors.WHITE,
-                        expand=True,
-                        multiline=True,
-                        min_lines=50,
-                        label="Text completion",
-                        value="The planet on which we live i",
-                    ),
+                    self.completion_field,
                     self.words2gen.getui(),
                 ],
             ),
@@ -91,7 +98,7 @@ class CompletionUI:
 
         self.model_selection_screen = model_selector(self.assistant)
 
-        self.ui_main_content = Container(
+        self.ui_main_util = Container(
             content=self.model_selection_screen,
             bgcolor="#112233",
             expand=True,
@@ -100,7 +107,7 @@ class CompletionUI:
         stop_generation = lambda _: self.assistant.stop_generation()
 
         self.next_screen = lambda _: [
-            setattr(self.ui_main_content, "content", self.comp_screen),
+            setattr(self.ui_main_util, "content", self.comp_screen),
             setattr(
                 self.ui_input_area.content.controls[1].controls[0], "visible", False
             ),
@@ -157,7 +164,7 @@ class CompletionUI:
             ),
         )
 
-        self.full_ui = Container(
+        self.main_content = Container(
             content=Row(
                 alignment=MainAxisAlignment.SPACE_BETWEEN,
                 controls=[
@@ -174,7 +181,7 @@ class CompletionUI:
                             expand=True,
                             alignment=MainAxisAlignment.SPACE_BETWEEN,
                             controls=[
-                                self.ui_main_content,
+                                self.ui_main_util,
                                 self.ui_input_area,
                             ],
                         ),
@@ -183,7 +190,10 @@ class CompletionUI:
             )
         )
 
-        self.page.update()
+        return self.main_content
+
+    def fab(self):
+        return FloatingActionButton(icon=ft.icons.CHAT, on_click=self.new_chat)
 
     def new_chat(self, _):
         self.page.floating_action_button.disabled = True
@@ -193,7 +203,9 @@ class CompletionUI:
         self.assistant.clear_chat()
         self.assistant.new_chat()
 
-        self.ui_main_content.content = self.model_selection_screen
+        self.completion_field.value = ""
+
+        self.ui_main_util.content = self.model_selection_screen
         screen = self.model_selection_screen.content.controls
         _ = screen.pop() if len(screen) > 1 else None
         self.page.update()
@@ -224,7 +236,7 @@ class CompletionUI:
         _ = "" if self.assistant.is_loaded else self.assistant.load_model()
 
         self.toggle_lock()
-        self.ui_main_content.content = self.comp_screen
+        self.ui_main_util.content = self.comp_screen
         self.comp_screen.content.controls[0].label = self.assistant.model.name
 
         input_text_box, _ = self.comp_screen.content.controls
@@ -278,7 +290,7 @@ class CompletionUI:
         for msg in data:
             res.append(msg)
 
-        self.ui_main_content.content = self.comp_screen
+        self.ui_main_util.content = self.comp_screen
         self.comp_screen.content.controls[0].value = txt2show
         self.ui_sidebar.controls[0].content = Conversation.ui_conversation_list(
             hide_last=False, select_chat_callback=self.load_chat_from_conversation
@@ -296,9 +308,7 @@ def main(page: Page):
 
     chatui = CompletionUI(page)
 
-    page.floating_action_button = FloatingActionButton(
-        icon=ft.icons.CHAT, on_click=chatui.new_chat
-    )
+    page.floating_action_button = chatui.fab()
 
     page.add(
         Container(

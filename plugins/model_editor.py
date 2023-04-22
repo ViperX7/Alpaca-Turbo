@@ -40,6 +40,7 @@ def save_helper(obj, objvar: str, value):
 
 class ModelSettingsUI:
     name = "Settings"
+
     def __init__(self, model, reset_func):
         self.target_model = model
         self.reset_func = reset_func
@@ -133,10 +134,15 @@ class ModelSettingsUI:
 
 class ModelManagerUI:
     """UI to | Install | Configure | List | models"""
+
     name = "Settings"
 
     def __init__(self, page) -> None:
         self.page: ft.Page = page
+        self.full_ui()
+        self.page.update()
+
+    def full_ui(self):
         self.models_dir_picker = ft.FilePicker(
             on_result=lambda result: self.import_models(result.path)
         )
@@ -193,7 +199,7 @@ class ModelManagerUI:
             ),
         )
 
-        self.main_content = Container(
+        self.main_util = Container(
             expand=80,
             content=Column(
                 expand=True,
@@ -209,30 +215,35 @@ class ModelManagerUI:
 
         self.generate_model_list()
 
-        self.full_ui = Container(
+        self.main_content = Container(
             bgcolor="#112233",
             content=Row(
                 spacing=0,
                 controls=[
                     self.side_bar,
-                    self.main_content,
+                    self.main_util,
                 ],
             ),
         )
 
+        return self.main_content
+
+    def fab(self):
+        return None
+
     def open_model_settings(self, model):
         # reset ui to prev state
         def reset_function(_=None):
-            self.full_ui.content.controls = self.full_ui.content.controls[:-1]
-            self.main_content.visible = not self.main_content.visible
+            self.main_content.content.controls = self.main_content.content.controls[:-1]
+            self.main_util.visible = not self.main_util.visible
             self.refresh_model_list()
             self.page.update()
 
         # show settings page
-        self.main_content.visible = not self.main_content.visible
+        self.main_util.visible = not self.main_util.visible
         settings_screen = ModelSettingsUI(model, reset_function)
         settings_screen_ui = settings_screen.get_ui()
-        self.full_ui.content.controls.append(settings_screen_ui)
+        self.main_content.content.controls.append(settings_screen_ui)
 
         self.page.update()
 
@@ -280,7 +291,7 @@ def main(page: Page):
 
     mmui = ModelManagerUI(page)
 
-    ___main_content__ = mmui.full_ui
+    ___main_content__ = mmui.main_content
 
     # set-up-some-bg-and -main-container
     # The-general-UI‘will-copy- that-of a-mobile-app

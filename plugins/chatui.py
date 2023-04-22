@@ -50,7 +50,9 @@ class ChatUI:
         ### delete chat_content date title
 
         self.assistant = Assistant(AIModel.objects.first())
+        self.full_ui()
 
+    def full_ui(self):
         self.lview = ft.ListView(
             expand=1,
             spacing=0,
@@ -80,7 +82,6 @@ class ChatUI:
                 ),
             ],
         )
-
 
         self.model_selection_screen = model_selector(self.assistant)
 
@@ -123,7 +124,7 @@ class ChatUI:
             ),
         )
 
-        self.full_ui = Container(
+        self.main_content= Container(
             content=Row(
                 alignment=MainAxisAlignment.SPACE_BETWEEN,
                 controls=[
@@ -149,6 +150,13 @@ class ChatUI:
             )
         )
 
+        return self.main_content
+
+    def fab(self):
+        return FloatingActionButton(
+            icon=ft.icons.CHAT, on_click=self.new_chat
+        )
+
     def new_chat(self, _):
         self.page.floating_action_button.disabled = True
         self.page.update()
@@ -164,7 +172,7 @@ class ChatUI:
 
         self.ui_main_content.content = self.model_selection_screen
         screen = self.model_selection_screen.content.controls
-        _ = screen.pop() if len(screen) > 1  else None
+        _ = screen.pop() if len(screen) > 1 else None
         self.page.update()
 
         self.chat_content = []
@@ -228,8 +236,8 @@ class ChatUI:
             input_text_box.value = ""  # empty the input boc
             self.toggle_lock()
 
-            user_msg, ai_msg = msg.get_ui()
-            _ = [self.lview.controls.append(ui_ele) for ui_ele in [user_msg, ai_msg]]
+            preprompt, user_msg, ai_msg = msg.get_ui()
+            _ = [self.lview.controls.append(ui_ele) for ui_ele in [preprompt, user_msg, ai_msg] if ui_ele]
 
             self.lview.update()
 
@@ -247,12 +255,11 @@ class ChatUI:
                 msg.ai_response = buffer
                 msg.save()
 
-                _, ai_msg = msg.get_ui()
-                ai_avatar, ai_text, ai_info = ai_msg.content.controls
+                _, _, ai_msg = msg.get_ui()
+                left_arrow,ai_avatar, ai_text, ai_info ,right_arrow= ai_msg.content.controls
                 ai_info.content.controls[1].value = f"{word_count} w / {sec}s"
 
                 self.lview.controls[-1] = ai_msg
-
 
                 self.page.update()
 
@@ -273,10 +280,12 @@ class ChatUI:
         final_column = self.lview
         final_column.controls = []
 
+
+
         for entry in data:
-            user_in, ai_out = entry.get_ui()
-            final_column.controls.append(user_in)
-            final_column.controls.append(ai_out)
+            print(entry)
+            print(type(entry))
+            _ = [final_column.controls.append(ui_ele) for ui_ele in entry.get_ui() if ui_ele]
 
         return final_column
 
@@ -294,6 +303,7 @@ class ChatUI:
         self.ui_sidebar.controls[0].content = Conversation.ui_conversation_list(
             hide_last=False, select_chat_callback=self.load_chat_from_conversation
         )
+
         self.page.update()
         return res
 
@@ -313,9 +323,7 @@ def main(page: Page):
 
     chatui = ChatUI(page)
 
-    page.floating_action_button = FloatingActionButton(
-        icon=ft.icons.CHAT, on_click=chatui.new_chat
-    )
+    page.floating_action_button = chatui.fab()
 
     # set-up-some-bg-and -main-container
     # The-general-UI‘will-copy- that-of a-mobile-app
@@ -327,7 +335,7 @@ def main(page: Page):
             expand=True,
             bgcolor="blue",
             alignment=ft.alignment.center,
-            content=chatui.full_ui,
+            content=chatui.main_content,
         ),
     )
 
