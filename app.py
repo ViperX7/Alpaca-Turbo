@@ -37,10 +37,12 @@ def main(page: Page):
     page.bgcolor = "#112233"
     page.padding = 0
 
+    fab_actions = []
     ui_units = {}
     for plugin in plugins:
         unit = plugin(page)
-        ui_units[unit.name] = unit.full_ui
+        ui_units[unit.name] = unit.full_ui()
+        fab_actions.append(unit.fab())
 
     tab_list = []
     for name, screen in ui_units.items():
@@ -55,6 +57,9 @@ def main(page: Page):
                 ),
             )
         )
+    page.floating_action_button = fab_actions[0]
+
+    tab_changed = lambda _ : [setattr(page,"floating_action_button",fab_actions[tabs.content.selected_index]), page.update()]
 
     tabs = Container(
         expand=True,
@@ -64,8 +69,10 @@ def main(page: Page):
             scrollable=True,
             animation_duration=300,
             tabs=tab_list,
+            on_change=tab_changed,
         ),
     )
+
 
     page.add(tabs)
 
