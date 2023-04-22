@@ -3,6 +3,7 @@ from uuid import uuid4
 import flet as ft
 from ai_model_manager.models import AIModel
 from django.db import models
+from rich import print as eprint
 
 
 class Conversation(models.Model):
@@ -40,14 +41,18 @@ class Conversation(models.Model):
 
     def get_all_text(self, sep=""):
         txtblob = ""
-        last_msg = self[self.lastidx-1] if len(Message.objects.filter(conversation=self)) > 0 else None
+        last_msg = (
+            self[self.lastidx - 1]
+            if len(Message.objects.filter(conversation=self)) > 0
+            else None
+        )
         if last_msg:
             txtblob += sep + last_msg.preprompt + sep + last_msg.ai_response
 
         return txtblob
 
     def get_messages(self):
-        return Message.objects.filter(conversation=self).order_by("index")
+        return Message.objects.filter(is_main=True, conversation=self).order_by("index")
 
     @staticmethod
     def clear_blank():
@@ -180,6 +185,7 @@ class Message(models.Model):
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
     index = models.PositiveIntegerField()
     hindex = models.PositiveIntegerField(default=1)
+    is_main = models.BooleanField(default=True, blank=True, null=True)
     user_request = models.TextField()
     ai_response = models.TextField()
     preprompt = models.TextField(max_length=512, blank=True, null=True)
@@ -187,6 +193,78 @@ class Message(models.Model):
     params = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
+
+    def create_alt(self):
+        all_objs = Message.objects.filter(
+            conversation=self.conversation, index=self.index
+        ).order_by("-hindex")
+        max_index = all_objs.first().hindex
+        print(max_index)
+        print(all_objs)
+        print([obj.hindex for obj in all_objs])
+        self.is_main = False
+        self.save()
+        # ori_pk = self.pk
+        self.pk = None
+        self.is_main = True
+        self.hindex = max_index + 1
+        self.ai_response = ""
+        self.save()
+
+    def set_main(self):
+        msg_objs = Message.objects.filter(index=self.index)
+        for msg in msg_objs:
+            msg.is_main = False
+            msg.save()
+
+        self.is_main = True
+        self.save()
+
+    def conv_left(self, _=None):
+        prev_message = Message.objects.filter(index=self.index, hindex=self.hindex - 1)
+        ori_index = self.hindex
+
+        if self.hindex > 0 and prev_message:
+            msg = prev_message[0]
+            # swapping the content of the messages
+            self.hindex, msg.hindex = msg.hindex, self.hindex
+            self.user_request, msg.user_request = msg.user_request, self.user_request
+            self.ai_response, msg.ai_response = msg.ai_response, self.ai_response
+            self.preprompt, msg.preprompt = msg.preprompt, self.preprompt
+            self.created_at, msg.created_at = msg.created_at, self.created_at
+
+            self.save()
+            msg.save()
+            print("moved left")
+            print(f"old index: {ori_index}: new index: {self.hindex}")
+            return
+        else:
+            print("Nothing left")
+
+    def conv_right(self, _=None):
+        next_message = Message.objects.filter(index=self.index, hindex=self.hindex + 1)
+        ori_index = self.hindex
+
+        if next_message:
+            msg = next_message[0]
+            # swapping the content of the messages
+            self.hindex, msg.hindex = msg.hindex, self.hindex
+            self.user_request, msg.user_request = msg.user_request, self.user_request
+            self.ai_response, msg.ai_response = msg.ai_response, self.ai_response
+            self.preprompt, msg.preprompt = msg.preprompt, self.preprompt
+            self.created_at, msg.created_at = msg.created_at, self.created_at
+
+            self.save()
+            msg.save()
+            print("moved right")
+            print(f"old index: {ori_index}: new index: {self.hindex}")
+            return
+
+        else:
+            print("Nothing right")
+            print("Creating new")
+            self.create_alt()
+            print(f"old index: {ori_index}: new index: {self.hindex}")
 
     def __str__(self) -> str:
         return f"{self.user_request}"
@@ -239,18 +317,85 @@ class Message(models.Model):
             ),
         )
 
-        content_holder = lambda controls, bgcolor: ft.Container(
-            bgcolor=bgcolor,
-            padding=ft.padding.only(left=50, right=50, top=10, bottom=10),
-            margin=0,
-            content=ft.Row(alignment=ft.MainAxisAlignment.CENTER, controls=controls),
-        )
+        def content_holder(controls, bgcolor, padding=None, extras={}):
+            left_button = (
+                [
+                    ft.IconButton(
+                        icon=ft.icons.ARROW_LEFT,
+                        on_click=lambda _: [
+                            self.conv_left(),
+                            [
+                                [
+                                    setattr(
+                                        cont[1].content, "value", getattr(self, member)
+                                    ),
+                                    eprint(cont[1].content),
+                                    eprint(type(cont[1].content)),
+                                ]
+                                for member, cont in extras.items()
+                            ],
+                            [cont[1].content.update() for _, cont in extras.items()],
+                        ],
+                    )
+                ]
+                if extras
+                else []
+            )
 
+            right_button = (
+                [
+                    ft.IconButton(
+                        icon=ft.icons.ARROW_RIGHT,
+                        on_click=lambda _: [
+                            self.conv_right(),
+                            [
+                                setattr(cont[1].content, "value", getattr(self, member))
+                                for member, cont in extras.items()
+                            ],
+                            [cont[1].content.update() for _, cont in extras.items()],
+                        ],
+                    )
+                ]
+                if extras
+                else []
+            )
+
+            ui_obj = ft.Container(
+                bgcolor=bgcolor,
+                padding=ft.padding.only(top=10, bottom=10)
+                if padding is None
+                else ft.padding.only(left=padding, right=padding, top=10, bottom=10),
+                margin=0,
+                content=ft.Row(
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    controls=left_button + controls + right_button,
+                ),
+            )
+            return ui_obj
+
+        user_skel = [icons(0), txtdata(self.user_request), action_bar("")]
         user_in = content_holder(
-            [icons(0), txtdata(self.user_request), action_bar("")], "#334455"
-        )
-        ai_out = content_holder(
-            [icons(1), txtdata(self.ai_response), action_bar(timetext)], "#334466"
+            user_skel,
+            "#334455",
+            50,
         )
 
-        return user_in, ai_out
+        preprompt_skel = [ft.Container(), txtdata(self.preprompt)]
+        preprompt = (
+            content_holder(preprompt_skel, "#443366") if self.preprompt else None
+        )
+
+        ai_skel = [icons(1), txtdata(self.ai_response), action_bar(timetext)]
+
+        extras = {"user_request": user_skel, "ai_response": ai_skel}
+        if preprompt:
+            extras["preprompt"] = preprompt_skel
+
+        ai_out = content_holder(
+            ai_skel,
+            "#334466",
+            "ai_response",
+            extras=extras,
+        )
+
+        return preprompt, user_in, ai_out
