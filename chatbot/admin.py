@@ -14,7 +14,7 @@ class ConversationAdmin(admin.ModelAdmin):
 
 
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ("conversation_id", "index", "hindex", "is_main","user_request", "ai_response")
+    list_display = ("conversation_id", "index", "hindex", "last_in_mem","is_main","user_request", "ai_response")
 
 
 admin.site.register(Conversation, ConversationAdmin)

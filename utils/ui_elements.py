@@ -152,10 +152,8 @@ class SliderWithInput:
 
 cc = 0
 def get_random_color():
-    print(cc)
     color = "#" + "".join([random.choice("0123456789ABCDEF") for _ in range(6)])
-    print(color)
-    
+
     return color
 
 
