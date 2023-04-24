@@ -32,9 +32,12 @@ class Assistant:
 
         self.DEBUG = "-d" in sys.argv
 
-        self.model = aimodel
+        self.model :AIModel= aimodel
+        self.settings = self.model.settings
+        self.prompt = self.model.prompt
         self.conversation: Conversation = Conversation()
         self.conversation.save()
+        self.last_in_mem = 0
 
         # Configurables
         self.threads = 4
@@ -94,6 +97,7 @@ class Assistant:
         result = "can't save generation going on"
         if self.current_state != "generating":
             self.conversation = Conversation()
+            self.conversation.save()
             result = "success"
             self.is_first_request = True
             self.use_bos = True
@@ -108,8 +112,7 @@ class Assistant:
         self.is_first_request = True
         self.current_state = "Initialised"
         if self.conversation:
-            Conversation.save(self.conversation)
-        self.conversation = Conversation()
+            self.conversation.save()
         self.is_loaded = ""
 
         return "killed the bot"
@@ -117,8 +120,8 @@ class Assistant:
     @staticmethod
     def get_bin_path():
         system_name = platform.system()
-        if os.path.exists("/main"):
-            name = "/main"
+        if os.path.exists("bin/cmain"):
+            name = "bin/cmain"
         elif system_name == "Linux":
             name = "bin/main"
         elif system_name == "Windows":
@@ -127,19 +130,10 @@ class Assistant:
             name = "bin/mac"
         else:
             print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
             print("XXXXXXXXXXXXXXX    CHAT BINARY MISSING    XXXXXXXXXXXXXXXXX")
             print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+            exit()
 
-        # elif system_name == "Android":
-        #     return "Android"
-        # else:
-        #     exit()
         return name
 
     @property
@@ -149,24 +143,24 @@ class Assistant:
             # "--color",
             "-i",
             "--seed",
-            f"{self.model.settings.seed}",
+            f"{self.settings.seed}",
             "-ins",
             "-t",
             f"{self.threads}",
             "-b",
-            f"{self.model.settings.batch_size}",
+            f"{self.settings.batch_size}",
             "--top_k",
-            f"{self.model.settings.top_k}",
+            f"{self.settings.top_k}",
             "--top_p",
-            f"{self.model.settings.top_p}",
+            f"{self.settings.top_p}",
             "--repeat_last_n",
-            f"{self.model.settings.repeat_last_n}",
+            f"{self.settings.repeat_last_n}",
             "--repeat_penalty",
-            f"{self.model.settings.repetition_penalty}",
+            f"{self.settings.repetition_penalty}",
             "--temp",
-            f"{self.model.settings.temperature}",
+            f"{self.settings.temperature}",
             "--n_predict",
-            f"{self.model.settings.n_predict}",
+            f"{self.settings.n_predict}",
             "-m",
             f"{self.model.path}",
             # "--interactive-start",
@@ -210,7 +204,6 @@ class Assistant:
             self.safe_kill()
             self.is_loaded = False
 
-
     def stop_generation(self):
         """Interrupts generation"""
         if self.current_state == "generating":
@@ -223,13 +216,27 @@ class Assistant:
 
         return f"failed to stop current status {self.current_state}"
 
-    def chatbot(self, message: Message):
+    def chatbot(self, message: Message, enable_history=False):
         """chatbot"""
         # self.conversation.append(prompt)
         # build history chahe
         final_prompt_2_send = []
 
-        data2use = self.conversation if self.enable_history else [message]
+        hist_start = self.last_in_mem
+        hist_end = message.index
+
+        print(f"hist_start: {hist_start}, hist_end: {hist_end}")
+
+        if hist_start >= hist_end:
+            hist_start = 0
+            self.unload_model()
+            self.load_model()
+
+        print(f"hist_start: {hist_start}, hist_end: {hist_end}")
+
+        data2use = message.conversation[hist_start:hist_end]
+        eprint(data2use)
+
         for convo in data2use:
             for sequence in convo.get_prompt():
                 final_prompt_2_send.append(sequence)
@@ -239,6 +246,7 @@ class Assistant:
             final_prompt_2_send = [message.preprompt, final_prompt_2_send]
         self.send_prompts(final_prompt_2_send)
 
+        self.last_in_mem = message.index
         for char in self.stream_generation():
             message.ai_response += char
             message.save()
@@ -254,13 +262,14 @@ class Assistant:
         sp_count = 0
         interrupted = False
         for char in self.stream_generation():
-            sp_count += 1 if " " in char else 0
-            if sp_count >= count and not interrupted:
-                self.process.interrupt()  # this sometimes misses a word or two
-                interrupted = True
+            if count != -1:
+                sp_count += 1 if " " in char else 0
+                if sp_count >= count and not interrupted:
+                    self.process.interrupt()  # this sometimes misses a word or two
+                    interrupted = True
             message.ai_response += char
             message.save()
-            yield char.replace("\n","") if interrupted else char
+            yield char.replace("\n", "") if interrupted else char
 
     def send_prompts(self, txtblob):
         """send the prompts with bos token"""
@@ -273,19 +282,19 @@ class Assistant:
             self.process.sendline(str(bos))
 
             self.process.recvuntil("n_threads> ")
-            self.process.sendline(str(self.threads))
+            self.process.sendline(str(int(self.threads)))
             self.process.recvuntil("top_k> ")
-            self.process.sendline(str(self.model.settings.top_k))
+            self.process.sendline(str(self.settings.top_k))
             self.process.recvuntil("top_p> ")
-            self.process.sendline(str(self.model.settings.top_p))
+            self.process.sendline(str(self.settings.top_p))
             self.process.recvuntil("temperature> ")
-            self.process.sendline(str(self.model.settings.temperature))
+            self.process.sendline(str(self.settings.temperature))
             self.process.recvuntil("repeat_penalty> ")
-            self.process.sendline(str(self.model.settings.repetition_penalty))
+            self.process.sendline(str(self.settings.repetition_penalty))
             self.process.recvuntil("n_batch> ")
-            self.process.sendline(str(self.model.settings.batch_size))
+            self.process.sendline(str(self.settings.batch_size))
             self.process.recvuntil("antiprompt> ")
-            self.process.sendline(str(self.model.prompt.antiprompt))
+            self.process.sendline(str(self.prompt.antiprompt))
 
             for txt in txtblob:
                 lines = txt.split("\n")
@@ -327,7 +336,7 @@ class Assistant:
                     continue
                 marker_detected = b""
             elif (
-                char == self.model.prompt.antiprompt[0].encode("utf-8")
+                char == self.prompt.antiprompt[0].encode("utf-8")
                 or len(antiprompt_detected) > 0
             ):
                 print("Antiprompt buffering started")
@@ -336,17 +345,17 @@ class Assistant:
                 # print("==========")
                 # print(antiprompt_detected)
                 # print(self.end_antiprompt[:len(antiprompt_detected)])
-                if antiprompt_detected in self.model.prompt.antiprompt[
+                if antiprompt_detected in self.prompt.antiprompt[
                     : len(antiprompt_detected)
                 ].encode("utf-8"):
                     # print("cont")
                     continue
                 antiprompt_detected = b""
 
-            if self.model.prompt.antiprompt.encode("utf-8") in buffer:
+            if self.prompt.antiprompt.encode("utf-8") in buffer:
                 buffer = buffer[:-1] if buffer[-1] == 10 else buffer
                 char_old = char_old.replace(
-                    self.model.prompt.antiprompt.encode("utf-8"), b""
+                    self.prompt.antiprompt.encode("utf-8"), b""
                 )
                 char_old = char_old[:-1] if char_old[-1] == 10 else char_old
 
@@ -386,6 +395,11 @@ class Assistant:
         # return buffer
 
     def sane_check_msg(self, msg):
+        print("====")
+        print(msg.conversation.id)
+        print(msg.preprompt)
+        print(self.old_preprompt)
+        print("====")
         if self.old_preprompt is None:
             self.old_preprompt = msg.preprompt
         elif self.old_preprompt is not None and self.old_preprompt != msg.preprompt:
@@ -395,11 +409,13 @@ class Assistant:
 
         msg.preprompt = msg.preprompt if msg.preprompt is not None else None
         msg.preprompt = (
-            self.model.prompt.preprompt if self.is_first_request else msg.preprompt
+            self.prompt.preprompt
+            if self.is_first_request and msg.index == 1
+            else msg.preprompt
         )
 
         self.is_first_request = False
-        msg.format = self.model.prompt.format if msg.format is None else msg.format
+        msg.format = self.prompt.format if msg.format is None else msg.format
         return msg
 
     def send_conv(self, preprompt, fmt, prompt):
@@ -417,9 +433,9 @@ class Assistant:
         assistant = Assistant(AIModel.objects.all()[1])
         assistant.load_model()
         assistant.enable_history = False
-        fmt = assistant.model.prompt.format
+        fmt = assistant.prompt.format
         # assistant.pre_prompt = ""
-        preprompt = assistant.model.prompt.preprompt
+        preprompt = assistant.prompt.preprompt
         while True:
             # print("=====")
             prompt = input(">>>>>> ")
