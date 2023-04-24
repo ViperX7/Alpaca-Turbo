@@ -50,6 +50,8 @@ class ChatUI:
         ### delete chat_content date title
 
         self.assistant = Assistant(AIModel.objects.first())
+        self.assistant.conversation.save()
+        self.bmsheet = None
         self.full_ui()
 
     def full_ui(self):
@@ -93,6 +95,18 @@ class ChatUI:
             # width=self.page.window_width*0.8,
         )
 
+        self.input_field = TextField(
+            width=800,
+            multiline=True,
+            bgcolor=app_color_scheme["chat_input_field_bg"],
+            border_color=ft.colors.TRANSPARENT,
+            color=app_color_scheme["chat_input_field_font"],
+            border=ft.border.all(0),
+            shift_enter=True,
+            hint_text="Enter To Send and shift enter for new line",
+            on_submit=lambda _: self.chat_submit(),
+        )
+
         self.ui_input_area = Container(
             alignment=ft.alignment.bottom_center,
             padding=10,
@@ -109,22 +123,23 @@ class ChatUI:
                         on_click=lambda _: self.assistant.stop_generation(),
                         visible=False,
                     ),
-                    TextField(
-                        width=800,
-                        multiline=True,
-                        bgcolor=app_color_scheme["chat_input_field_bg"],
-                        border_color=ft.colors.TRANSPARENT,
-                        color=app_color_scheme["chat_input_field_font"],
-                        border=ft.border.all(0),
-                        shift_enter=True,
-                        hint_text="Enter To Send and shift enter for new line",
-                        on_submit=lambda _ : self.chat_submit(),
+                    Row(
+                        alignment=MainAxisAlignment.CENTER,
+                        controls=[
+                            ft.IconButton(
+                                icon=ft.icons.SETTINGS,
+                                on_click=lambda _: [
+                                    self.toggle_bottom_sheet(),
+                                ],
+                            ),
+                            self.input_field,
+                        ],
                     ),
                 ],
             ),
         )
 
-        self.main_content= Container(
+        self.main_content = Container(
             content=Row(
                 alignment=MainAxisAlignment.SPACE_BETWEEN,
                 controls=[
@@ -153,9 +168,7 @@ class ChatUI:
         return self.main_content
 
     def fab(self):
-        return FloatingActionButton(
-            icon=ft.icons.CHAT, on_click=self.new_chat
-        )
+        return FloatingActionButton(icon=ft.icons.CHAT, on_click=self.new_chat)
 
     def new_chat(self, _):
         self.page.floating_action_button.disabled = True
@@ -170,9 +183,8 @@ class ChatUI:
         self.assistant.clear_chat()
         self.assistant.new_chat()
 
+        self.model_selection_screen = model_selector(self.assistant)
         self.ui_main_content.content = self.model_selection_screen
-        screen = self.model_selection_screen.content.controls
-        _ = screen.pop() if len(screen) > 1 else None
         self.page.update()
 
         self.chat_content = []
@@ -185,8 +197,36 @@ class ChatUI:
 
         self.page.update()
 
+    def toggle_bottom_sheet(self):
+        if self.bmsheet:
+            self.bmsheet.open = not self.bmsheet.open
+        else:
+            self.bmsheet = ft.BottomSheet(
+                ft.Container(
+                    ft.Column(
+                        [
+                            self.assistant.settings.get_ui(),
+                            ft.ElevatedButton("Close bottom sheet"),
+                        ],
+                        tight=True,
+                        scroll=True,
+                    ),
+                    padding=10,
+                ),
+                open=True,
+            )
+            self.page.overlay.append(self.bmsheet)
+            self.page.update()
+
+        self.bmsheet.update()
+        return self.bmsheet
+
+        bs.open = True
+        bs.update()
+
     def toggle_lock(self):
-        stop_button, input_text_box = self.ui_input_area.content.controls
+        stop_button, _ = self.ui_input_area.content.controls
+        input_text_box = self.input_field
 
         stop_button.visible = not stop_button.visible
         input_text_box.disabled = not input_text_box.disabled
@@ -205,10 +245,10 @@ class ChatUI:
             )
         )
         self.model_selection_screen.update()
-        print("***")
-        print(screen[0].content.controls[0].value)
-        print(type(screen[0].content.controls[0].value))
-        print("***")
+        # print("***")
+        # print(screen[0].content.controls[0].value)
+        # print(type(screen[0].content.controls[0].value))
+        # print("***")
 
         self.assistant.model = AIModel.objects.filter(
             id=screen[0].content.controls[0].value
@@ -216,40 +256,47 @@ class ChatUI:
         self.assistant.load_model()
         screen.pop()
 
-    def get_ui_idx_from_message(self,main_message:Message):
+    def get_ui_idx_from_message(self, main_message: Message):
         all_messages = main_message.conversation.get_messages()
         # eprint(all_messages)
-        all_messages=all_messages[:main_message.index]
+        all_messages = all_messages[: main_message.index]
         # eprint(all_messages)
         # eprint(main_message.index)
         idx = -1
-        for i,m in enumerate(all_messages):
-            idx +=1 if m.preprompt else 0
-            idx +=1 if m.user_request else 0
-            idx +=1
+        for i, m in enumerate(all_messages):
+            idx += 1 if m.preprompt else 0
+            idx += 1 if m.user_request else 0
+            idx += 1
         return idx
-
 
     def chat_submit(self, msg=None):
         """Update the interaction"""
 
+        self.assistant.conversation.save()
+        if not isinstance(msg, Message):
+            msg = Message.objects.filter(id=msg).first()
 
         ori_msg = bool(msg)
 
+        print("Chat submitted...")
+        print(f"Message provided: {ori_msg}")
+        if ori_msg:
+            print(f"\t\tConversation: {msg.id}")
 
         # Load model if not already loaded
         if not self.assistant.is_loaded:
             self.load_with_ui()
 
         # match the state of self.chat content with ui main content
-        self.ui_main_content.content = self.md_chat_generator(self.chat_content)
+        self.ui_main_content.content = self.md_chat_generator(
+            self.assistant.conversation
+        )
         stop_button, input_text_box = self.ui_input_area.content.controls
+        input_text_box = self.input_field
 
         user_inp = input_text_box.value  # If user sends something
-        if user_inp or msg:
-            self.assistant.conversation.save()
-
-            if msg is  None:
+        if user_inp or ori_msg:
+            if msg is None:
                 # Add new message to the end of the list and reset input field
                 msg = self.assistant.conversation.add_message(
                     user_inp,
@@ -257,33 +304,35 @@ class ChatUI:
                     self.assistant.model.prompt.preprompt,
                     self.assistant.model.prompt.format,
                 )
-                msg = self.assistant.sane_check_msg(msg) # this clears duplicate preprompts
+                msg = self.assistant.sane_check_msg(
+                    msg
+                )  # this clears duplicate preprompts
                 self.chat_content.append(msg)
                 input_text_box.value = ""  # empty the input boc
             else:
-                print("we are here")
-
-
-
+                pass
 
             self.toggle_lock()
 
             preprompt, user_msg, ai_msg = msg.get_ui(chat_submit=self.chat_submit)
 
             if not ori_msg:
-                _ = [self.lview.controls.append(ui_ele) for ui_ele in [preprompt, user_msg, ai_msg] if ui_ele]
-
+                _ = [
+                    self.lview.controls.append(ui_ele)
+                    for ui_ele in [preprompt, user_msg, ai_msg]
+                    if ui_ele
+                ]
 
             self.lview.update()
 
             buffer = ""
 
-            print("Trying to generate")
             # Start generation with the msg
-            generator = self.assistant.chatbot(msg)
+            msg.ai_response = ""
+            msg.save()
+            generator = self.assistant.chatbot(msg, enable_history=ori_msg)
 
             tstart = time()
-            msg.ai_response = ""
             for char in generator:
                 buffer += char.replace("\n", "  \n")
                 sec = str(time() - tstart).split(".")[0]
@@ -293,15 +342,20 @@ class ChatUI:
                 msg.save()
 
                 preprompt, user_msg, ai_msg = msg.get_ui(chat_submit=self.chat_submit)
-                left_arrow,ai_avatar, ai_text, ai_info ,right_arrow= ai_msg.content.controls
+                (
+                    left_arrow,
+                    ai_avatar,
+                    ai_text,
+                    ai_info,
+                    right_arrow,
+                ) = ai_msg.content.controls
                 ai_info.content.controls[1].value = f"{word_count} w / {sec}s"
 
                 tindex = self.get_ui_idx_from_message(msg)
-                eprint(tindex)
 
                 if preprompt:
-                    self.lview.controls[tindex-2] = preprompt
-                self.lview.controls[tindex-1] = user_msg
+                    self.lview.controls[tindex - 2] = preprompt
+                self.lview.controls[tindex - 1] = user_msg
                 self.lview.controls[tindex] = ai_msg
 
                 self.page.update()
@@ -323,12 +377,14 @@ class ChatUI:
         final_column = self.lview
         final_column.controls = []
 
-
-
         for entry in data:
             print(entry)
             print(type(entry))
-            _ = [final_column.controls.append(ui_ele) for ui_ele in entry.get_ui(chat_submit=self.chat_submit) if ui_ele]
+            _ = [
+                final_column.controls.append(ui_ele)
+                for ui_ele in entry.get_ui(chat_submit=self.chat_submit)
+                if ui_ele
+            ]
 
         return final_column
 
@@ -367,6 +423,7 @@ def main(page: Page):
     chatui = ChatUI(page)
 
     page.floating_action_button = chatui.fab()
+    page.overlay.append(chatui.toggle_bottom_sheet())
 
     # set-up-some-bg-and -main-container
     # The-general-UI‘will-copy- that-of a-mobile-app

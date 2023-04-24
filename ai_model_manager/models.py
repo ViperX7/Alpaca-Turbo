@@ -15,91 +15,180 @@ def save_helper(obj: models.Model, objvar: str, value):
     obj.save()
 
 
-
 class Prompt(models.Model):
     """Prompts for the AI model."""
 
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
 
-
-    name = models.CharField(max_length=255,default="New_Preset",blank=True, null=True)
-    format = models.TextField(default="### Instruction:\n\n{instruction}\n\n### Response:\n\n{response}",blank=True, null=True)
-    preprompt = models.TextField(default=" Below is an instruction that describes a task. Write a response that appropriately completes the request.",blank=True, null=True)
-    antiprompt = models.TextField(default="### Human:",blank=True, null=True)
+    name = models.CharField(max_length=255, default="New_Preset", blank=True, null=True)
+    format = models.TextField(
+        default="### Instruction:\n\n{instruction}\n\n### Response:\n\n{response}",
+        blank=True,
+        null=True,
+    )
+    preprompt = models.TextField(
+        default=" Below is an instruction that describes a task. Write a response that appropriately completes the request.",
+        blank=True,
+        null=True,
+    )
+    antiprompt = models.TextField(default="### Human:", blank=True, null=True)
     is_preset = models.BooleanField(default=False)
+
     # use_bos = models.BooleanField(default=False)
     def __str__(self):
         return self.name
 
-
-    def get_ui(self):
+    def get_ui(self, preset_mode=False):
+        name = ft.Container(
+            margin=ft.margin.only(bottom=50, top=10),
+            padding=0,
+            content=ft.TextField(
+                value=self.name,
+                bgcolor="#5587ff",
+                label="Preset Name",
+                multiline=False,
+                on_change=lambda x: save_helper(self, "name", x.control.value),
+            ),
+        )
 
         preprompt = ft.Container(
-            margin = ft.margin.only(bottom=50,top=10),
+            margin=ft.margin.only(bottom=50, top=10),
             padding=0,
-            content= ft.TextField(value=self.preprompt,bgcolor="#8855aa",label="Preprompt",multiline=True,min_lines=4,on_change=lambda x : save_helper(self,"preprompt",x.control.value))
+            content=ft.TextField(
+                value=self.preprompt,
+                bgcolor="#5587ff",
+                label="Preprompt",
+                multiline=True,
+                min_lines=4,
+                on_change=lambda x: save_helper(self, "preprompt", x.control.value),
+            ),
         )
         fmt = ft.Container(
-            margin = ft.margin.only(bottom=50),
+            margin=ft.margin.only(bottom=50),
             padding=0,
-            content= ft.TextField(value=self.format,bgcolor="#8855aa",label="Format",multiline=True,min_lines=7,on_change=lambda x : save_helper(self,"format",x.control.value))
+            content=ft.TextField(
+                value=self.format,
+                bgcolor="#5587ff",
+                label="Format",
+                multiline=True,
+                min_lines=7,
+                on_change=lambda x: save_helper(self, "format", x.control.value),
+            ),
         )
 
         antiprompt = ft.Container(
-            margin = ft.margin.only(bottom=50),
+            margin=ft.margin.only(bottom=50),
             padding=0,
-            content= ft.TextField(value=self.antiprompt,bgcolor="#8855aa",label="Antiprompt",on_change=lambda x : save_helper(self,"antiprompt",x.control.value))
+            content=ft.TextField(
+                value=self.antiprompt,
+                bgcolor="#5587ff",
+                label="Antiprompt",
+                on_change=lambda x: save_helper(self, "antiprompt", x.control.value),
+            ),
         )
 
-        presets =  ft.Container(
-            margin = ft.margin.only(bottom=50,top=10),
+        preset_selector = ft.Container(
+            margin=ft.margin.only(bottom=50, top=10),
             padding=0,
-            content= ft.Dropdown(
+            content=ft.Dropdown(
                 label="Load from Presets",
                 options=[
-                    ft.dropdown.Option(opt.id,opt.name)  for opt in Prompt.objects.filter(is_preset=True)
+                    ft.dropdown.Option(opt.id, opt.name)
+                    for opt in Prompt.objects.filter(is_preset=True)
                 ],
                 on_change=lambda x: [
-                    setattr(preprompt.content,"value",Prompt.objects.filter(id=x.control.value).first().preprompt),
-                    setattr(fmt.content,"value",Prompt.objects.filter(id=x.control.value).first().format),
-                    setattr(antiprompt.content,"value",Prompt.objects.filter(id=x.control.value).first().antiprompt),
-                    save_helper(self,"preprompt",preprompt.content.value),
-                    save_helper(self,"format",fmt.content.value),
-                    save_helper(self,"antiprompt",antiprompt.content.value),
+                    setattr(
+                        preprompt.content,
+                        "value",
+                        Prompt.objects.filter(id=x.control.value).first().preprompt,
+                    ),
+                    setattr(
+                        fmt.content,
+                        "value",
+                        Prompt.objects.filter(id=x.control.value).first().format,
+                    ),
+                    setattr(
+                        antiprompt.content,
+                        "value",
+                        Prompt.objects.filter(id=x.control.value).first().antiprompt,
+                    ),
+                    save_helper(self, "preprompt", preprompt.content.value),
+                    save_helper(self, "format", fmt.content.value),
+                    save_helper(self, "antiprompt", antiprompt.content.value),
                     preprompt.update(),
                     fmt.update(),
                     antiprompt.update(),
-
                 ],
-            )
+            ),
         )
 
-
-
+        selected_controls = [
+            name if preset_mode else preset_selector,
+            preprompt,
+            fmt,
+            antiprompt,
+            
+        ]
 
         prompting_group = ft.Container(
             margin=ft.margin.only(top=10),
             padding=0,
-            content= ft.Column(
+            content=ft.Column(
                 expand=True,
                 scroll=True,
                 alignment=ft.MainAxisAlignment.START,
                 horizontal_alignment=ft.CrossAxisAlignment.START,
                 spacing=10,
-                controls=[
-                    presets,
-                    preprompt,
-                    fmt,
-                    antiprompt,
-                ],
+                controls=selected_controls,
             ),
         )
 
-
         return prompting_group
 
+    def ui_list_repr(self,refresh_call, prompt_settings):
+        list_unit = ft.Container(
+            bgcolor="#232343",
+            content=ft.Row(
+                controls=[
+                    ft.Container(
+                        expand=True,
+                        content=ft.Row(
+                            controls=[
+                                ft.Container(
+                                    expand=True,
+                                    content=ft.Text(self.name),
+                                ),
+                            ]
+                        ),
+                    ),
+                    ft.Container(
+                        # bgcolor=get_random_color(),
+                        content=ft.Row(
+                            controls=[
+                                ft.IconButton(icon=ft.icons.EDIT, icon_color="blue"),
+                                ft.IconButton(
+                                    icon=ft.icons.DELETE,
+                                    icon_color=ft.colors.RED_900,
+                                    on_click=lambda x: [self.delete(), refresh_call()],
+                                ),
+                                ft.IconButton(
+                                    icon=ft.icons.SETTINGS,
+                                    icon_color=ft.colors.ORANGE_400,
+                                    on_click=lambda _: prompt_settings(),
+                                ),
+                            ]
+                        ),
+                        border_radius=20,
+                    )
 
 
+                ]
+            ),
+            margin=0,
+            padding=20,
+        )
+
+        return list_unit
 
 
 class AIModelFormat(models.Model):
@@ -111,9 +200,7 @@ class AIModelFormat(models.Model):
 
 
 class AIModelSetting(models.Model):
-
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
-
 
     temperature = models.FloatField(default=0.7)
     top_p = models.FloatField(default=0.99)
@@ -134,7 +221,7 @@ class AIModelSetting(models.Model):
             max=1,
             divisions=1000,
             value=self.temperature,
-            callback=lambda x: save_helper(self,"temperature",x),
+            callback=lambda x: save_helper(self, "temperature", x),
         )
         top_p = SliderWithInput(
             label="Top-p",
@@ -210,13 +297,13 @@ class AIModelSetting(models.Model):
                 horizontal_alignment=ft.CrossAxisAlignment.START,
                 spacing=10,
                 controls=[
+                    seed.getui(),
                     temp.getui(),
                     top_p.getui(),
                     top_k.getui(),
                     repete_pen.getui(),
                     n_predict.getui(),
                     repete_last_n.getui(),
-                    seed.getui(),
                     batch_size.getui(),
                 ],
             ),
@@ -232,18 +319,15 @@ class AIModel(models.Model):
     name = models.CharField(max_length=255)
     source = models.URLField(blank=True, null=True)
     author = models.CharField(max_length=255, blank=True, null=True)
-    model_format = models.ForeignKey("AIModelFormat",
-                                     on_delete=models.CASCADE,
-                                     blank=True,
-                                     null=True)
-    settings = models.ForeignKey("AIModelSetting",
-                                 on_delete=models.CASCADE,
-                                 blank=True,
-                                 null=True)
-    prompt = models.ForeignKey("Prompt",
-                                 on_delete=models.CASCADE,
-                                 blank=True,
-                                 null=True)
+    model_format = models.ForeignKey(
+        "AIModelFormat", on_delete=models.CASCADE, blank=True, null=True
+    )
+    settings = models.ForeignKey(
+        "AIModelSetting", on_delete=models.CASCADE, blank=True, null=True
+    )
+    prompt = models.ForeignKey(
+        "Prompt", on_delete=models.CASCADE, blank=True, null=True
+    )
 
     version = models.CharField(max_length=255, blank=True, null=True)
     is_configured = models.BooleanField(default=False)
@@ -266,13 +350,11 @@ class AIModel(models.Model):
     def model_size(self):
         size = str(os.path.getsize(self.path) / (1024 * 1024 * 1024))
 
-        return size[:size.find(".") + 3] + " GB"
-
+        return size[: size.find(".") + 3] + " GB"
 
     @staticmethod
     def add_models_from_dir(dir_path):
-        model_formats = AIModelFormat.objects.values_list("extension",
-                                                          flat=True)
+        model_formats = AIModelFormat.objects.values_list("extension", flat=True)
         model_formats = list(model_formats)
         new_models = []
         for root, dirs, files in os.walk(dir_path):
@@ -281,8 +363,7 @@ class AIModel(models.Model):
                 file_ext = os.path.splitext(file)[1]
                 if file_ext in model_formats:
                     file_name = os.path.splitext(file)[0]
-                    model_format = AIModelFormat.objects.get(
-                        extension=file_ext)
+                    model_format = AIModelFormat.objects.get(extension=file_ext)
                     if not AIModel.objects.filter(path=file_path).exists():
                         obj = AIModel.objects.create(
                             path=file_path,
@@ -293,9 +374,8 @@ class AIModel(models.Model):
         _ = [obj.save() for obj in new_models]
         return [obj.path for obj in new_models]
 
-
     def ui_header(self):
-        """ Header with model information
+        """Header with model information
 
         Returns:
             UI with model information
@@ -318,89 +398,102 @@ class AIModel(models.Model):
                                 content_padding=0,
                                 text_size=30,
                                 border_color=ft.colors.TRANSPARENT,
-                                on_change=lambda x: save_helper(self,"name",x.control.value),
-                                         ),
-                            ft.Text(f"Path:   {self.path if self.path else 'Unknown' }"),
+                                on_change=lambda x: save_helper(
+                                    self, "name", x.control.value
+                                ),
+                            ),
+                            ft.Text(
+                                f"Path:   {self.path if self.path else 'Unknown' }"
+                            ),
                             ft.Text(f"Size: {self.model_size} "),
-                            ft.Text(f"Source:   {self.source if self.source else 'Unknown' }"),
-                            ft.Text(f"Publisher:   {self.author if self.author else 'Unknown' }"),
-                        ]
+                            ft.Text(
+                                f"Source:   {self.source if self.source else 'Unknown' }"
+                            ),
+                            ft.Text(
+                                f"Publisher:   {self.author if self.author else 'Unknown' }"
+                            ),
+                        ],
                     ),
                     ft.Column(
                         alignment=ft.MainAxisAlignment.CENTER,
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         controls=[
-
                             ft.Icon(
-                                name=ft.icons.CHECK_CIRCLE if  self.is_configured else ft.icons.WARNING_SHARP,
-                                color=ft.colors.GREEN_400 if self.is_configured else ft.colors.YELLOW_400,
+                                name=ft.icons.CHECK_CIRCLE
+                                if self.is_configured
+                                else ft.icons.WARNING_SHARP,
+                                color=ft.colors.GREEN_400
+                                if self.is_configured
+                                else ft.colors.YELLOW_400,
                                 size=80,
                             ),
                             ft.Text("Ready" if self.is_configured else "Not Ready"),
-                        ]
+                        ],
                     ),
-                ]
-            )
+                ],
+            ),
         )
         return head_bar
 
-
-    def ui_list_repr(self,refresh_call,model_settings):
+    def ui_list_repr(self, refresh_call, model_settings):
         list_unit = ft.Container(
-                bgcolor="#232343",
-                content=ft.Row(
-                    controls=[
-                        ft.Container(
-                            expand=True,
-                            content=ft.Row(
-                                controls=[
-                                    ft.Container(
-                                        content=ft.Icon(
-                                            name=ft.icons.CHECK_CIRCLE if  self.is_configured else ft.icons.WARNING_SHARP,
-                                            color=ft.colors.GREEN_400 if self.is_configured else ft.colors.YELLOW_400,
-                                        ),
+            bgcolor="#232343",
+            content=ft.Row(
+                controls=[
+                    ft.Container(
+                        expand=True,
+                        content=ft.Row(
+                            controls=[
+                                ft.Container(
+                                    content=ft.Icon(
+                                        name=ft.icons.CHECK_CIRCLE
+                                        if self.is_configured
+                                        else ft.icons.WARNING_SHARP,
+                                        color=ft.colors.GREEN_400
+                                        if self.is_configured
+                                        else ft.colors.YELLOW_400,
                                     ),
-                                    ft.Container(
-                                        expand=True,
-                                        content=ft.Text(self.name),
-                                    ),
-                                    ft.Container(
-                                        expand=True,
-                                        alignment=ft.alignment.center,
-                                        content=ft.Text(self.model_size),
-                                    ),
-                                    ft.Container(
-                                        expand=True,
-                                        alignment=ft.alignment.center,
-                                        content=ft.Text(self.model_format),
-                                    ),
-
-                                ]
-                            )
+                                ),
+                                ft.Container(
+                                    expand=True,
+                                    content=ft.Text(self.name),
+                                ),
+                                ft.Container(
+                                    expand=True,
+                                    alignment=ft.alignment.center,
+                                    content=ft.Text(self.model_size),
+                                ),
+                                ft.Container(
+                                    expand=True,
+                                    alignment=ft.alignment.center,
+                                    content=ft.Text(self.model_format),
+                                ),
+                            ]
                         ),
-                        ft.Container(
-                            # bgcolor=get_random_color(),
-                            content=ft.Row(
-                                controls=[
-                                    ft.IconButton(icon=ft.icons.EDIT,icon_color="blue"),
-                                    ft.IconButton(icon=ft.icons.DELETE,icon_color=ft.colors.RED_900, on_click=lambda x: [self.delete(),refresh_call()]),
-                                    ft.IconButton(icon=ft.icons.SETTINGS,icon_color=ft.colors.ORANGE_400,on_click=model_settings(self)),
-                                ]
-                            ),
-                            border_radius=20
+                    ),
+                    ft.Container(
+                        # bgcolor=get_random_color(),
+                        content=ft.Row(
+                            controls=[
+                                ft.IconButton(icon=ft.icons.EDIT, icon_color="blue"),
+                                ft.IconButton(
+                                    icon=ft.icons.DELETE,
+                                    icon_color=ft.colors.RED_900,
+                                    on_click=lambda x: [self.delete(), refresh_call()],
+                                ),
+                                ft.IconButton(
+                                    icon=ft.icons.SETTINGS,
+                                    icon_color=ft.colors.ORANGE_400,
+                                    on_click=model_settings(self),
+                                ),
+                            ]
                         ),
-                    ]
+                        border_radius=20,
+                    ),
+                ]
+            ),
+            margin=0,
+            padding=20,
+        )
 
-                ),
-                margin=0,
-                padding=20,
-            )
-
-
-
-        return  list_unit
-
-
-
-
-
+        return list_unit

@@ -15,14 +15,14 @@ from flet import (ClipBehavior, Column, Container, CrossAxisAlignment, Image,
                   Row, Tab, Tabs, Text, alignment, border, colors)
 from plugins.chatui import ChatUI
 from plugins.completionui import CompletionUI
-from plugins.model_editor import ModelManagerUI
+from plugins.model_editor import ModelManagerUI, SettingsManager
 from rich import print as eprint
 from utils.ui_elements import get_random_color, put_center
 
 plugins = [
     ChatUI,
     CompletionUI,
-    ModelManagerUI,
+    SettingsManager,
 ]
 
 

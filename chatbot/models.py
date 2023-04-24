@@ -118,7 +118,7 @@ class Conversation(models.Model):
         message.conversation = self
         message.index = self.lastidx + 1
         message.save()
-        if message.index == 0:
+        if message.index == 1:
             self.title = message.user_request
             self.save()
 
@@ -209,7 +209,10 @@ class Message(models.Model):
         self.save()
 
     def set_main(self):
-        msg_objs = Message.objects.filter(index=self.index)
+        msg_objs = Message.objects.filter(
+            conversation=self.conversation,
+            index=self.index,
+        )
         for msg in msg_objs:
             msg.is_main = False
             msg.save()
@@ -219,7 +222,7 @@ class Message(models.Model):
 
     def conv_left(self, _=None):
         prev_message = Message.objects.filter(
-            conversation=self.conversation, index=self.index, hindex=self.hindex -1
+            conversation=self.conversation, index=self.index, hindex=self.hindex - 1
         )
 
         ori_index = self.hindex
@@ -235,11 +238,11 @@ class Message(models.Model):
 
             self.save()
             msg.save()
-            print("moved left")
-            print(f"old index: {ori_index}: new index: {self.hindex}")
+            # print("moved left")
+            # print(f"old index: {ori_index}: new index: {self.hindex}")
             return
-        else:
-            print("Nothing left")
+        # else:
+        # print("Nothing left")
 
     def conv_right(self, new_callback=None):
         next_message = Message.objects.filter(
@@ -258,16 +261,16 @@ class Message(models.Model):
 
             self.save()
             msg.save()
-            print("moved right")
-            print(f"old index: {ori_index}: new index: {self.hindex}")
+            # print("moved right")
+            # print(f"old index: {ori_index}: new index: {self.hindex}")
             return
 
         else:
-            print("Nothing right")
-            print("Creating new")
+            # print("Nothing right")
+            # print("Creating new")
             self.create_alt()
-            new_callback(msg=self) if new_callback else None
-            print(f"old index: {ori_index}: new index: {self.hindex}")
+            new_callback(msg=self.id) if new_callback else None
+            # print(f"old index: {ori_index}: new index: {self.hindex}")
 
     def __str__(self) -> str:
         return f"{self.user_request}"
