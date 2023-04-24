@@ -44,9 +44,19 @@ def test_disconnect():
 
 @socketio.on("send_input")
 def send_conv(data):
+    print("-----------")
+    print(data)
+    print("-----------")
+
+
+
     inp = data["inp"]
     fmt = data.get("fmt", "")
     preprompt = data.get("pre", "")
+    if "\n" not in fmt:
+        fmt = fmt.replace("###","\n\n###")
+        fmt = fmt.replace(":",":\n\n")
+        fmt = fmt.strip("\n")
     output = assistant.send_conv(preprompt, fmt, inp)
     print("Attempting to GENERATE======================")
     buffer = ""
@@ -75,7 +85,7 @@ def remove_all_chat():
 
 @app.route("/list_models")
 def list_models():
-    models = assistant.list_available_models()
+    models = assistant.list_available_models(assistant.models_directory)
     return jsonify(models)
 
 
@@ -133,6 +143,9 @@ def get_config():
             "seed": assistant.seed,
             "n_predict": assistant.n_predict,
             "repeat_last_n": assistant.repeat_last_n,
+            "batch_size": assistant.batch_size,
+            "antiprompt": assistant.antiprompt,
+            "models_directory": assistant.models_directory,
         }
     )
 
@@ -148,6 +161,9 @@ def set_config():
     assistant.seed = data.get("seed", assistant.seed)
     assistant.n_predict = data.get("n_predict", assistant.n_predict)
     assistant.repeat_last_n = data.get("repeat_last_n", assistant.repeat_last_n)
+    assistant.batch_size = data.get("batch_size", assistant.batch_size)
+    assistant.antiprompt = data.get("antiprompt", assistant.antiprompt)
+    assistant.models_directory = data.get("models_directory", assistant.models_directory)
     return jsonify({"success": True})
 
 
@@ -222,6 +238,7 @@ if __name__ == "__main__":
     socketio.run(
         app,
         host="0.0.0.0",
+        port=7887,
         allow_unsafe_werkzeug=True,
         debug=True,
     )
