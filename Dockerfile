@@ -13,7 +13,7 @@ RUN mkdir -p /app/models
 
 RUN git clone https://github.com/ViperX7/llama.cpp /llama.cpp
 RUN cd /llama.cpp && make
-RUN cp -r /llama.cpp /main
+RUN cp -r /llama.cpp/main /main
 
 COPY ./requirements.txt /app/
 # COPY ./main /
