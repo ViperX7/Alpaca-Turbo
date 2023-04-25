@@ -9,6 +9,7 @@ from flet import (ClipBehavior, Column, Container, CrossAxisAlignment, Image,
                   Row, Text, alignment, border, colors)
 from rich import print as eprint
 from utils.model_selector import model_selector
+from utils.status_widget import status_widget
 from utils.ui_elements import get_random_color
 
 app_color_scheme = {
@@ -77,11 +78,35 @@ class ChatUI:
                     # height=self.page.window_height-160,
                 ),
                 Container(
-                    Text("hi"),
+                    Row(
+                        alignment=MainAxisAlignment.CENTER,
+                        vertical_alignment=CrossAxisAlignment.CENTER,
+                        controls=[
+                            ft.IconButton(
+                                content=ft.Image(
+                                    src="./assets/GitHub-Mark.png", height=30, width=30
+                                ),
+                                on_click=lambda _:self.page.launch_url(
+                                    "https://github.com/ViperX7/Alpaca-Turbo"
+                                ),
+                            ),
+                            ft.IconButton(
+                                
+                                content=ft.Image(
+                                    src="./assets/discord.png", height=30, width=30
+                                ),
+                                on_click=lambda _:self.page.launch_url(
+                                    "https://github.com/ViperX7/Alpaca-Turbo"
+                                ),
+                            ),
+                        ],
+                    ),
                     alignment=ft.alignment.center,
                     height=160,
-                    bgcolor="blue",
-                ),
+                    bgcolor="#223322",
+                    padding=20,
+                )
+                # status_widget(),
             ],
         )
 
@@ -126,11 +151,32 @@ class ChatUI:
                     Row(
                         alignment=MainAxisAlignment.CENTER,
                         controls=[
-                            ft.IconButton(
-                                icon=ft.icons.SETTINGS,
-                                on_click=lambda _: [
-                                    self.toggle_bottom_sheet(),
-                                ],
+                            Column(
+                                controls=[
+                                    ft.IconButton(
+                                        icon=ft.icons.REFRESH,
+                                        on_click=lambda _: [
+                                            setattr(self.assistant, "last_in_mem", 0),
+                                            setattr(
+                                                self.page,
+                                                "snack_bar",
+                                                ft.SnackBar(
+                                                    content=ft.Text(
+                                                        "Entire conversation will be recontextualized on next generation"
+                                                    )
+                                                ),
+                                            ),
+                                            setattr(self.page.snack_bar, "open", True),
+                                            self.page.update(),
+                                        ],
+                                    ),
+                                    ft.IconButton(
+                                        icon=ft.icons.SETTINGS,
+                                        on_click=lambda _: [
+                                            self.toggle_bottom_sheet(),
+                                        ],
+                                    ),
+                                ]
                             ),
                             self.input_field,
                         ],
@@ -251,7 +297,7 @@ class ChatUI:
         # print("***")
 
         self.assistant.model = AIModel.objects.filter(
-            id=screen[0].content.controls[0].value
+            id=screen[1].content.controls[0].value
         ).first()
         self.assistant.load_model()
         screen.pop()
@@ -346,6 +392,7 @@ class ChatUI:
                     left_arrow,
                     ai_avatar,
                     ai_text,
+                    ai_text2,
                     ai_info,
                     right_arrow,
                 ) = ai_msg.content.controls
@@ -364,6 +411,7 @@ class ChatUI:
             # self.chat_content.append(conv)
 
             self.toggle_lock()
+
 
     def conversation2chat(self, uuid):
         self.chat_content = []

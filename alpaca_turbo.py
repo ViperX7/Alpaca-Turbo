@@ -254,6 +254,7 @@ class Assistant:
 
     def completion(self, message: Message, count=-1):
         """add completion support"""
+        message.conversation.save()
         final_prompt_2_send = [message.user_request]
 
         final_prompt_2_send = "".join(final_prompt_2_send)

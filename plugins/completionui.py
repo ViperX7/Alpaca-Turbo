@@ -19,6 +19,7 @@ from flet import (ClipBehavior, Column, Container, CrossAxisAlignment, Image,
                   Row, Text, alignment, border, colors)
 from rich import print as eprint
 from utils.model_selector import model_selector
+from utils.status_widget import status_widget
 from utils.ui_elements import SliderWithInput, get_random_color
 
 app_color_scheme = {
@@ -57,12 +58,7 @@ class CompletionUI:
                     alignment=ft.alignment.center,
                     # height=self.page.window_height-160,
                 ),
-                Container(
-                    Text("hi"),
-                    alignment=ft.alignment.center,
-                    height=160,
-                    bgcolor="blue",
-                ),
+                # status_widget(),
             ],
         )
 

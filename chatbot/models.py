@@ -293,7 +293,7 @@ class Message(models.Model):
             height=50,
         )
 
-        txtdata = lambda text: ft.Container(
+        txtdata = lambda obj, member: ft.Container(
             expand=True,
             margin=ft.margin.symmetric(horizontal=20),
             content=ft.Markdown(
@@ -301,22 +301,43 @@ class Message(models.Model):
                 code_theme="atom-one-dark",
                 # code_style=ft.TextStyle(font_family="Roboto Mono"),
                 # on_tap_link=lambda e: page.launch_url(e.data),
-                value=text,
+                value=getattr(obj, member),
                 selectable=True,
             )
-            if isinstance(text, str)
-            else text,
+            if isinstance(getattr(obj, member), str)
+            else getattr(obj, member),
         )
 
-        action_bar = lambda timetext: ft.Container(
+        txtdata2 = lambda obj, member: ft.Container(
+            visible=False,
+            expand=True,
+            margin=ft.margin.symmetric(horizontal=20),
+            content=ft.TextField(
+                min_lines=len(getattr(obj, member).split("\n")),
+                value=getattr(obj, member),
+                multiline=True,
+                on_change=lambda x: [setattr(obj, member, x.control.value), obj.save()],
+            )
+            if isinstance(getattr(obj, member), str)
+            else getattr(obj, member),
+        )
+
+        action_bar = lambda obj, timetext: ft.Container(
             width=50,
             content=ft.Column(
                 alignment=ft.MainAxisAlignment.CENTER,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 controls=[
-                    ft.Icon(
-                        name=ft.icons.ACCESS_ALARMS,
-                        color=ft.colors.WHITE38,
+                    ft.IconButton(
+                        icon=ft.icons.EDIT,
+                        on_click=lambda _: [
+                            setattr(obj[1].content, "value",  getattr(obj[2].content, "value")),
+                            setattr(obj[1], "visible", not getattr(obj[1], "visible")),
+                            setattr(obj[2], "visible", not getattr(obj[2], "visible")),
+                            obj[1].update(),
+                            obj[2].update(),
+                        ],
+                        icon_size=15,
                     ),
                     ft.Text(timetext),
                 ],
@@ -372,7 +393,7 @@ class Message(models.Model):
                 bgcolor=bgcolor,
                 padding=ft.padding.only(top=10, bottom=10)
                 if padding is None
-                else ft.padding.only(left=padding, right=padding, top=10, bottom=10),
+                else ft.padding.only(left=padding[0], right=padding[1], top=10, bottom=10),
                 margin=0,
                 content=ft.Row(
                     alignment=ft.MainAxisAlignment.CENTER,
@@ -381,19 +402,41 @@ class Message(models.Model):
             )
             return ui_obj
 
-        user_skel = [icons(0), txtdata(self.user_request), action_bar("")]
+        #############USER
+        user_skel = [
+            icons(0),
+            txtdata(self, "user_request"),
+            txtdata2(self, "user_request"),
+        ]
+        abar = action_bar(user_skel, "")
+        user_skel.append(abar)
+
         user_in = content_holder(
             user_skel,
             "#334455",
-            50,
+            (50,50),
         )
 
-        preprompt_skel = [ft.Container(), txtdata(self.preprompt)]
+        ############# PREPROMPT
+        preprompt_skel = [
+            ft.Container(),
+            txtdata(self, "preprompt"),
+            txtdata2(self, "preprompt"),
+        ]
+        abar = action_bar(preprompt_skel, "")
+        preprompt_skel.append(abar)
         preprompt = (
-            content_holder(preprompt_skel, "#443366") if self.preprompt else None
+            content_holder(preprompt_skel, "#443366",(0,50)) if self.preprompt else None
         )
 
-        ai_skel = [icons(1), txtdata(self.ai_response), action_bar(timetext)]
+        ############# AIAIAI
+        ai_skel = [
+            icons(1),
+            txtdata(self, "ai_response"),
+            txtdata2(self, "ai_response"),
+        ]
+        abar = action_bar(ai_skel, timetext)
+        ai_skel.append(abar)
 
         extras = {"user_request": user_skel, "ai_response": ai_skel}
         if preprompt:
