@@ -85,14 +85,14 @@ class ModelSettingsUI:
                         content=self.target_model.settings.get_ui(),
                     ),
                     ft.Tab(text="Prompting", content=self.target_model.prompt.get_ui()),
-                    ft.Tab(
-                        text="Benchmark",
-                        content=Text("Benchmark"),
-                    ),
-                    ft.Tab(
-                        text="Stats",
-                        content=Text("Stats"),
-                    ),
+                    # ft.Tab(
+                    #     text="Benchmark",
+                    #     content=Text("Benchmark"),
+                    # ),
+                    # ft.Tab(
+                    #     text="Stats",
+                    #     content=Text("Stats"),
+                    # ),
                 ],
             ),
         )
@@ -478,14 +478,14 @@ class SettingsManager:
                 "icon": ft.icons.ADD_BOX_SHARP,
                 "module": PromptManagerUI(self.page).full_ui(),
             },
-            "Stuff": {
-                "icon": ft.icons.ADD_BOX_SHARP,
-                "module": ModelManagerUI(self.page).full_ui(),
-            },
-            "Advanced": {
-                "icon": ft.icons.ADD_BOX_SHARP,
-                "module": ModelManagerUI(self.page).full_ui(),
-            },
+            # "Stuff": {
+            #     "icon": ft.icons.ADD_BOX_SHARP,
+            #     "module": ModelManagerUI(self.page).full_ui(),
+            # },
+            # "Advanced": {
+            #     "icon": ft.icons.ADD_BOX_SHARP,
+            #     "module": ModelManagerUI(self.page).full_ui(),
+            # },
         }
 
         elements = [
