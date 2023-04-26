@@ -119,7 +119,7 @@ class Conversation(models.Model):
         message.index = self.lastidx + 1
         message.save()
         if message.index == 1:
-            self.title = message.user_request
+            self.title = " ".join(message.ai_response.split(" ")[:6])
             self.save()
 
     @staticmethod
@@ -269,6 +269,7 @@ class Message(models.Model):
             # print("Nothing right")
             # print("Creating new")
             self.create_alt()
+            # chat_submit(message.id)
             new_callback(msg=self.id) if new_callback else None
             # print(f"old index: {ori_index}: new index: {self.hindex}")
 

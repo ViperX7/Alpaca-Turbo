@@ -317,96 +317,101 @@ class ChatUI:
         """Update the interaction"""
 
         self.assistant.conversation.save()
-        if not isinstance(msg, Message):
+
+
+        if msg and not isinstance(msg, Message):
             msg = Message.objects.filter(id=msg).first()
 
         ori_msg = bool(msg)
 
-        print("Chat submitted...")
-        print(f"Message provided: {ori_msg}")
-        if ori_msg:
-            print(f"\t\tConversation: {msg.id}")
+        # print("Chat submitted...")
+        # print(f"Message provided: {ori_msg}")
+        # if ori_msg:
+        #     print(f"\t\tConversation: {msg.id}")
 
-        # Load model if not already loaded
+        # Load model if not loaded
         if not self.assistant.is_loaded:
             self.load_with_ui()
 
-        # match the state of self.chat content with ui main content
+        # Sync the UI with currently active conversation in assistant
         self.ui_main_content.content = self.md_chat_generator(
             self.assistant.conversation
         )
-        stop_button, input_text_box = self.ui_input_area.content.controls
+
         input_text_box = self.input_field
 
         user_inp = input_text_box.value  # If user sends something
-        if user_inp or ori_msg:
-            if msg is None:
+
+        if msg is None:
+        # there is some user input but no message object
+            if user_inp :
                 # Add new message to the end of the list and reset input field
                 msg = self.assistant.conversation.add_message(
                     user_inp,
-                    "Thinking...",
+                    "",
                     self.assistant.model.prompt.preprompt,
                     self.assistant.model.prompt.format,
                 )
                 msg = self.assistant.sane_check_msg(
                     msg
                 )  # this clears duplicate preprompts
+                msg.save()
                 input_text_box.value = ""  # empty the input boc
             else:
-                pass
+                print("No message")
+                msg = list(self.assistant.conversation.get_messages())[-1]
 
-            self.toggle_lock()
+
+        self.toggle_lock()
+
+        preprompt, user_msg, ai_msg = msg.get_ui(chat_submit=self.chat_submit)
+
+
+        self.ui_main_content.content = self.md_chat_generator(
+            self.assistant.conversation
+        )
+        self.page.update()
+
+        buffer = msg.ai_response
+
+        # Start generation with the msg
+        # msg.ai_response = ""
+        # msg.save()
+        generator = self.assistant.chatbot(msg, enable_history=ori_msg)
+
+        tstart = time()
+        for char in generator:
+            # print(char)
+            buffer += char.replace("\n", "  \n")
+            sec = str(time() - tstart).split(".")[0]
+            word_count = len(buffer.split(" "))
+
+            # msg.ai_response = buffer
+            # msg.save()
 
             preprompt, user_msg, ai_msg = msg.get_ui(chat_submit=self.chat_submit)
+            (
+                left_arrow,
+                ai_avatar,
+                ai_text,
+                ai_text2,
+                ai_info,
+                right_arrow,
+            ) = ai_msg.content.controls
+            ai_info.content.controls[1].value = f"{word_count} w / {sec}s"
 
-            if not ori_msg:
-                _ = [
-                    self.lview.controls.append(ui_ele)
-                    for ui_ele in [preprompt, user_msg, ai_msg]
-                    if ui_ele
-                ]
+            tindex = self.get_ui_idx_from_message(msg)
 
-            self.lview.update()
+            if preprompt:
+                self.lview.controls[tindex - 2] = preprompt
+            self.lview.controls[tindex - 1] = user_msg
+            self.lview.controls[tindex] = ai_msg
 
-            buffer = ""
+            self.page.update()
 
-            # Start generation with the msg
-            msg.ai_response = ""
-            msg.save()
-            generator = self.assistant.chatbot(msg, enable_history=ori_msg)
+        # conv.response = buffer
 
-            tstart = time()
-            for char in generator:
-                buffer += char.replace("\n", "  \n")
-                sec = str(time() - tstart).split(".")[0]
-                word_count = len(buffer.split(" "))
-
-                msg.ai_response = buffer
-                msg.save()
-
-                preprompt, user_msg, ai_msg = msg.get_ui(chat_submit=self.chat_submit)
-                (
-                    left_arrow,
-                    ai_avatar,
-                    ai_text,
-                    ai_text2,
-                    ai_info,
-                    right_arrow,
-                ) = ai_msg.content.controls
-                ai_info.content.controls[1].value = f"{word_count} w / {sec}s"
-
-                tindex = self.get_ui_idx_from_message(msg)
-
-                if preprompt:
-                    self.lview.controls[tindex - 2] = preprompt
-                self.lview.controls[tindex - 1] = user_msg
-                self.lview.controls[tindex] = ai_msg
-
-                self.page.update()
-
-            # conv.response = buffer
-
-            self.toggle_lock()
+        self.toggle_lock()
 
 
     def conversation2chat(self, uuid):

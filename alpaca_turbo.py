@@ -58,7 +58,7 @@ class Assistant:
     def new_chat(self, conv:Conversation=None):
         "save current conv and set proper title and start new conv"
         try:
-            self.conversation.title = self.conversation[0].ai_response
+            self.conversation.title = " ".join(self.conversation[0].ai_response.split(" ")[:6])
             self.conversation.save()
         except (IndexError, TypeError):
             pass
@@ -271,9 +271,11 @@ class Assistant:
                 if sp_count >= count and not interrupted:
                     self.process.interrupt()  # this sometimes misses a word or two
                     interrupted = True
-            message.ai_response += char
+            res =  char.replace("\n", "") if interrupted else char
+            message.ai_response += res
             message.save()
-            yield char.replace("\n", "") if interrupted else char
+            # print(res,end="")
+            yield res
 
     def send_prompts(self, txtblob):
         """send the prompts with bos token"""
