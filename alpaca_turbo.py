@@ -55,7 +55,7 @@ class Assistant:
         # fixed values
         self.end_marker = b"RSTsr"
 
-    def new_chat(self):
+    def new_chat(self, conv:Conversation=None):
         "save current conv and set proper title and start new conv"
         try:
             self.conversation.title = self.conversation[0].ai_response
@@ -64,9 +64,11 @@ class Assistant:
             pass
 
         Conversation.clear_blank()
-        self.conversation = Conversation()
-        self.conversation.title = "New Chat"
-        self.conversation.save()
+
+        self.conversation = conv if conv else Conversation()
+        if not conv:
+            setattr(self.conversation,"title","New Chat")
+            self.conversation.save()
 
     def remove_all_chat(self):
         r_count = Conversation.remove_all_conv()
@@ -76,8 +78,9 @@ class Assistant:
         """load chat"""
         # data = {"can't load generation going on"}
         # if self.current_state != "generating":
-        data = Conversation.objects.filter(id=id).first()
-        data = list(data)
+        conv = Conversation.objects.filter(id=id).first()
+        self.conversation = conv
+        data = list(conv)
         return data
 
     def get_conv_logs(self):

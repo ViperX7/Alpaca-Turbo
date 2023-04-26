@@ -46,7 +46,6 @@ class ChatUI:
     def __init__(self, page) -> None:
         self.name = "Chat"
         self.chat_title = None
-        self.chat_content = []
         self.page: ft.Page = page
         ### delete chat_content date title
 
@@ -91,7 +90,6 @@ class ChatUI:
                                 ),
                             ),
                             ft.IconButton(
-                                
                                 content=ft.Image(
                                     src="./assets/discord.png", height=30, width=30
                                 ),
@@ -225,7 +223,8 @@ class ChatUI:
         #     self.model_selection_screen.content.controls[0].content.controls[0].value
         # )
 
-        self.assistant.unload_model()
+        if self.assistant.is_loaded:
+            self.assistant.unload_model()
         self.assistant.clear_chat()
         self.assistant.new_chat()
 
@@ -233,7 +232,6 @@ class ChatUI:
         self.ui_main_content.content = self.model_selection_screen
         self.page.update()
 
-        self.chat_content = []
         self.lview.controls = []
         self.ui_sidebar.controls[0].content = Conversation.ui_conversation_list(
             hide_last=True, select_chat_callback=self.load_chat_from_conversation
@@ -353,7 +351,6 @@ class ChatUI:
                 msg = self.assistant.sane_check_msg(
                     msg
                 )  # this clears duplicate preprompts
-                self.chat_content.append(msg)
                 input_text_box.value = ""  # empty the input boc
             else:
                 pass
@@ -408,13 +405,11 @@ class ChatUI:
                 self.page.update()
 
             # conv.response = buffer
-            # self.chat_content.append(conv)
 
             self.toggle_lock()
 
 
     def conversation2chat(self, uuid):
-        self.chat_content = []
         conv = self.assistant.load_chat(uuid)
         print(conv)
         print("-----")
@@ -444,9 +439,8 @@ class ChatUI:
         for msg in data:
             res.append(msg)
 
-        self.chat_content = res
         self.lview.controls = []
-        self.ui_main_content.content = self.md_chat_generator(self.chat_content)
+        self.ui_main_content.content = self.md_chat_generator(self.assistant.conversation.get_messages())
         self.ui_sidebar.controls[0].content = Conversation.ui_conversation_list(
             hide_last=False, select_chat_callback=self.load_chat_from_conversation
         )
