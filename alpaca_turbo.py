@@ -245,8 +245,8 @@ class Assistant:
                 final_prompt_2_send.append(sequence)
 
         final_prompt_2_send = "".join(final_prompt_2_send)
-        if message.preprompt:
-            final_prompt_2_send = [message.preprompt, final_prompt_2_send]
+        if message.preprompt or hist_start == 0:
+            final_prompt_2_send = [self.conversation.get_messages()[0].preprompt, final_prompt_2_send]
         self.send_prompts(final_prompt_2_send)
 
         self.last_in_mem = message.index
