@@ -340,16 +340,50 @@ class Message(models.Model):
                         ],
                         icon_size=15,
                     ),
+                    ft.IconButton(
+                        icon=ft.icons.DOUBLE_ARROW,
+                        on_click=lambda _: [
+                            chat_submit(self)
+                        ],
+                        icon_size=15,
+                    ),
                     ft.Text(timetext),
                 ],
             ),
         )
 
+        action_bar_min = lambda obj, timetext: ft.Container(
+            width=50,
+            content=ft.Column(
+                alignment=ft.MainAxisAlignment.CENTER,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                controls=[
+                    ft.IconButton(
+                        icon=ft.icons.EDIT,
+                        on_click=lambda _: [
+                            setattr(obj[1].content, "value",  getattr(obj[2].content, "value")),
+                            setattr(obj[1], "visible", not getattr(obj[1], "visible")),
+                            setattr(obj[2], "visible", not getattr(obj[2], "visible")),
+                            obj[1].update(),
+                            obj[2].update(),
+                        ],
+                        icon_size=15,
+                    ),
+                ],
+            ),
+        )
+
+
+
+
+
+
+
         def content_holder(controls, bgcolor, padding=None, extras={}):
             left_button = (
                 [
                     ft.IconButton(
-                        icon=ft.icons.ARROW_LEFT,
+                        icon=ft.icons.CHEVRON_LEFT,
                         on_click=lambda _: [
                             self.conv_left(),
                             [
@@ -374,7 +408,7 @@ class Message(models.Model):
             right_button = (
                 [
                     ft.IconButton(
-                        icon=ft.icons.ARROW_RIGHT,
+                        icon=ft.icons.CHEVRON_RIGHT,
                         on_click=lambda _: [
                             self.conv_right(chat_submit),
                             [
@@ -409,7 +443,7 @@ class Message(models.Model):
             txtdata(self, "user_request"),
             txtdata2(self, "user_request"),
         ]
-        abar = action_bar(user_skel, "")
+        abar = action_bar_min(user_skel, "")
         user_skel.append(abar)
 
         user_in = content_holder(
@@ -424,7 +458,7 @@ class Message(models.Model):
             txtdata(self, "preprompt"),
             txtdata2(self, "preprompt"),
         ]
-        abar = action_bar(preprompt_skel, "")
+        abar = action_bar_min(preprompt_skel, "")
         preprompt_skel.append(abar)
         preprompt = (
             content_holder(preprompt_skel, "#443366",(0,50)) if self.preprompt else None

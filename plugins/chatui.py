@@ -331,7 +331,10 @@ class ChatUI:
 
         # Load model if not loaded
         if not self.assistant.is_loaded:
-            self.load_with_ui()
+            if len(list(self.assistant.conversation)):
+                self.assistant.load_model()
+            else:
+                self.load_with_ui()
 
         # Sync the UI with currently active conversation in assistant
         self.ui_main_content.content = self.md_chat_generator(
@@ -349,7 +352,7 @@ class ChatUI:
                 msg = self.assistant.conversation.add_message(
                     user_inp,
                     "",
-                    self.assistant.model.prompt.preprompt,
+                    self.assistant.model.prompt.preprompt if len(list(self.assistant.conversation)) == 0 else None,
                     self.assistant.model.prompt.format,
                 )
                 msg = self.assistant.sane_check_msg(
@@ -377,11 +380,14 @@ class ChatUI:
         # Start generation with the msg
         # msg.ai_response = ""
         # msg.save()
+        msg.ai_response = msg.ai_response.strip("\n").strip(" ").strip("\n")
+        msg.save()
         generator = self.assistant.chatbot(msg, enable_history=ori_msg)
 
         tstart = time()
         for char in generator:
             # print(char)
+            print(".", end="")
             buffer += char.replace("\n", "  \n")
             sec = str(time() - tstart).split(".")[0]
             word_count = len(buffer.split(" "))
@@ -410,24 +416,16 @@ class ChatUI:
             self.page.update()
 
         # conv.response = buffer
+        print()
 
         self.toggle_lock()
 
-
-    def conversation2chat(self, uuid):
-        conv = self.assistant.load_chat(uuid)
-        print(conv)
-        print("-----")
-        eprint(conv)
-        print("-----")
 
     def md_chat_generator(self, data):
         final_column = self.lview
         final_column.controls = []
 
         for entry in data:
-            print(entry)
-            print(type(entry))
             _ = [
                 final_column.controls.append(ui_ele)
                 for ui_ele in entry.get_ui(chat_submit=self.chat_submit)
