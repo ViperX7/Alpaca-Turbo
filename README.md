@@ -27,6 +27,7 @@ https://user-images.githubusercontent.com/38191717/234747316-2e8d5f55-73f2-4f42-
 #### 🐳 Using Docker (only Linux is supported with docker)
 - ToDo
 
+
 #### 🪟 Using Windows (standalone or miniconda) AND Mac M1/M2 (using miniconda)
 
 > #### For Windows users we have a [oneclick standalone launcher - Alpaca-Turbo.exe](https://github.com/ViperX7/Alpaca-Turbo/releases/latest).
@@ -54,6 +55,14 @@ https://user-images.githubusercontent.com/38191717/234747316-2e8d5f55-73f2-4f42-
    ```
 
 9. ready to interact
+
+#### Directly installing with Pip
+just get the latest release unzip and then run 
+
+```
+pip install -r requirements.txt
+python app.py
+```
 
 ## 💁 Contributing
 
