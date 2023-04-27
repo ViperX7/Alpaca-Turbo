@@ -147,6 +147,7 @@ class ModelManagerUI:
         self.models_dir_picker = ft.FilePicker(
             on_result=lambda result: self.import_models(result.path)
         )
+
         self.page.overlay.append(self.models_dir_picker)
 
         self.model_list_view = ft.ListView(
@@ -178,6 +179,7 @@ class ModelManagerUI:
                         content=ElevatedButton(
                             "Download Models",
                             icon=ft.icons.DOWNLOAD,
+                            disabled=True,
                             on_click=lambda _: AIModel.add_models_from_dir(
                                 "/home/utkarsh/install_scratch/Alpaca-Turbo/turbo_server/models"
                             ),
@@ -289,10 +291,10 @@ class PromptManagerUI:
         return obj
 
     def full_ui(self):
-        self.models_dir_picker = ft.FilePicker(
-            on_result=lambda result: self.import_models(result.path)
+        self.prompt_file_picker = ft.FilePicker(
+            on_result=lambda result: [Prompt.import_from_json([f.path for f in result.files]),self.refresh_prompt_list()]
         )
-        self.page.overlay.append(self.models_dir_picker)
+        self.page.overlay.append(self.prompt_file_picker)
 
         self.prompt_list_view = ft.ListView(
             expand=1,
@@ -355,8 +357,8 @@ class PromptManagerUI:
                         content=ElevatedButton(
                             "Import Prompts",
                             icon=ft.icons.SYSTEM_UPDATE_ALT,
-                            on_click=lambda _: self.models_dir_picker.get_directory_path(
-                                dialog_title="Select Models Directory"
+                            on_click=lambda _: self.prompt_file_picker.pick_files(
+                                dialog_title="Import Prompt",file_type="json",allow_multiple=True,
                             ),
                         ),
                     ),
@@ -365,6 +367,7 @@ class PromptManagerUI:
                         content=ElevatedButton(
                             "Download Prompts",
                             icon=ft.icons.DOWNLOAD,
+                            disabled=True,
                             on_click=lambda _: AIModel.add_models_from_dir(
                                 "/home/utkarsh/install_scratch/Alpaca-Turbo/turbo_server/models"
                             ),

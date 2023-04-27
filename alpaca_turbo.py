@@ -32,7 +32,7 @@ class Assistant:
 
         self.DEBUG = "-d" in sys.argv
 
-        self.model :AIModel= aimodel
+        self.model: AIModel = aimodel
         self.settings = self.model.settings
         self.prompt = self.model.prompt
         self.conversation: Conversation = Conversation()
@@ -55,10 +55,12 @@ class Assistant:
         # fixed values
         self.end_marker = b"RSTsr"
 
-    def new_chat(self, conv:Conversation=None):
+    def new_chat(self, conv: Conversation = None):
         "save current conv and set proper title and start new conv"
         try:
-            self.conversation.title = " ".join(self.conversation[0].ai_response.split(" ")[:6])
+            self.conversation.title = " ".join(
+                self.conversation[0].user_request.split(" ")[:6]
+            )
             self.conversation.save()
         except (IndexError, TypeError):
             pass
@@ -67,7 +69,7 @@ class Assistant:
 
         self.conversation = conv if conv else Conversation()
         if not conv:
-            setattr(self.conversation,"title","New Chat")
+            setattr(self.conversation, "title", "New Chat")
             self.conversation.save()
 
     def remove_all_chat(self):
@@ -246,7 +248,10 @@ class Assistant:
 
         final_prompt_2_send = "".join(final_prompt_2_send)
         if message.preprompt or hist_start == 0:
-            final_prompt_2_send = [self.conversation.get_messages()[0].preprompt, final_prompt_2_send]
+            final_prompt_2_send = [
+                self.conversation.get_messages()[0].preprompt,
+                final_prompt_2_send,
+            ]
         self.send_prompts(final_prompt_2_send)
 
         self.last_in_mem = message.index
@@ -271,7 +276,7 @@ class Assistant:
                 if sp_count >= count and not interrupted:
                     self.process.interrupt()  # this sometimes misses a word or two
                     interrupted = True
-            res =  char.replace("\n", "") if interrupted else char
+            res = char.replace("\n", "") if interrupted else char
             message.ai_response += res
             message.save()
             # print(res,end="")
@@ -360,9 +365,7 @@ class Assistant:
 
             if self.prompt.antiprompt.encode("utf-8") in buffer:
                 buffer = buffer[:-1] if buffer[-1] == 10 else buffer
-                char_old = char_old.replace(
-                    self.prompt.antiprompt.encode("utf-8"), b""
-                )
+                char_old = char_old.replace(self.prompt.antiprompt.encode("utf-8"), b"")
                 char_old = char_old[:-1] if char_old[-1] == 10 else char_old
 
             if self.end_marker in buffer:

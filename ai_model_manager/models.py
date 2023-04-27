@@ -1,8 +1,9 @@
+import json
 import os
 from uuid import uuid4
 
 import flet as ft
-from django.db import models
+from django.db import IntegrityError, models
 from utils.ui_elements import (SliderWithInput, easy_content_expander,
                                get_random_color)
 
@@ -37,6 +38,42 @@ class Prompt(models.Model):
     # use_bos = models.BooleanField(default=False)
     def __str__(self):
         return self.name
+
+    @staticmethod
+    def import_from_json(file_path):
+        print(file_path)
+        if isinstance(file_path, str):
+            files_path = [file_path]
+        else:
+            files_path = file_path
+        for file_path in files_path:
+            with open(file_path, "r") as f:
+                data = json.load(f)
+            prompt = Prompt.objects.create(
+                id=data["id"],
+                name=data["name"],
+                format=data["format"],
+                preprompt=data["preprompt"],
+                antiprompt=data["antiprompt"],
+                is_preset=True,
+            )
+            try:
+                prompt.save()
+            except IntegrityError:
+                pass
+        return len(files_path)
+
+    def export_to_json(self):
+        data = {
+            "id": str(self.id),
+            "name": self.name,
+            "format": self.format,
+            "preprompt": self.preprompt,
+            "antiprompt": self.antiprompt,
+            "is_preset": self.is_preset,
+        }
+        with open(f"prompt_{self.name}_{self.id}.json", "w") as f:
+            json.dump(data, f)
 
     def get_ui(self, preset_mode=False):
         name = ft.Container(
@@ -127,7 +164,6 @@ class Prompt(models.Model):
             preprompt,
             fmt,
             antiprompt,
-            
         ]
 
         prompting_group = ft.Container(
@@ -145,7 +181,7 @@ class Prompt(models.Model):
 
         return prompting_group
 
-    def ui_list_repr(self,refresh_call, prompt_settings):
+    def ui_list_repr(self, refresh_call, prompt_settings):
         list_unit = ft.Container(
             bgcolor="#232343",
             content=ft.Row(
@@ -165,7 +201,11 @@ class Prompt(models.Model):
                         # bgcolor=get_random_color(),
                         content=ft.Row(
                             controls=[
-                                ft.IconButton(icon=ft.icons.EDIT, icon_color="blue"),
+                                ft.IconButton(
+                                    icon=ft.icons.UPLOAD,
+                                    icon_color="blue",
+                                    on_click=lambda _: self.export_to_json(),
+                                ),
                                 ft.IconButton(
                                     icon=ft.icons.DELETE,
                                     icon_color=ft.colors.RED_900,
@@ -179,9 +219,7 @@ class Prompt(models.Model):
                             ]
                         ),
                         border_radius=20,
-                    )
-
-
+                    ),
                 ]
             ),
             margin=0,
@@ -330,7 +368,7 @@ class AIModel(models.Model):
     )
 
     version = models.CharField(max_length=255, blank=True, null=True)
-    is_configured = models.BooleanField(default=False)
+    is_configured = models.BooleanField(default=True)
     is_broken = models.BooleanField(default=False)
 
     def __init__(self, *args, **kwargs):
@@ -475,7 +513,7 @@ class AIModel(models.Model):
                         # bgcolor=get_random_color(),
                         content=ft.Row(
                             controls=[
-                                ft.IconButton(icon=ft.icons.EDIT, icon_color="blue"),
+                                # ft.IconButton(icon=ft.icons.EDIT, icon_color="blue"),
                                 ft.IconButton(
                                     icon=ft.icons.DELETE,
                                     icon_color=ft.colors.RED_900,

@@ -119,7 +119,7 @@ class Conversation(models.Model):
         message.index = self.lastidx + 1
         message.save()
         if message.index == 1:
-            self.title = " ".join(message.ai_response.split(" ")[:6])
+            self.title = " ".join(message.user_request.split(" ")[:6])
             self.save()
 
     @staticmethod
