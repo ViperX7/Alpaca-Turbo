@@ -85,7 +85,7 @@ class ChatUI:
                                 content=ft.Image(
                                     src="./assets/GitHub-Mark.png", height=30, width=30
                                 ),
-                                on_click=lambda _:self.page.launch_url(
+                                on_click=lambda _: self.page.launch_url(
                                     "https://github.com/ViperX7/Alpaca-Turbo"
                                 ),
                             ),
@@ -93,8 +93,8 @@ class ChatUI:
                                 content=ft.Image(
                                     src="./assets/discord.png", height=30, width=30
                                 ),
-                                on_click=lambda _:self.page.launch_url(
-                                    "https://github.com/ViperX7/Alpaca-Turbo"
+                                on_click=lambda _: self.page.launch_url(
+                                    "https://discord.gg/pm4JzCBHNn"
                                 ),
                             ),
                         ],
@@ -318,7 +318,6 @@ class ChatUI:
 
         self.assistant.conversation.save()
 
-
         if msg and not isinstance(msg, Message):
             msg = Message.objects.filter(id=msg).first()
 
@@ -346,13 +345,15 @@ class ChatUI:
         user_inp = input_text_box.value  # If user sends something
 
         if msg is None:
-        # there is some user input but no message object
-            if user_inp :
+            # there is some user input but no message object
+            if user_inp:
                 # Add new message to the end of the list and reset input field
                 msg = self.assistant.conversation.add_message(
                     user_inp,
                     "",
-                    self.assistant.model.prompt.preprompt if len(list(self.assistant.conversation)) == 0 else None,
+                    self.assistant.model.prompt.preprompt
+                    if len(list(self.assistant.conversation)) == 0
+                    else None,
                     self.assistant.model.prompt.format,
                 )
                 msg = self.assistant.sane_check_msg(
@@ -364,11 +365,9 @@ class ChatUI:
                 print("No message")
                 msg = list(self.assistant.conversation.get_messages())[-1]
 
-
         self.toggle_lock()
 
         preprompt, user_msg, ai_msg = msg.get_ui(chat_submit=self.chat_submit)
-
 
         self.ui_main_content.content = self.md_chat_generator(
             self.assistant.conversation
@@ -420,7 +419,6 @@ class ChatUI:
 
         self.toggle_lock()
 
-
     def md_chat_generator(self, data):
         final_column = self.lview
         final_column.controls = []
@@ -443,7 +441,9 @@ class ChatUI:
             res.append(msg)
 
         self.lview.controls = []
-        self.ui_main_content.content = self.md_chat_generator(self.assistant.conversation.get_messages())
+        self.ui_main_content.content = self.md_chat_generator(
+            self.assistant.conversation.get_messages()
+        )
         self.ui_sidebar.controls[0].content = Conversation.ui_conversation_list(
             hide_last=False, select_chat_callback=self.load_chat_from_conversation
         )
