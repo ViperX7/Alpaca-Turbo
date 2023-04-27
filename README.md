@@ -12,34 +12,20 @@
 Alpaca-Turbo is a language model that can be run locally without much setup required. It is a user-friendly web UI for the alpaca.cpp language model based on LLaMA, with unique features that make it stand out from other implementations. The goal is to provide a seamless chat experience that is easy to configure and use, without sacrificing speed or functionality.
 
 ## 📝 Example views
-### Chat Frontpage
-![Alpaca-Turbo Screenshot 2](./screenshots/screenshot2.png)
 
-### Chat functionality
-![Alpaca-Turbo Screenshot 1](./screenshots/screenshot1.png)
+
+https://user-images.githubusercontent.com/38191717/234747316-2e8d5f55-73f2-4f42-ad9a-11114de1825b.mp4
+
+
 
 ## 📦 Installation Steps
 
 ### 📺 Video Instructions
-- [Windows](https://drive.google.com/file/d/1771mvqo6LgU8El1A8-m4vxXHPE-gy91u/view?usp=sharing)
-- [Mac](https://www.youtube.com/watch?v=bGcrTGsSNaY)
+- ToDo
+- ToDo
 
 #### 🐳 Using Docker (only Linux is supported with docker)
-
-**Note**: for some reason this docker container works on Linux but not on Windows
-
-> Docker must be installed on your system
-
-1. Download the [latest alpaca-turbo.zip from the release page](https://github.com/ViperX7/Alpaca-Turbo/releases/latest).
-2. Extract the contents of the zip file into a directory named alpaca-turbo.
-3. Copy your alpaca models to alpaca-turbo/models/ directory.
-4. Run the following command to set everything up:
-   ```
-    docker-compose up
-   ```
-5. Visit http://localhost:7887 to use the chat interface of the chatbot.
-
-**OR**
+- ToDo
 
 #### 🪟 Using Windows (standalone or miniconda) AND Mac M1/M2 (using miniconda)
 
@@ -61,12 +47,12 @@ Alpaca-Turbo is a language model that can be run locally without much setup requ
 6. close that window
 7. open a new cmd window in your Alpaca-Turbo dir and type
    ```
-   conda create -n alpaca_turbo python=3.8 -y
+   conda create -n alpaca_turbo python=3.10 -y
    conda activate alpaca_turbo
    pip install -r requirements.txt
-   python api.py
+   python app.py
    ```
-8. Visit http://localhost:7887 select your model and click change wait for the model to load
+
 9. ready to interact
 
 ## 💁 Contributing
