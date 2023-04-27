@@ -9,7 +9,7 @@
 
 
 
-Alpaca-Turbo is a language model that can be run locally without much setup required. It is a user-friendly web UI for the alpaca.cpp language model based on LLaMA, with unique features that make it stand out from other implementations. The goal is to provide a seamless chat experience that is easy to configure and use, without sacrificing speed or functionality.
+Alpaca-Turbo is a frontend to use large language models that can be run locally without much setup required. It is a user-friendly web UI for the llama.cpp , with unique features that make it stand out from other implementations. The goal is to provide a seamless chat experience that is easy to configure and use, without sacrificing speed or functionality.
 
 ## 📝 Example views
 
