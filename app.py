@@ -8,6 +8,8 @@
 
 https;//github.comViperX7/Alpaca-Turbo
 """
+import sys
+
 import flet as ft
 from alpaca_turbo import AIModel, Assistant
 from flet import (ClipBehavior, Column, Container, CrossAxisAlignment, Image,
@@ -27,7 +29,7 @@ plugins = [
 
 
 def main(page: Page):
-    """ what do you expect the main function """
+    """what do you expect the main function"""
 
     page.horizontal_alignment = "center"
     page.vertical_alignment = "center"
@@ -59,7 +61,12 @@ def main(page: Page):
         )
     page.floating_action_button = fab_actions[0]
 
-    tab_changed = lambda _ : [setattr(page,"floating_action_button",fab_actions[tabs.content.selected_index]), page.update()]
+    tab_changed = lambda _: [
+        setattr(
+            page, "floating_action_button", fab_actions[tabs.content.selected_index]
+        ),
+        page.update(),
+    ]
 
     tabs = Container(
         expand=True,
@@ -73,11 +80,31 @@ def main(page: Page):
         ),
     )
 
-
     page.add(tabs)
     page.title = "Alpaca Turbo"
 
     page.update()
 
 
-_ = ft.app(target=main, assets_dir="assets",name="Alpaca Turbo") if __name__ == "__main__" else None
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Argument parser for web server")
+
+    parser.add_argument("--web", action="store_true", help="Enable web server")
+
+    parser.add_argument(
+        "--host", type=str, default="127.0.0.1", help="IP address to listen on"
+    )
+    parser.add_argument("--port", type=int, default=7887, help="Port to listen on")
+
+    args = parser.parse_args()
+
+    _ = ft.app(
+        target=main,
+        assets_dir="assets",
+        name="Alpaca Turbo",
+        host=args.host,
+        port=args.port,
+        view=ft.WEB_BROWSER if args.web else ft.FLET_APP,
+    )
