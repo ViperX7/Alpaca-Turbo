@@ -25,7 +25,7 @@ from chatbot.models import Conversation, Message
 
 
 class Assistant:
-    def __init__(self, aimodel: AIModel | None = None):
+    def __init__(self, aimodel: AIModel  = None):
         if aimodel is None:
             print("No model specified using the first one from database")
             aimodel = AIModel.objects.first()
