@@ -32,9 +32,16 @@ class Assistant:
 
         self.DEBUG = "-d" in sys.argv
 
-        self.model: AIModel = aimodel
-        self.settings = self.model.settings
-        self.prompt = self.model.prompt
+        if aimodel:
+            self.model: AIModel = aimodel
+            self.settings = self.model.settings
+            self.prompt = self.model.prompt
+        else:
+            self.model: AIModel = None
+            self.settings = None
+            self.prompt = None
+
+
         self.conversation: Conversation = Conversation()
         self.conversation.save()
         self.last_in_mem = 0
@@ -247,6 +254,7 @@ class Assistant:
                 final_prompt_2_send.append(sequence)
 
         final_prompt_2_send = "".join(final_prompt_2_send)
+        final_prompt_2_send = final_prompt_2_send.replace("\r","")
         if message.preprompt or hist_start == 0:
             final_prompt_2_send = [
                 self.conversation.get_messages()[0].preprompt,
@@ -257,6 +265,7 @@ class Assistant:
         self.last_in_mem = message.index
         for char in self.stream_generation():
             message.ai_response += char
+            message.ai_response = message.ai_response.replace("\r","")
             message.save()
             yield char
 

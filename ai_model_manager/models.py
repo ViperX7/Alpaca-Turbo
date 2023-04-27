@@ -386,7 +386,12 @@ class AIModel(models.Model):
 
     @property
     def model_size(self):
-        size = str(os.path.getsize(self.path) / (1024 * 1024 * 1024))
+        try:
+            size = str(os.path.getsize(self.path) / (1024 * 1024 * 1024))
+        except FileNotFoundError:
+            self.is_configured = False
+            self.save()
+            size = "-1.0"
 
         return size[: size.find(".") + 3] + " GB"
 

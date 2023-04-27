@@ -47,7 +47,7 @@ def model_selector(assistant: Assistant, callback=lambda: None):
     if len(model_options) == 0:
         model_selection_screen = put_center(
             ft.Text(
-                "No models imported import from settings",
+                "No Models can be located. Please Import models from settings",
             )
         )
     else:
