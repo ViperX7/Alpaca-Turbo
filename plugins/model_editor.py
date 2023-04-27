@@ -77,7 +77,6 @@ class ModelSettingsUI:
             expand=80,
             padding=40,
             content=Tabs(
-                selected_index=1,
                 animation_duration=300,
                 tabs=[
                     ft.Tab(
