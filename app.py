@@ -75,8 +75,9 @@ def main(page: Page):
 
 
     page.add(tabs)
+    page.title = "Alpaca Turbo"
 
     page.update()
 
 
-_ = ft.app(target=main, assets_dir="assets") if __name__ == "__main__" else None
+_ = ft.app(target=main, assets_dir="assets",name="Alpaca Turbo") if __name__ == "__main__" else None
