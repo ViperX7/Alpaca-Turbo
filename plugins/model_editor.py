@@ -252,7 +252,7 @@ class ModelManagerUI:
         path_list = AIModel.add_models_from_dir(path)
         self.refresh_model_list()
         self.page.snack_bar = ft.SnackBar(
-            content=Text(f"{len(path_list)} new models imported")
+            content=Text(f"{len(path_list)} new models imported restart to see changes")
         )
         self.page.snack_bar.open = True
         self.page.update()
