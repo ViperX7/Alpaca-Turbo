@@ -101,6 +101,7 @@ class Conversation(models.Model):
         Returns:
             Message: Message object
         """
+        self.save()
         message = Message(
             conversation=self,
             index=-2,

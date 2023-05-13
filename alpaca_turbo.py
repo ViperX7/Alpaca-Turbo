@@ -28,7 +28,38 @@ class Assistant:
     def __init__(self, aimodel: AIModel  = None):
         if aimodel is None:
             print("No model specified using the first one from database")
-            aimodel = AIModel.objects.first()
+            print("Checking all available Models")
+            no_models = len(AIModel.objects.all())
+            print(f"Total {no_models} models found")
+
+            print()
+
+            print("select a model ")
+            print()
+            print("\t0. <<<Load new models>>>\n")
+            for i,mod in enumerate(AIModel.objects.all()):
+                print(f"\t{i+1}. {mod.name}")
+
+            print()
+
+            try:
+                choice = int(input("choice [1]: ")) -1
+            except:
+                choice = 0
+
+            if choice > -1:
+                aimodel = AIModel.objects.all()[choice]
+            else:
+                path = input("Enter path of directory containing all models [./models]")
+                if not path:
+                    path = "./models"
+                res = AIModel.add_models_from_dir(path)
+                print(f"Added {len(res)} models to db")
+                exit()
+
+
+
+
 
         self.DEBUG = "-d" in sys.argv
 
@@ -271,6 +302,7 @@ class Assistant:
 
     def completion(self, message: Message, count=-1):
         """add completion support"""
+        self.conversation.save()
         message.conversation.save()
         final_prompt_2_send = [message.user_request]
 
@@ -448,7 +480,7 @@ class Assistant:
     @staticmethod
     def repl():
         """Repl for my chat bot"""
-        assistant = Assistant(AIModel.objects.all()[1])
+        assistant = Assistant(None)
         assistant.load_model()
         assistant.enable_history = False
         fmt = assistant.prompt.format
