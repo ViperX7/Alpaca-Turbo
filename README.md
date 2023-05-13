@@ -63,6 +63,55 @@ just get the latest release unzip and then run
 pip install -r requirements.txt
 python app.py
 ```
+## How to use Alpaca-Turbo on Windows
+
+1. Open the CMD in Windows 
+![CMD](https://drive.google.com/file/d/1h3RGaMDR-chuacRxTe9o5867PY1mT-VH/view?usp=share_link)
+2. Clone the github repository where the CMD is opened that means in that particular directory
+![Clone Repository](https://drive.google.com/file/d/1y4nWjb6X7N-QAPqqHTelxdtLqFxs0-Aw/view?usp=share_link)
+```
+git clone https://github.com/ViperX7/Alpaca-Turbo.git
+```
+3. Go into the Alpaca-Turbo Directory
+![Alpaca-Turbo Directory](https://drive.google.com/file/d/1yEUU9roB5eI1Gakzwjm4NpQFcMG-IZpo/view?usp=share_link)
+```
+cd Alpaca-Turbo
+```
+4. Now installing all the dependencies which are in the requirements.txt file
+![Example Image](https://drive.google.com/file/d/1_WfyktBJvhBaxQPrRo22ieNYPEvZKIXU/view?usp=share_link)
+```
+pip install -r requirements.txt
+```
+5. If you encounter any error regarding `gradio.exe.deleteme` for this just install gradio separately
+![Gradio error](https://drive.google.com/file/d/1IuOjGWg-oR1sHxBEu86vUpqtPoNe1gA-/view?usp=share_link)
+```
+pip install gradio
+```
+![Gradio Install](https://drive.google.com/file/d/19uN_ZdWHrZuQpahgXzj52lbBYPwODqtE/view?usp=share_link)
+![Error Resolved](https://drive.google.com/file/d/1H49WcRFo2GBJ4mRusJFu0rv-tlJ_LDbf/view?usp=share_link)
+6. Then since we are good to go this process is specifically for windows then type the following command
+![startwin.py](https://drive.google.com/file/d/1uLDojTgLjfciZUbx8weth3Uu0BnWKkNn/view?usp=share_link)
+```
+python startwin.py
+```
+7. After this it will ask you to download model just hit 'y' and press enter it will take its time to download the model for you
+![Model Install](https://drive.google.com/file/d/1-9Qs40vBBhO2oQt8Qt0sX-MORXH7sUNE/view?usp=share_link)
+![Progress](https://drive.google.com/file/d/1fy7PnuhXF4hPuYSIlqBb-cmwQ2cuOatH/view?usp=share_link)
+![Completed installation of model](https://drive.google.com/file/d/1iZ4u6ZmONG38lRd0Fk4TSYXFNuWj2v9z/view?usp=share_link)
+8. Now the concluding step to run our webui of Alpaca-Turbo
+![Running alpaca-turbo webui.py](https://drive.google.com/file/d/1taFz1WIo17r2pRsOQzOUkJ7KPLX2-kQ3/view?usp=share_link)
+```
+python webui.py
+```
+9. Just now go to locahost:8000 or 127.0.0.1:8000 to see your Alpaca-Turbo in Action
+![Running webui](https://drive.google.com/file/d/1TSrrMy7c92EB0_MfAj1LA7ZSD3Q9HPyQ/view?usp=share_link)
+![Firstlook](https://drive.google.com/file/d/1FfMohbT4clh0Sspc-pjSEk5BqG0mhuYJ/view?usp=share_link)
+![Model loading logs](https://drive.google.com/file/d/1yU0L_ZBwWujSPGXM3PoGMbScx2hejc2q/view?usp=share_link)
+10. If this `python webui.py` command gives any error just simply delete the `settings.dat` by typing
+
+```
+del settings.dat
+```
 
 ## 💁 Contributing
 
