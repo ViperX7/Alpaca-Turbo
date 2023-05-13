@@ -63,6 +63,78 @@ just get the latest release unzip and then run
 pip install -r requirements.txt
 python app.py
 ```
+## How to use Alpaca-Turbo on Windows
+
+1. Open the CMD in Windows 
+
+![CMD](https://dl.dropbox.com/s/rc6p3xl8sb46dgn/1.png?dl=0)
+
+2. Clone the github repository where the CMD is opened that means in that particular directory
+
+![Clone Repository](https://dl.dropbox.com/s/qmd7ie96y8o80k3/2.png?dl=0)
+
+```
+git clone https://github.com/ViperX7/Alpaca-Turbo.git
+```
+3. Go into the Alpaca-Turbo Directory
+
+![Alpaca-Turbo Directory](https://dl.dropbox.com/s/64pum8vkv4gvbna/3.png?dl=0)
+
+```
+cd Alpaca-Turbo
+```
+4. Now installing all the dependencies which are in the requirements.txt file
+
+![Dependencies install](https://dl.dropbox.com/s/r8tih2g3qnj54y8/4.png?dl=0)
+
+```
+pip install -r requirements.txt
+```
+5. If you encounter any error regarding `gradio.exe.deleteme` for this just install gradio separately
+
+![Gradio error](https://dl.dropbox.com/s/igzsaksd81no81e/4%202nd.png?dl=0)
+
+```
+pip install gradio
+```
+![Gradio Install](https://dl.dropbox.com/s/vazcnlc3b37w1pe/5%202nd.png?dl=0)
+
+![Error Resolved](https://dl.dropbox.com/s/qbasux4nobvi6lm/5%203rd.png?dl=0)
+6. Then since we are good to go this process is specifically for windows then type the following command
+
+![startwin.py](https://dl.dropbox.com/s/69h917ldziomsjp/6.png?dl=0)
+
+```
+python startwin.py
+```
+7. After this it will ask you to download model just hit 'y' and press enter it will take its time to download the model for you
+
+![Model Install](https://dl.dropbox.com/s/uor22ox6h91lhut/8.png?dl=0)
+
+![Progress](https://dl.dropbox.com/s/ftxdbe7uj75zcsc/10.png?dl=0)
+
+![Completed installation of model](https://dl.dropbox.com/s/gel46m4gtuaizhy/11.png?dl=0)
+
+8. Now the concluding step to run our webui of Alpaca-Turbo
+
+![Running alpaca-turbo webui.py](https://dl.dropbox.com/s/vvmeki04jkesdng/12.png?dl=0)
+
+```
+python webui.py
+```
+9. Just now go to locahost:8000 or 127.0.0.1:8000 to see your Alpaca-Turbo in Action
+
+![Running webui](https://dl.dropbox.com/s/3cd8jxs9wos47yp/13.png?dl=0)
+
+![Firstlook](https://dl.dropbox.com/s/3lpolb29wq1moh3/14.png?dl=0)
+
+![Model loading logs](https://dl.dropbox.com/s/7pyqksvryatx9xs/15.png?dl=0)
+
+10. If this `python webui.py` command gives any error just simply delete the `settings.dat` by typing
+
+```
+del settings.dat
+```
 
 ## 💁 Contributing
 
